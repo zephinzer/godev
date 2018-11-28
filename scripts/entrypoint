@@ -1,0 +1,35 @@
+#!/bin/bash
+
+CURDIR=$(dirname $0);
+
+noop()
+{
+  printf -- '';
+}
+
+ARG="$@";
+
+case $ARG in
+  'build')
+    ${CURDIR}/build;
+    exit 0;
+  ;;
+  'init')
+    ${CURDIR}/init;
+    exit 0;
+  ;;
+  'shell')
+    ${CURDIR}/shell;
+    exit;
+  ;;
+  'start')
+    ${CURDIR}/start;
+    exit 0;
+  ;;
+  'help')
+    noop;
+  ;&
+  *)
+    ${CURDIR}/help;
+  ;;
+esac;

@@ -1,0 +1,101 @@
+#!/bin/bash
+noop()
+{
+  printf -- '';
+}
+
+add_gitignore()
+{
+  printf -- 'Add .gitignore? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      printf -- "vendor\napp\n" > $(pwd)/.gitignore;
+      printf -- '.gitignore has been setup.\n\n';
+    ;;
+  esac;
+}
+
+add_git()
+{
+  printf -- "Initialize git repository at $(pwd)? [y/N] ";
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      git init;
+      printf -- 'Git repository setup done.\n\n';
+      add_gitignore;
+    ;;
+  esac;
+}
+
+add_go_mod()
+{
+  printf -- 'Setup Go modules? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      GO111MODULE=on go mod init;
+      printf -- 'Go mod set up successfully.\n\n';
+    ;;
+  esac;
+}
+
+printf -- 'Checking for git setup... ';
+git status &>/dev/null;
+if [ "$?" != "0" ]; then
+  printf -- 'Git setup not found!\n';
+  add_git;
+else
+  printf -- 'Git setup found!\n';
+fi;
+
+git status &>/dev/null;
+if [ "$?" = "0" ]; then
+  printf -- "Checking for .gitignore... ";
+  ls $(pwd)/.gitignore &>/dev/null;
+  if [ "$?" != "0" ]; then
+    printf -- '.gitignore not found!\n';
+    add_gitignore;
+  else
+    printf -- '.gitignore found!\n';
+  fi;
+fi;
+
+printf -- 'Checking for go mod... ';
+ls $(pwd)/go.mod &>/dev/null;
+if [ "$?" != "0" ]; then
+  printf -- 'go.mod not found!\n';
+  add_go_mod;
+else
+  printf -- 'go.mod found!\n\n';
+fi;
+
+printf -- "You're all set up!\n\n";

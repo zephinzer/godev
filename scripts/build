@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ARGS=${@};
+
+go env;
+
+if [ -z "${ARGS}" ]; then
+  go build ${ARGS};
+else
+  go build -a -ldflags '-w -s' -o app;
+fi;

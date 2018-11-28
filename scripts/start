@@ -1,0 +1,95 @@
+#!/bin/bash
+runner_printf()
+{
+  printf -- "\033[90m${@}\033[0m";
+}
+
+set_grey()
+{
+  printf -- "\033[90m";
+}
+
+set_normal()
+{
+  printf -- "\033[0m";
+}
+
+update_dependencies()
+{
+  if [ -e "$(pwd)/go.mod" ]; then
+    runner_printf 'retrieving dependencies... ';
+    set_grey;
+    GO111MODULE=on go mod download;
+    GO111MODULE=on go mod vendor;
+    set_normal;
+    runner_printf 'dependencies retrieved.\n';
+  fi;
+}
+
+build_it()
+{
+  runner_printf 'building app... ';
+  set_grey;
+  go build -o $(pwd)/app;
+  set_normal;
+  runner_printf 'built.\n';
+}
+
+run_it()
+{
+  build_it;
+  runner_printf 'starting app... ';
+  $(pwd)/app &
+  APP_PID=$!;
+  runner_printf "app started with process ID ${APP_PID}\n- - application logs below this line - -\n";
+}
+
+kill_it()
+{
+  runner_printf "- - this is the end of process ${APP_PID} - -\n";
+  runner_printf "killing process ID ${APP_PID}... ";
+  set_grey;
+  ps | grep app | grep ${APP_PID} && kill ${APP_PID} >/dev/null & wait;
+  set_normal;
+  runner_printf "process with PID ${APP_PID} killed.\n";
+}
+
+# use set -e only for first run because if
+# application cannot build then there's no use
+# retrying
+set -e;
+update_dependencies;
+build_it;
+run_it;
+set +e;
+
+
+# create the watch pattern - check if there
+# are any .go files and **/*.go files before adding
+# it to a pattern we will use later for inotifywatch
+WATCH_PATTERN='';
+ls *.go &>/dev/null && STAR_GO=1 || STAR_GO=0;
+ls **/*.go &>/dev/null && STAR_STAR_GO=1 || STAR_STAR_GO=0;
+if [ $STAR_GO -eq 1 ]; then
+  WATCH_PATTERN="*.go ${WATCH_PATTERN}"
+fi;
+if [ $STAR_STAR_GO -eq 1 ]; then
+  WATCH_PATTERN="**/*.go ${WATCH_PATTERN}"
+fi;
+
+
+# start the application and watch it
+INIT=0;
+inotifywait -q \
+  -e close_write,create \
+  -m ${WATCH_PATTERN} \
+  @./app |
+while read -r directory events filename; do
+  if [ ${APP_PID} -ne 0 ] & [ ${INIT} -ne 0 ]; then
+    kill_it;
+    update_dependencies;
+    build_it;
+    run_it;
+  fi;
+  INIT=1;
+done;
