@@ -14,6 +14,10 @@ case $ARG in
     ${CURDIR}/build;
     exit 0;
   ;;
+  'test')
+    ${CURDIR}/test;
+    exit 0;
+  ;;
   'init')
     ${CURDIR}/init;
     exit 0;

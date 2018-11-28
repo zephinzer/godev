@@ -62,3 +62,10 @@ log.warn:
 	-@printf -- "\033[33m\033[1m?  [WARN] ${MSG}\033[0m\n"
 log.error:
 	-@printf -- "\033[31m\033[1m! [ERROR] ${MSG}\033[0m\n"
+
+eg.test:
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest test
+eg.start:
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest start
+eg.build:
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest build

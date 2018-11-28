@@ -72,6 +72,12 @@ docker run -it \
   zephinzer/golang:latest start;
 ```
 
+Run the following to test your application in watch mode:
+
+```sh
+docker run -it -u ${UID} -v "$(pwd):/go/src/app" zephinzer/golang:latest test;
+```
+
 Run the following to build your application:
 
 ```sh

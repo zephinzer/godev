@@ -1,4 +1,4 @@
-FROM golang:1.11-alpine
+FROM golang:1.11-alpine3.8
 
 ARG CGO_ENABLED=0
 ARG GOARCH=amd64
