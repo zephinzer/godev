@@ -15,14 +15,22 @@ You'll need:
 1. Live-reload is happiness on a CLI
 1. Live-reload should also live-install dependencies added to your `*.go`
 
+# Intentions
+
+1. Meant for information systems development
+1. Host system independent methodology
+1. Destined for containerisation
+
 # Usage
 
+## Directory Initialisation
 Run the following in your directory of choice:
 
 ```sh
 docker run -it -u ${UID} -v "$(pwd):/go/src/app" zephinzer/golang:latest init;
 ```
 
+## Project Setup
 Setup a `Dockerfile` in the directory of your choice with:
 
 ```
@@ -53,6 +61,7 @@ func main() {
 }
 ```
 
+## Developing with Live-Reload
 Run the following to start your application in live-reload:
 
 ```sh
@@ -72,20 +81,31 @@ docker run -it \
   zephinzer/golang:latest start;
 ```
 
+## Testing with Live-Reload
 Run the following to test your application in watch mode:
 
 ```sh
-docker run -it -u ${UID} -v "$(pwd):/go/src/app" zephinzer/golang:latest test;
+docker run -it \
+  -u ${UID} \
+  -v "$(pwd):/go/src/app" \
+  zephinzer/golang:latest \
+  test;
 ```
 
-Run the following to build your application:
+## Compilation to Binary
+Run the following to compile your application:
 
 ```sh
-docker run -it -u ${UID} -v "$(pwd):/go/src/app" zephinzer/golang:latest build;
+docker run \
+  -u ${UID} \
+  -v "$(pwd):/go/src/app" \
+  zephinzer/golang:latest \
+  build;
 ```
 
 You should now see a binary named `app` in that directory which you can redistribute.
 
+## Docker Image Packaging
 Alternatively, to package it into a nice Docker image:
 
 ```sh
@@ -102,8 +122,95 @@ Try to run it:
 docker run yourusername/imagename:latest;
 ```
 
-# Development
+## TL;DR (*Gimme a Makefile*)
+
+Pretty self-explanatory, copy this into a Makefile in an empty directory and run `make init` to get started!
+
+```makefile
+init:
+	$(MAKE) dev ARG="init"
+build:
+	$(MAKE) dev ARG="build"
+test:
+	$(MAKE) dev ARG="test"
+test.once: build
+	go test -coverprofile c.out
+start:
+	$(MAKE) dev ARG="start"
+start.once: build
+	$(CURDIR)/app
+shell:
+	$(MAKE) dev ARG="shell"
+dev:
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest ${ARG}
+```
+
+# Advanced Usage
+
+## Running on Host Network
+
+```sh
+docker run \
+  -u ${UID} \
+  --network host \
+  -v "$(pwd):/go/src/app" \
+  zephinzer/golang:latest \
+  start;
+```
+
+## Running within Docker Compose
+
+```yaml
+version: "3.5"
+services:
+  # ...
+  application:
+    image: zephinzer/golang:1.11
+    ports: # if needed
+    - "3000:3000"
+    user: ${UID}
+    volumes:
+    - "./:/go/src/app"
+  # ...
+```
+
+## Building Binaries for Other Architectures
+
+An example for Windows follows:
+
+```sh
+docker run \
+  -u ${UID} \
+  -v "$(pwd):/go/src/app" \
+  --env GOARCH=amd64 \
+  --env GOOS=windows \
+  zephinzer/golang:latest \
+  build;
+```
+
+[Check out this page](https://golang.org/doc/install/source#environment) for all possible `GOARCH` and `GOOS`es.
+
+# Development/Hacking
+
+## Code
+The main logic of how this works is written in `bash` [in the `/scripts` directory](./scripts).
+
+The `Dockerfile` simply copies [the `/scripts`](./scripts) in and adds it to the `$PATH`.
 
 ## Testing
 Tests are contained [in the `./test` directory](./test) but you can run it from the root using `make test`.
 
+## Building
+To build the Docker image, run `make build`.
+
+## Versioning
+To bump a patch version, run `make version.bump`.
+
+To bump a minor versoin, run `make version.bump VERSION=minor`.
+
+To bump a major versoin, run `make version.bump VERSION=major`.
+
+## Publishing
+To publish the Docker image, run `make publish`.
+
+This publishes two images - one with the version as recorded by the Git tags, another with the version of Golang.

@@ -52,7 +52,7 @@ version.bump:
 	@docker run \
 		-v "$(CURDIR):/app" \
 		zephinzer/vtscripts:latest \
-		iterate patch -i
+		iterate ${VERSION} -i
 
 test: build
 	cd ./test && $(MAKE) test

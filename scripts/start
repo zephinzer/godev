@@ -41,12 +41,12 @@ run_it()
   runner_printf 'starting app... ';
   $(pwd)/app &
   APP_PID=$!;
-  runner_printf "app started with process ID ${APP_PID}\n- - application logs below this line - -\n";
+  runner_printf "- - - app:${APP_PID} logs below this line - - -\n";
 }
 
 kill_it()
 {
-  runner_printf "- - this is the end of process ${APP_PID} - -\n";
+  runner_printf "- - - app:${APP_PID} logs above this line - - -\n";
   runner_printf "killing process ID ${APP_PID}... ";
   set_grey;
   ps | grep app | grep ${APP_PID} && kill ${APP_PID} >/dev/null & wait;

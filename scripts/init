@@ -19,7 +19,7 @@ add_gitignore()
       noop;
     ;&
     '1')
-      printf -- "vendor\napp\n" > $(pwd)/.gitignore;
+      printf -- "vendor\napp\n*.out" > $(pwd)/.gitignore;
       printf -- '.gitignore has been setup.\n\n';
     ;;
   esac;
@@ -68,6 +68,38 @@ add_go_mod()
   esac;
 }
 
+add_dockerfile()
+{
+  printf -- 'Seed a Dockerfile? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      cat << 'EOF' > $(pwd)/Dockerfile
+FROM zephinzer/golang:latest as development
+COPY . /go/src/app
+ENTRYPOINT [ "start" ]
+
+FROM development as build
+RUN build
+ENTRYPOINT [ "/go/src/app/app" ]
+
+FROM scratch as production
+COPY --from=build /go/src/app/app /
+ENTRYPOINT [ "/app" ]
+EOF
+    ;;
+  esac;
+}
+
 printf -- 'Checking for git setup... ';
 git status &>/dev/null;
 if [ "$?" != "0" ]; then
@@ -96,6 +128,15 @@ if [ "$?" != "0" ]; then
   add_go_mod;
 else
   printf -- 'go.mod found!\n\n';
+fi;
+
+printf -- 'Checking for Dockerfile... ';
+ls $(pwd)/Dockerfile &>/dev/null;
+if [ "$?" != " 0" ]; then
+  printf -- 'Dockerfile not found!\n';
+  add_dockerfile;
+else
+  printf -- 'Dockerfile found!\n\n';
 fi;
 
 printf -- "You're all set up!\n\n";
