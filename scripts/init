@@ -100,6 +100,36 @@ EOF
   esac;
 }
 
+add_main_go()
+{
+  printf -- 'Seed a main.go? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      cat << 'EOF' > $(pwd)/main.go
+package main
+
+import (
+  "fmt"
+)
+
+func main() {
+  fmt.Println("hello world")
+}
+EOF
+    ;;
+  esac;
+}
+
 printf -- 'Checking for git setup... ';
 git status &>/dev/null;
 if [ "$?" != "0" ]; then
@@ -139,4 +169,15 @@ else
   printf -- 'Dockerfile found!\n\n';
 fi;
 
+printf -- 'Checking for main.go... ';
+ls $(pwd)/main.go &>/dev/null;
+if [ "$?" != " 0" ]; then
+  printf -- 'main.go not found!\n';
+  add_main_go;
+else
+  printf -- 'main.go found!\n\n';
+fi;
+
 printf -- "You're all set up!\n\n";
+
+printf -- "- run 'make start' now to start developing!\n\n";

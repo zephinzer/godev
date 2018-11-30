@@ -4,6 +4,11 @@ runner_printf()
   printf -- "\033[90m${@}\033[0m";
 }
 
+set_red()
+{
+  printf -- "\033[31m";
+}
+
 set_grey()
 {
   printf -- "\033[90m";
@@ -29,7 +34,7 @@ update_dependencies()
 build_it()
 {
   runner_printf 'building app... ';
-  set_grey;
+  set_red;
   go build -o $(pwd)/app;
   set_normal;
   runner_printf 'built.\n';
