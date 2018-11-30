@@ -8,7 +8,7 @@ test:
 
 test.base:
 	@$(MAKE) log.debug MSG='building the base image...';
-	@docker build -f ../Dockerfile -t zephinzer/golang:test ..
+	@docker build -f ../Dockerfile -t zephinzer/golang-dev:test ..
 	@$(MAKE) log.info MSG='base image built successfully.';
 
 test.build:
@@ -17,7 +17,7 @@ test.build:
 	@docker run \
 		-v "$(CURDIR):/go/src/app" \
 		--entrypoint=build \
-		zephinzer/golang:test
+		zephinzer/golang-dev:test
 	@if [ ! -e "$(CURDIR)/app" ]; then exit 1; else rm -rf $(CURDIR)/app; fi
 	@$(MAKE) log.info MSG='application successfully built.';
 
@@ -26,7 +26,7 @@ test.files:
 	@docker run \
 		-v "$(CURDIR):/go/src/app" \
 		--entrypoint=ls \
-		zephinzer/golang:test \
+		zephinzer/golang-dev:test \
 		-1 /scripts
 	@$(MAKE) log.info MSG='/scripts exists.';
 
@@ -34,19 +34,19 @@ test.run:
 	@$(MAKE) log.debug MSG='running the base image...';
 	@docker run \
 		-v "$(CURDIR):/go/src/app" \
-		zephinzer/golang:test
+		zephinzer/golang-dev:test
 	@$(MAKE) log.info MSG='base image ran successfully.';
 
 test.usage.build:
 	@$(MAKE) log.debug MSG='using base image to build sub-image with scratch...'
-	@docker build -t zephinzer/golang:testusage .
+	@docker build -t zephinzer/golang-dev:testusage .
 	@$(MAKE) log.info MSG='scratch image built successfully.'
 
 test.usage.run:
 	@$(MAKE) log.debug MSG='running image based on scratch...'
 	-@docker stop zephinzer-golang-testusage
 	-@docker rm zephinzer-golang-testusage
-	@docker run -d --name zephinzer-golang-testusage zephinzer/golang:testusage
+	@docker run -d --name zephinzer-golang-testusage zephinzer/golang-dev:testusage
 	@docker cp zephinzer-golang-testusage:/.output $(CURDIR)/.output
 	-@docker stop zephinzer-golang-testusage
 	-@docker rm zephinzer-golang-testusage
@@ -64,8 +64,8 @@ log.error:
 	-@printf -- "\033[31m\033[1m! [ERROR] ${MSG}\033[0m\n"
 
 eg.test:
-	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest test
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang-dev:latest test
 eg.start:
-	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest start
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang-dev:latest start
 eg.build:
-	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest build
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang-dev:latest build

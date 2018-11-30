@@ -27,14 +27,14 @@ You'll need:
 Run the following in your directory of choice:
 
 ```sh
-docker run -it -u ${UID} -v "$(pwd):/go/src/app" zephinzer/golang:latest init;
+docker run -it -u ${UID} -v "$(pwd):/go/src/app" zephinzer/golang-dev:latest init;
 ```
 
 ## Project Setup
 Setup a `Dockerfile` in the directory of your choice with:
 
 ```
-FROM zephinzer/golang:latest as development
+FROM zephinzer/golang-dev:latest as development
 COPY . /go/src/app
 ENTRYPOINT [ "start" ]
 
@@ -68,7 +68,7 @@ Run the following to start your application in live-reload:
 docker run -it \
   -u ${UID} \
   -v "$(pwd):/go/src/app" \
-  zephinzer/golang:latest start;
+  zephinzer/golang-dev:latest start;
 ```
 
 If you need to expose ports (3000 in the example):
@@ -78,7 +78,7 @@ docker run -it \
   -u ${UID} \
   -v "$(pwd):/go/src/app" \
   -p "3000:3000" \
-  zephinzer/golang:latest start;
+  zephinzer/golang-dev:latest start;
 ```
 
 ## Testing with Live-Reload
@@ -88,7 +88,7 @@ Run the following to test your application in watch mode:
 docker run -it \
   -u ${UID} \
   -v "$(pwd):/go/src/app" \
-  zephinzer/golang:latest \
+  zephinzer/golang-dev:latest \
   test;
 ```
 
@@ -99,7 +99,7 @@ Run the following to compile your application:
 docker run \
   -u ${UID} \
   -v "$(pwd):/go/src/app" \
-  zephinzer/golang:latest \
+  zephinzer/golang-dev:latest \
   build;
 ```
 
@@ -142,7 +142,7 @@ start.once: build
 shell:
 	$(MAKE) dev ARG="shell"
 dev:
-	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang:latest ${ARG}
+	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang-dev:latest ${ARG}
 ```
 
 # Advanced Usage
@@ -154,7 +154,7 @@ docker run \
   -u ${UID} \
   --network host \
   -v "$(pwd):/go/src/app" \
-  zephinzer/golang:latest \
+  zephinzer/golang-dev:latest \
   start;
 ```
 
@@ -165,7 +165,7 @@ version: "3.5"
 services:
   # ...
   application:
-    image: zephinzer/golang:1.11
+    image: zephinzer/golang-dev:1.11
     ports: # if needed
     - "3000:3000"
     user: ${UID}
@@ -184,7 +184,7 @@ docker run \
   -v "$(pwd):/go/src/app" \
   --env GOARCH=amd64 \
   --env GOOS=windows \
-  zephinzer/golang:latest \
+  zephinzer/golang-dev:latest \
   build;
 ```
 

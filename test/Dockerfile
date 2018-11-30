@@ -1,4 +1,4 @@
-FROM zephinzer/golang:latest as development
+FROM zephinzer/golang-dev:latest as development
 COPY . /go/src/app
 
 FROM development as build

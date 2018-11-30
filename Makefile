@@ -1,5 +1,5 @@
 DOCKER_NAMESPACE=zephinzer
-DOCKER_IMAGE_NAME=golang
+DOCKER_IMAGE_NAME=golang-dev
 
 build:
 	@docker build -t $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest .

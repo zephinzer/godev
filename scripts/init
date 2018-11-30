@@ -84,7 +84,7 @@ add_dockerfile()
     ;&
     '1')
       cat << 'EOF' > $(pwd)/Dockerfile
-FROM zephinzer/golang:latest as development
+FROM zephinzer/golang-dev:latest as development
 COPY . /go/src/app
 ENTRYPOINT [ "start" ]
 
