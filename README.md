@@ -214,3 +214,7 @@ To bump a major versoin, run `make version.bump VERSION=major`.
 To publish the Docker image, run `make publish`.
 
 This publishes two images - one with the version as recorded by the Git tags, another with the version of Golang.
+
+# License
+
+This project is licensed under the MIT license. See [the LICENSE file](./LICENSE) for the full text.
