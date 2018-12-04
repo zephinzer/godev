@@ -1,5 +1,7 @@
 #!/bin/bash
 ALL_PARAMETERS=$@;
+BUILED_FAILED=0;
+APP_PID=0;
 
 runner_printf()
 {
@@ -38,13 +40,13 @@ build_it()
   runner_printf 'building app... ';
   set_red;
   go build -o $(pwd)/app;
+  BUILD_FAILED=$?;
   set_normal;
   runner_printf 'built.\n';
 }
 
 run_it()
 {
-  build_it;
   runner_printf 'starting app... ';
   $(pwd)/app ${ALL_PARAMETERS} &
   APP_PID=$!;
@@ -64,11 +66,9 @@ kill_it()
 # use set -e only for first run because if
 # application cannot build then there's no use
 # retrying
-set -e;
 update_dependencies;
 build_it;
-run_it;
-set +e;
+if [ $BUILD_FAILED -eq 0 ]; then run_it; else APP_PID=0; fi;
 
 
 # create the watch pattern - check if there
@@ -92,11 +92,11 @@ inotifywait -q \
   -m ${WATCH_PATTERN} \
   @./app |
 while read -r directory events filename; do
-  if [ ${APP_PID} -ne 0 ] & [ ${INIT} -ne 0 ]; then
-    kill_it;
+  if [ ${INIT} -ne 0 ]; then
+    if [ ${APP_PID} -ne 0 ] then kill_it; fi;
     update_dependencies;
     build_it;
-    run_it;
+    if [ ${BUILD_FAILED} -eq 0 ]; then run_it; fi;
   fi;
   INIT=1;
 done;
