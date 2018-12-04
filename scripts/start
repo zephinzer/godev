@@ -1,4 +1,6 @@
 #!/bin/bash
+ALL_PARAMETERS=$@;
+
 runner_printf()
 {
   printf -- "\033[90m${@}\033[0m";
@@ -44,7 +46,7 @@ run_it()
 {
   build_it;
   runner_printf 'starting app... ';
-  $(pwd)/app &
+  $(pwd)/app ${ALL_PARAMETERS} &
   APP_PID=$!;
   runner_printf "- - - app:${APP_PID} logs below this line - - -\n";
 }

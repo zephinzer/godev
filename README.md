@@ -142,7 +142,12 @@ start.once: build
 shell:
 	$(MAKE) dev ARG="shell"
 dev:
-	docker run -it -u $$(id -u) -v "$(CURDIR):/go/src/app" zephinzer/golang-dev:latest ${ARG}
+	docker run \
+    -it \
+    --network host \
+    -u $$(id -u) \
+    -v "$(CURDIR):/go/src/app" \
+    zephinzer/golang-dev:latest ${ARG}
 ```
 
 # Advanced Usage
