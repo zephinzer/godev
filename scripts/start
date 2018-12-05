@@ -3,9 +3,19 @@ ALL_PARAMETERS=$@;
 BUILED_FAILED=0;
 APP_PID=0;
 
+app_printf()
+{
+  printf -- "\033[32m${@}\033[0m";
+}
+
 runner_printf()
 {
   printf -- "\033[90m${@}\033[0m";
+}
+
+runner_errorf()
+{
+  printf -- "\033[31m${@}\033[0m";
 }
 
 set_red()
@@ -42,7 +52,11 @@ build_it()
   go build -o $(pwd)/app;
   BUILD_FAILED=$?;
   set_normal;
-  runner_printf 'built.\n';
+  if [ ${BUILD_FAILED} -eq 0 ]; then
+    runner_printf 'built.\n';
+  else
+    runner_errorf "failed to build (build exited with status code ${BUILD_FAILED}).\n";
+  fi;
 }
 
 run_it()
@@ -50,12 +64,12 @@ run_it()
   runner_printf 'starting app... ';
   $(pwd)/app ${ALL_PARAMETERS} &
   APP_PID=$!;
-  runner_printf "- - - app:${APP_PID} logs below this line - - -\n";
+  app_printf "- - - app:${APP_PID} logs below this line - - -\n";
 }
 
 kill_it()
 {
-  runner_printf "- - - app:${APP_PID} logs above this line - - -\n";
+  app_printf "- - - app:${APP_PID} logs above this line - - -\n";
   runner_printf "killing process ID ${APP_PID}... ";
   set_grey;
   ps | grep app | grep ${APP_PID} && kill ${APP_PID} >/dev/null & wait;
@@ -93,7 +107,7 @@ inotifywait -q \
   @./app |
 while read -r directory events filename; do
   if [ ${INIT} -ne 0 ]; then
-    if [ ${APP_PID} -ne 0 ] then kill_it; fi;
+    if [ ${APP_PID} -ne 0 ]; then kill_it; fi;
     update_dependencies;
     build_it;
     if [ ${BUILD_FAILED} -eq 0 ]; then run_it; fi;
