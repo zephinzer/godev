@@ -64,7 +64,7 @@ run_it()
   runner_printf 'starting app... ';
   $(pwd)/app ${ALL_PARAMETERS} &
   APP_PID=$!;
-  app_printf "- - - app:${APP_PID} logs below this line - - -\n";
+  app_printf "\n- - - app:${APP_PID} logs below this line - - -\n";
 }
 
 kill_it()
