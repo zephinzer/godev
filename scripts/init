@@ -4,6 +4,16 @@ noop()
   printf -- '';
 }
 
+success_printf()
+{
+  printf -- "\033[32m${@}\033[0m";
+}
+
+error_printf()
+{
+  printf -- "\033[31m${@}\033[0m";
+}
+
 add_gitignore()
 {
   printf -- 'Add .gitignore? [y/N] ';
@@ -135,52 +145,52 @@ EOF
 printf -- 'Checking for git setup... ';
 git status &>/dev/null;
 if [ "$?" != "0" ]; then
-  printf -- 'Git setup not found!\n';
+  error_printf 'Git setup not found!\n';
   add_git;
 else
-  printf -- 'Git setup found!\n\n';
+  success_printf 'Git setup found!\n';
 fi;
 
 git status &>/dev/null;
 if [ "$?" = "0" ]; then
-  printf -- "Checking for .gitignore... ";
-  ls $(pwd)/.gitignore &>/dev/null;
+  printf -- "Checking for .gitignore at $(pwd)/.gitignore... ";
+  stat $(pwd)/.gitignore &>/dev/null;
   if [ "$?" != "0" ]; then
-    printf -- '.gitignore not found!\n';
+    error_printf '.gitignore not found!\n';
     add_gitignore;
   else
-    printf -- '.gitignore found!\n\n';
+    success_printf '.gitignore found!\n';
   fi;
 fi;
 
-printf -- 'Checking for go mod... ';
-ls $(pwd)/go.mod &>/dev/null;
+printf -- "Checking for go mod at $(pwd)/go.mod... ";
+stat $(pwd)/go.mod &>/dev/null;
 if [ "$?" != "0" ]; then
-  printf -- 'go.mod not found!\n';
+  error_printf 'go.mod not found!\n';
   add_go_mod;
 else
-  printf -- 'go.mod found!\n\n';
+  printf -- 'go.mod found!\n';
 fi;
 
-printf -- 'Checking for Dockerfile... ';
-ls $(pwd)/Dockerfile &>/dev/null;
-if [ "$?" != " 0" ]; then
-  printf -- 'Dockerfile not found!\n';
+printf -- "Checking for Dockerfile at $(pwd)/Dockerfile... ";
+stat $(pwd)/Dockerfile &>/dev/null;
+if [ "$?" != "0" ]; then
+  error_printf 'Dockerfile not found!\n';
   add_dockerfile;
 else
-  printf -- 'Dockerfile found!\n\n';
+  success_printf 'Dockerfile found!\n';
 fi;
 
-printf -- 'Checking for main.go... ';
-ls $(pwd)/main.go &>/dev/null;
-if [ "$?" != " 0" ]; then
-  printf -- 'main.go not found!\n';
+printf -- "Checking for main.go at $(pwd)/main.go... ";
+stat $(pwd)/main.go &>/dev/null;
+if [ "$?" != "0" ]; then
+  error_printf 'main.go not found!\n';
   add_main_go;
 else
-  printf -- 'main.go found!\n\n';
+  success_printf 'main.go found!\n';
 fi;
 
-printf -- "You're all set up!\n\n";
+success_printf -- "You're all set up!\n\n";
 
 printf -- 'Post installation notes:\n';
 printf -- "- run 'make start' now to start developing\n";
@@ -188,4 +198,4 @@ printf -- "- run 'make test' now to start the test watching\n";
 printf -- "- run 'make build' now to run a logical build\n";
 printf -- "- (if Dockerfile is present) run 'docker build .' now to run an image build\n\n";
 
-printf -- "If your friend would find this useful, share this link: https://github.com/zephinzer/golang-dev (:\n\n";
+success_printf -- "If your friend would find this useful, share this link: https://github.com/zephinzer/golang-dev (:\n\n";
