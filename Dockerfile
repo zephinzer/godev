@@ -7,10 +7,6 @@ ARG GOOS=linux
 RUN apk update --no-cache
 RUN apk add --no-cache bash inotify-tools curl git gcc g++ vim
 
-COPY --chown=1000:0 ./scripts /scripts
-ENV PATH="/scripts:${PATH}"
-RUN chmod +x -R /scripts
-
 WORKDIR /go/src/app
 
 RUN printf -- "alias ll=\"ls -al\";\nexport PATH=\"${PATH}\";" > /.profile
@@ -21,5 +17,9 @@ ENV GOARCH ${GOARCH}
 ENV GOOS ${GOOS}
 
 RUN mkdir -p /.cache/go-build && chmod 777 -R /.cache
+
+COPY --chown=1000:0 ./scripts /scripts
+ENV PATH="/scripts:${PATH}"
+RUN chmod +x -R /scripts
 
 ENTRYPOINT [ "entrypoint" ]
