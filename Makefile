@@ -7,6 +7,7 @@ build:
 publish: build
 	@$(MAKE) publish.app
 	@$(MAKE) publish.go
+	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest
 
 publish.app: tag.app
 	@printf -- "$$(docker run \
