@@ -23,6 +23,8 @@ You'll need:
 
 # Usage
 
+[TL;DR (Gimme a Makefile)](#tldr-gimme-a-makefile)
+
 ## Directory Initialisation
 Run the following in your directory of choice:
 

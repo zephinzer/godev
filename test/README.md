@@ -10,3 +10,6 @@ The application contained herein tests for:
 - successful usage of external dependencies from github
 - successful running of a file-modifying function
 - successful reloading of a file based change
+
+# The Dockerfile
+The Dockerfile here is a sample Dockerfile you can copy and paste into your own projects for use
