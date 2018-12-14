@@ -127,27 +127,32 @@ docker run yourusername/imagename:latest;
 Pretty self-explanatory, copy this into a Makefile in an empty directory and run `make init` to get started!
 
 ```makefile
-init:
-	$(MAKE) dev ARG="init"
-build:
-	$(MAKE) dev ARG="build"
-test:
-	$(MAKE) dev ARG="test"
-test.once: build
-	go test -coverprofile c.out
-start:
-	$(MAKE) dev ARG="start"
-start.once: build
-	$(CURDIR)/app
-shell:
+GOLANG_DEV_VERSION=latest
+
+init: # initialises this directory - use once only
+	@$(MAKE) _dev ARG="init"
+build: # builds the application - outputs an `app` binary
+	@$(MAKE) _dev ARG="build"
+test: build # runs tests in watch-mode
+	@$(MAKE) _dev ARG="test"
+test.once: build # runs tests once
+	@$(MAKE) _dev ARG="test -coverprofile c.out"
+start: build # runs the application on the host network
+	@$(MAKE) _dev ARG="start"
+shell: # creates a shell in a fresh container generated from the image, usable for development on non-linux machines
 	$(MAKE) dev ARG="shell"
-dev:
-	docker run \
+version.get: # retrieves the latest version we are at
+	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q
+version.bump: # bumps the version by 1: specify VERSION as "patch", "minor", or "major", to be specific about things
+	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
+_dev: # base command to run (do not use)
+	@docker run \
     -it \
     --network host \
     -u $$(id -u) \
+    -v "$(CURDIR)/.cache/pkg:/go/pkg" \
     -v "$(CURDIR):/go/src/app" \
-    zephinzer/golang-dev:latest ${ARG}
+    zephinzer/golang-dev:$(GOLANG_DEV_VERSION) ${ARG}
 ```
 
 # Advanced Usage
@@ -165,18 +170,36 @@ docker run \
 
 ## Running within Docker Compose
 
+In Docker Compose, add the following:
+
 ```yaml
 version: "3.5"
 services:
   # ...
-  application:
-    image: zephinzer/golang-dev:1.11
+  app:
+    image: zephinzer/golang-dev:latest
     ports: # if needed
     - "3000:3000"
-    user: ${UID}
+    user: "${UID}"
+    entrypoint: ["start"]
     volumes:
+    - "./.cache/pkg:/go/pkg"
     - "./:/go/src/app"
+    # ...
   # ...
+```
+
+In Makefile, add a `start.once` recipe (if needed), and change `start` recipe to:
+```makefile
+# ...
+start: # starts the development environment
+	@UID=$$(id -u) docker-compose up -d ${ARGS} app
+start.once: build # runs the application on the host network
+	@$(MAKE) _dev ARG="start"
+# optional: if you want an easy way to get the logs:
+logs: # displays the application logs
+	@docker logs -f $$(docker ps | grep $$(basename $$(pwd)) | grep app | cut -f 1 -d ' ')
+# ...
 ```
 
 ## Building Binaries for Other Architectures
