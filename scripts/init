@@ -19,6 +19,8 @@ add_gitignore()
       noop;
     ;&
     '1')
+      mkdir -p $(pwd)/.cache/pkg;
+      printf -- "*\n!.gitignore" > $(pwd)/.cache/pkg/.gitignore;
       printf -- "vendor\napp\n*.out" > $(pwd)/.gitignore;
       printf -- '.gitignore has been setup.\n\n';
     ;;
@@ -136,7 +138,7 @@ if [ "$?" != "0" ]; then
   printf -- 'Git setup not found!\n';
   add_git;
 else
-  printf -- 'Git setup found!\n';
+  printf -- 'Git setup found!\n\n';
 fi;
 
 git status &>/dev/null;
@@ -147,7 +149,7 @@ if [ "$?" = "0" ]; then
     printf -- '.gitignore not found!\n';
     add_gitignore;
   else
-    printf -- '.gitignore found!\n';
+    printf -- '.gitignore found!\n\n';
   fi;
 fi;
 
@@ -180,4 +182,10 @@ fi;
 
 printf -- "You're all set up!\n\n";
 
-printf -- "- run 'make start' now to start developing!\n\n";
+printf -- 'Post installation notes:\n';
+printf -- "- run 'make start' now to start developing\n";
+printf -- "- run 'make test' now to start the test watching\n";
+printf -- "- run 'make build' now to run a logical build\n";
+printf -- "- (if Dockerfile is present) run 'docker build .' now to run an image build\n\n";
+
+printf -- "If your friend would find this useful, share this link: https://github.com/zephinzer/golang-dev (:\n\n";
