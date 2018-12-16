@@ -223,3 +223,5 @@ This publishes two images - one with the version as recorded by the Git tags, an
 - [usvc/accounts](https://github.com/usvc/accounts)
 
 # Cheers 😎
+
+Leave me a 🌟 or watch this repository to indicate your interest in my sustained development on this. It'll help me decide whether or not I should deprecate this once my own use case for this is over.
