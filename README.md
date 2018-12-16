@@ -178,7 +178,7 @@ This project is licensed under the MIT license. See [the LICENSE file](./LICENSE
 ## Footnotes
 ### Why `golang-dev` Came About
 - **Golang requirements**. Go's infamous `$GOPATH` is a pain-in-the-filesystem. Developing via a Docker environment abstracts this away. Also, you no longer have to have Go installed on your system since managing different Go versions is another pain-in-the-filesystem.
-- **Live-reload tooling**. [Realize](https://github.com/oxequa/realize) works for applications but does not run tests. Same for [Gin](https://github.com/codegangsta/gin) which seems . Only [GoConvey](https://github.com/smartystreets/goconvey) does it well, but it uses a browser interface instead of a CLI.
+- **Live-reload tooling**. [Realize](https://github.com/oxequa/realize) works for applications but does not run tests. Same for [Gin](https://github.com/codegangsta/gin) which seems . Only [GoConvey](https://github.com/smartystreets/goconvey) does it well, but it uses a browser interface instead of a CLI. Go Convey also only outputs a PASS or FAIL. I wanted to see error logs on FAIL which it didn't provide me.
 - **Auto-download dependencies**. None of Realize, Gin and GoConvey automatically downloads dependencies either. While this is super useful, it also requires context of which package manager to use. This project enforces the use of `go mod` which accomodates previous package managers such as `glide` and `go dep`.
 
 ### Personal Use Case
