@@ -122,7 +122,7 @@ docker run -it \
 
 The binary will appear in your current directory and be named `app.$GOOS.$GOARCH`. It will be postfixd with a `.exe` if `$GOOS` specifies a Windows build.
 
-Notes:
+**Notes**:
 - The build is run with `CGO_ENABLED=0`, `GOOS=linux`, and `GOARCH=amd64`. To change this, specify your environment variables as part of the `docker` command. [Documentation can be found here under the `--env` or `--env-file` flag](https://docs.docker.com/engine/reference/commandline/run/#options).
 
 ### Building Into a Docker Image
