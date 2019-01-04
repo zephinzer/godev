@@ -97,7 +97,7 @@ docker run -it \
   zephinzer/golang-dev:latest start;
 ```
 
-To start the tests, create a new terminal in the smae directory and run:
+To start the tests, create a new terminal in the same directory and run:
 
 ```sh
 docker run -it \
@@ -105,7 +105,7 @@ docker run -it \
   --network host \
   -v "$(pwd)/.cache/pkg:/go/pkg" \
   -v "$(pwd):/go/src/app" \
-  zephinzer/golang-dev:latest start;
+  zephinzer/golang-dev:latest test;
 ```
 
 **Notes**
