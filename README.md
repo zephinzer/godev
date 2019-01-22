@@ -44,7 +44,7 @@ start: build
 	@$(MAKE) _dev ARG="start"
 # creates a shell in a fresh container generated from the image, usable for development on non-linux machines
 shell:
-	$(MAKE) dev ARG="shell"
+	$(MAKE) _dev ARG="shell"
 # retrieves the latest version we are at
 version.get:
 	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q
