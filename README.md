@@ -171,13 +171,15 @@ services:
   # ...
   app:
     image: zephinzer/golang-dev:latest
+    environment: # if needed
+      PORT: "3000"
     ports: # if needed
     - "3000:3000"
-    user: "${UID}"
+    user: "${USER_ID}"
     entrypoint: ["start"]
     volumes:
-    - "./.cache/pkg:/go/pkg"
-    - "./:/go/src/app"
+    - "./:/go/src/app" # for mapping source files
+    - "./.cache/pkg:/go/pkg" # for mapping go cache
     # ...
   # ...
 ```

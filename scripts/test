@@ -62,7 +62,7 @@ build_it()
 run_it()
 {
   runner_printf 'starting app... ';
-  go test ${ALL_PARAMETERS} &
+  go test ${ALL_PARAMETERS} ./... &
   APP_PID=$!;
   app_printf "\n- - - test:${APP_PID} logs below this line - - -\n";
 }

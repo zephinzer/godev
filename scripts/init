@@ -31,10 +31,11 @@ add_gitignore()
     '1')
       mkdir -p $(pwd)/.cache/pkg;
       printf -- "*\n!.gitignore" > $(pwd)/.cache/pkg/.gitignore;
-      printf -- "vendor\napp\n*.out" > $(pwd)/.gitignore;
-      printf -- '.gitignore has been setup.\n\n';
+      printf -- ".cache\nvendor\napp\n*.out" > $(pwd)/.gitignore;
+      printf -- '.gitignore has been setup.';
     ;;
   esac;
+  printf -- '\n\n';
 }
 
 add_git()
@@ -53,10 +54,11 @@ add_git()
     ;&
     '1')
       git init;
-      printf -- 'Git repository setup done.\n\n';
+      printf -- 'Git repository setup done.';
       add_gitignore;
     ;;
   esac;
+  printf -- '\n\n';
 }
 
 add_go_mod()
@@ -78,6 +80,7 @@ add_go_mod()
       printf -- 'Go mod set up successfully.\n\n';
     ;;
   esac;
+  printf -- '\n\n';
 }
 
 add_dockerfile()
@@ -108,8 +111,10 @@ FROM scratch as production
 COPY --from=build /go/src/app/app /
 ENTRYPOINT [ "/app" ]
 EOF
+      printf -- 'Dockerfile setup done.';
     ;;
   esac;
+  printf -- '\n\n';
 }
 
 add_main_go()
@@ -138,9 +143,14 @@ func main() {
   fmt.Println("hello world")
 }
 EOF
+      printf -- 'main.go seeded successfully.';
     ;;
   esac;
+  printf -- '\n\n';
 }
+
+printf -- 'Initialising .cache directory...';
+mkdir -p "$(pwd)/.cache/pkg";
 
 printf -- 'Checking for git setup... ';
 git status &>/dev/null;
