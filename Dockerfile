@@ -1,6 +1,6 @@
 # for instances where we wish to use an internally built golang
 ARG IMAGE_NAME=golang
-ARG IMAGE_TAG=1.11-alpine3.8
+ARG IMAGE_TAG=1.11.5-alpine3.9
 
 # define the base image
 FROM ${IMAGE_NAME}:${IMAGE_TAG}
