@@ -31,7 +31,7 @@ publish.go: tag.go
 		--entrypoint=go \
 		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
 		version)" | cut -f 3 -d ' ' | sed -e 's|go||g' > $(CURDIR)/.go.version
-	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.go.version)
+	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)
 	@rm -rf $(CURDIR)/.go.version
 
 # tags the image with the $SEMVER_VERSION tag
@@ -51,7 +51,7 @@ tag.go:
 		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
 		version)" | cut -f 3 -d ' ' | sed -e 's|go||g' > $(CURDIR)/.go.version
 	@docker tag $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
-		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.go.version)
+		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)
 	@rm -rf $(CURDIR)/.go.version
 
 # retrieves the latest tagged version of this repository
