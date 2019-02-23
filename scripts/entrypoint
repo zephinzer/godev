@@ -8,26 +8,27 @@ noop()
 }
 
 ARG="$@";
+CMD="$1";
 
-case $ARG in
+case $CMD in
   'build')
-    ${CURDIR}/build;
+    ${CURDIR}/$@;
     exit 0;
   ;;
   'test')
-    ${CURDIR}/test;
+    ${CURDIR}/$@;
     exit 0;
   ;;
   'init')
-    ${CURDIR}/init;
+    ${CURDIR}/$@;
     exit 0;
   ;;
   'shell')
-    ${CURDIR}/shell;
+    ${CURDIR}/$@;
     exit;
   ;;
   'start')
-    ${CURDIR}/start;
+    ${CURDIR}/$@;
     exit 0;
   ;;
   'help')
