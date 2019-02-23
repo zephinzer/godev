@@ -1,0 +1,5 @@
+# dev artifacts
+bin/*
+
+# golang dependencies
+vendor
