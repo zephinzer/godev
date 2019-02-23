@@ -102,7 +102,7 @@ fi;
 # start the application and watch it
 INIT=0;
 inotifywait -q \
-  -e close_write,create \
+  -e close_write,modify,move,create,delete \
   -m ${WATCH_PATTERN} \
   @./app |
 while read -r directory events filename; do
