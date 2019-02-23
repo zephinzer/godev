@@ -28,10 +28,15 @@ publish.app: tag.app
 # publishes the image with the $GO_VERSION tag
 publish.go: tag.go
 	@printf -- "$$(docker run \
+		-v "$(CURDIR):/app" \
+		$(DOCKER_NAMESPACE)/vtscripts:latest \
+		get-latest -q)" > $(CURDIR)/.app.version
+	@printf -- "$$(docker run \
 		--entrypoint=go \
 		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
 		version)" | cut -f 3 -d ' ' | sed -e 's|go||g' > $(CURDIR)/.go.version
-	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)
+	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)-dev-$$(cat $(CURDIR)/.app.version)
+	@rm -rf $(CURDIR)/.app.version
 	@rm -rf $(CURDIR)/.go.version
 
 # tags the image with the $SEMVER_VERSION tag
@@ -47,12 +52,17 @@ tag.app:
 # tags the image with the $GO_VERSION tag
 tag.go:
 	@printf -- "$$(docker run \
+		-v "$(CURDIR):/app" \
+		$(DOCKER_NAMESPACE)/vtscripts:latest \
+		get-latest -q)" > $(CURDIR)/.app.version
+	@printf -- "$$(docker run \
 		--entrypoint=go \
 		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
 		version)" | cut -f 3 -d ' ' | sed -e 's|go||g' > $(CURDIR)/.go.version
 	@docker tag $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
-		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)
+		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)-dev-$$(cat $(CURDIR)/.app.version)
 	@rm -rf $(CURDIR)/.go.version
+	@rm -rf $(CURDIR)/.app.version
 
 # retrieves the latest tagged version of this repository
 version.get:
