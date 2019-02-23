@@ -1,6 +1,8 @@
 # Go Develop 🤓
 A set of scripts/tools packaged in a Docker image to quickly get up-and-writing with Golang.
 
+> If you're looking for a binary, check out that version at [this directory](./app).
+
 # Scope of Work
 - ✅ Use Docker to provision an environment for a Golang 1.x application
 - ✅ Live-reload of application using `go build`

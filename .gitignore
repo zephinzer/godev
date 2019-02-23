@@ -3,5 +3,5 @@
 
 # testing/development artifacts
 vendor
-app
+*/**/app
 *.version
