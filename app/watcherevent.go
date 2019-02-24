@@ -98,7 +98,7 @@ func (e *WatcherEvent) FileType() string {
 
 func (e *WatcherEvent) IsAnyOf(theseTypes []string) bool {
 	for _, fileExtension := range theseTypes {
-		if strings.Trim(e.FileType(), ".") == fileExtension {
+		if strings.TrimLeft(e.FileType(), ".") == strings.TrimLeft(fileExtension, ".") {
 			return true
 		}
 	}
