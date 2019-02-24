@@ -27,7 +27,7 @@ func InitWatcher(config *WatcherConfig) *Watcher {
 	}
 	fw := &Watcher{
 		config:  config,
-		logger:  InitLogger(&LoggerConfig{Name: "watcher", Format: "text", Level: "trace"}),
+		logger:  InitLogger(&LoggerConfig{Name: "watcher", Format: "production", Level: "trace"}),
 		watcher: watcher,
 	}
 	return fw
@@ -56,7 +56,6 @@ type WatcherEventHandler func(*WatcherEvent) bool
 
 // BeginWatch starts the file system watching in blocking mode
 func (fw *Watcher) BeginWatch(waitGroup *sync.WaitGroup, handler WatcherEventHandler) {
-	defer fw.logger.Trace("file system watch terminated")
 	fw.logger.Trace("initialising file system watch")
 	fw.watchMutex = make(chan bool)
 	fw.intervalTicker = time.Tick(fw.config.RefreshRate)
@@ -67,7 +66,6 @@ func (fw *Watcher) BeginWatch(waitGroup *sync.WaitGroup, handler WatcherEventHan
 		handler,
 		waitGroup.Done,
 	)
-	waitGroup.Wait()
 }
 
 func (fw *Watcher) EndWatch() {
@@ -82,14 +80,28 @@ func (fw *Watcher) watchRoutine(tick <-chan time.Time, stop chan bool, handler W
 			if len(fw.events) == 0 {
 				fw.logger.Trace("no events recorded, waiting for next tick")
 			} else {
-				fw.logger.Infof("processing %v events", len(fw.events))
+				fw.logger.Tracef("processing %v raw events...", len(fw.events))
+				var eventsProcessed []string
 				for _, event := range fw.events {
-					handler(&event)
+					proceed := true
+					for _, processedEvent := range eventsProcessed {
+						if processedEvent == event.String() {
+							proceed = false
+						}
+					}
+					if proceed {
+						eventsProcessed = append(eventsProcessed, event.String())
+						handler(&event)
+					}
 				}
+				fw.logger.Infof("processed %v event(s)", len(eventsProcessed))
 				fw.events = make([]WatcherEvent, 0)
 			}
 		case event := <-fw.watcher.Events:
-			fw.events = append(fw.events, WatcherEvent(event))
+			eventToAdd := WatcherEvent(event)
+			if eventToAdd.IsAnyOf(fw.config.FileExtensions) {
+				fw.events = append(fw.events, eventToAdd)
+			}
 		case shouldWeStop := <-stop:
 			fw.logger.Tracef("received signal to terminate watch routine: %v", shouldWeStop)
 			fw.watchMutex = make(chan bool)

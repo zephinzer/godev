@@ -6,17 +6,20 @@ import (
 
 func main() {
 	logger := InitLogger(&LoggerConfig{
-		Name: "main",
+		Name:   "main",
+		Format: "production",
 	})
-	logger.Info("hello")
 	config := InitConfig()
 	var watcher *Watcher
 	if config.RunModWatch {
 		watcher = InitWatcher(&WatcherConfig{
-			FileExtensions: []string{"go"},
-			IgnoredNames:   []string{"vendor", ".cache"},
+			FileExtensions: config.FileExtensions,
+			IgnoredNames:   config.IgnoredNames,
 			RefreshRate:    config.Rate,
 		})
+		logger.Infof("file extensions  : %v", watcher.config.FileExtensions)
+		logger.Infof("ignored names    : %v", watcher.config.IgnoredNames)
+		logger.Infof("refresh interval : %v", watcher.config.RefreshRate)
 	}
 	watcher.RecursivelyWatch(config.WatchDirectory)
 	var wg sync.WaitGroup
@@ -30,8 +33,10 @@ func main() {
 	// 	}
 	// }()
 	watcher.BeginWatch(&wg, func(event *WatcherEvent) bool {
-		logger.Info(event.String())
+		logger.Info(event)
 		return true
 	})
+	logger.Info("started watcher")
+	wg.Wait()
 	logger.Info("bye")
 }

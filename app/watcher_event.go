@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -35,6 +36,20 @@ var watcherEventType = []string{
 	WatcherEventPermission,
 }
 
+var watcherEventTypeString = []string{
+	"",
+	// 1
+	"create",
+	// 2
+	"write", "",
+	// 4
+	"remove", "", "", "",
+	// 8
+	"rename", "", "", "", "", "", "", "",
+	//  16
+	"perms",
+}
+
 // WatcherEvent provides some function candy for working with
 // fsnotify more easily
 type WatcherEvent fsnotify.Event
@@ -42,6 +57,11 @@ type WatcherEvent fsnotify.Event
 // EventType returns a symbol denoting the type of operation recorded
 func (e *WatcherEvent) EventType() string {
 	return watcherEventType[e.Op]
+}
+
+// EventTypeString returns a string denoting the type of operation recorded
+func (e *WatcherEvent) EventTypeString() string {
+	return watcherEventTypeString[e.Op]
 }
 
 // FilePath returns the absolute path of the file/dir
@@ -76,6 +96,20 @@ func (e *WatcherEvent) FileType() string {
 	}
 }
 
+func (e *WatcherEvent) IsAnyOf(theseTypes []string) bool {
+	for _, fileExtension := range theseTypes {
+		if strings.Trim(e.FileType(), ".") == fileExtension {
+			return true
+		}
+	}
+	return false
+}
+
 func (e *WatcherEvent) String() string {
-	return fmt.Sprintf("%s: [%s] at '%s'", e.EventType(), e.FileType(), e.FilePath())
+	return fmt.Sprintf(
+		"[%s] %s at '%s'",
+		e.EventType(),
+		e.FileType(),
+		e.FilePath(),
+	)
 }

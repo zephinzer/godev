@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 )
@@ -9,18 +10,43 @@ import (
 type LogFormat string
 
 func (lf *LogFormat) String() string {
-	if *lf != "json" {
-		return "text"
+	if *lf == "json" {
+		return "json"
 	}
-	return "json"
+	return "text"
+}
+
+type productionFormat struct{}
+
+func (f *productionFormat) Format(entry *logrus.Entry) ([]byte, error) {
+	switch entry.Level {
+	case logrus.TraceLevel:
+		return []byte(Color(CDarkGray, fmt.Sprintf("'| [%v] %s\n", entry.Data, entry.Message))), nil
+	case logrus.DebugLevel:
+		return []byte(Color(CLightGray, fmt.Sprintf(".| [%v] %s\n", entry.Data, entry.Message))), nil
+	case logrus.InfoLevel:
+		return []byte(Color(CGreen, fmt.Sprintf(">| [%v] %s\n", entry.Data, entry.Message))), nil
+	case logrus.WarnLevel:
+		return []byte(Color(CYellow, fmt.Sprintf("!| [%v] %s\n", entry.Data, entry.Message))), nil
+	case logrus.ErrorLevel:
+		return []byte(Color(CRed, fmt.Sprintf("x| [%v] %s\n", entry.Data, entry.Message))), nil
+	case logrus.PanicLevel:
+		return []byte(Color(CRed, fmt.Sprintf("X| [%v] %s\n", entry.Data, entry.Message))), nil
+	default:
+		return []byte(Color(CDefault, fmt.Sprintf("-| [%v] %s\n", entry.Data, entry.Message))), nil
+	}
 }
 
 func (lf *LogFormat) Get() logrus.Formatter {
-	if *lf == "json" {
+	switch *lf {
+	case "json":
 		return &logrus.JSONFormatter{}
-	}
-	return &logrus.TextFormatter{
-		ForceColors: true,
+	case "production":
+		return new(productionFormat)
+	default:
+		return &logrus.TextFormatter{
+			ForceColors: true,
+		}
 	}
 }
 
