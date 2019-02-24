@@ -15,6 +15,8 @@ A set of scripts/tools packaged in a Docker image to quickly get up-and-writing 
 - Docker ([RHEL](https://docs.docker.com/install/linux/docker-ce/centos/) [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/) [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/) [OS X](https://docs.docker.com/docker-for-mac/install/) [Windows](https://docs.docker.com/docker-for-windows/install/))
 - [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 
+> For Windows auto-update does not work out of the box (because of [#56](https://github.com/docker/for-win/issues/56)). Use [docker-windows-volume-watcher](https://github.com/merofeev/docker-windows-volume-watcher) to activate it.
+
 > You don't need Go installed or a `GOPATH` for this 🥂
 
 # Usage
@@ -31,7 +33,7 @@ GOLANG_DEV_VERSION=latest
 init:
 	@$(MAKE) _dev ARG="init"
 # builds the application - outputs an `app` binary
-build: 
+build:
 	@$(MAKE) _dev ARG="build"
 # runs tests in watch-mode
 test: build
@@ -49,7 +51,7 @@ shell:
 version.get:
 	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q
 # bumps the version by 1: specify VERSION as "patch", "minor", or "major", to be specific about things
-version.bump: 
+version.bump:
 	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
 # base command to run other scripts (do not use alone)
 _dev:
@@ -174,12 +176,12 @@ services:
     environment: # if needed
       PORT: "3000"
     ports: # if needed
-    - "3000:3000"
+      - "3000:3000"
     user: "${USER_ID}"
     entrypoint: ["start"]
     volumes:
-    - "./:/go/src/app" # for mapping source files
-    - "./.cache/pkg:/go/pkg" # for mapping go cache
+      - "./:/go/src/app" # for mapping source files
+      - "./.cache/pkg:/go/pkg" # for mapping go cache
     # ...
   # ...
 ```
