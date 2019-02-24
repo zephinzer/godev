@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -27,28 +28,65 @@ func (s *WatcherTestSuite) SetupTest() {
 	s.currentDirectory = cwd
 }
 
-func (s *WatcherTestSuite) TestWatch() {
+func (s *WatcherTestSuite) TestRecursivelyWatch() {
+	var logBuffer bytes.Buffer
+	mockLog := InitLogger(&LoggerConfig{
+		Name: "test",
+	})
+	mockLog.SetOutput(&logBuffer)
 	w := InitWatcher(&WatcherConfig{})
+	w.logger = mockLog
+	cwd := s.currentDirectory
+	testDirectoryPath := path.Join(cwd, "/data/test-recursive")
+	w.RecursivelyWatch(testDirectoryPath)
+	defer w.Close()
+	allSubDirectories := w.recursivelyGetDirectories(testDirectoryPath)
+	logs := string(logBuffer.Bytes())
+	for _, subDirectory := range allSubDirectories {
+		assert.Containsf(
+			s.T(),
+			logs,
+			fmt.Sprintf("registered '%s'", subDirectory),
+			"expected a line of log for registration of '%s' but none was found",
+			subDirectory,
+		)
+	}
+
+}
+
+func (s *WatcherTestSuite) TestWatch() {
+	t := s.T()
+	var logBuffer bytes.Buffer
+	mockLog := InitLogger(&LoggerConfig{
+		Name: "test",
+	})
+	mockLog.SetOutput(&logBuffer)
+	w := InitWatcher(&WatcherConfig{})
+	w.logger = mockLog
 	cwd := s.currentDirectory
 	testDirectoryPath := path.Join(cwd, "/data/test-watch")
 	w.Watch(testDirectoryPath)
+	defer w.Close()
+	testFilePath := path.Join(testDirectoryPath, "Watcher.TestWatch")
+	createFile(t, testFilePath)
+	removeFile(t, testFilePath)
+	assert.Contains(
+		t,
+		string(logBuffer.Bytes()),
+		fmt.Sprintf("registered '%s'", testDirectoryPath),
+		"expected to have a line of logs indicating directory registration",
+	)
 }
 
 func (s *WatcherTestSuite) Test_assertDirectoryIntegrityPass() {
-	defer func() {
-		err := recover()
-		assert.NotNil(s.T(), err, "expected an error but none was panicked")
-	}()
+	defer expectError(s.T())()
 	w := &Watcher{}
 	cwd := s.currentDirectory
 	w.assertDirectoryIntegrity(path.Join(cwd, "/non/existent"))
 }
 
 func (s *WatcherTestSuite) Test_assertDirectoryIntegrityFail() {
-	defer func() {
-		err := recover()
-		assert.Nilf(s.T(), err, "expected no errors but '%s' was panicked", err)
-	}()
+	defer expectNoError(s.T())()
 	w := &Watcher{}
 	cwd := s.currentDirectory
 	w.assertDirectoryIntegrity(path.Join(cwd))
@@ -56,10 +94,19 @@ func (s *WatcherTestSuite) Test_assertDirectoryIntegrityFail() {
 
 func (s *WatcherTestSuite) Test_isIgnoredName() {
 	ignoredName := "ignored"
-	notIgnoredNames := []string{
+	watchedNames := []string{
 		fmt.Sprintf(" %s", ignoredName),
 		fmt.Sprintf("%s ", ignoredName),
 		fmt.Sprintf(" %s ", ignoredName),
+		fmt.Sprintf("_%s", ignoredName),
+		fmt.Sprintf("%s_", ignoredName),
+		fmt.Sprintf("_%s_", ignoredName),
+		fmt.Sprintf("a%s", ignoredName),
+		fmt.Sprintf("%sa", ignoredName),
+		fmt.Sprintf("a%sa", ignoredName),
+		fmt.Sprintf("0%s", ignoredName),
+		fmt.Sprintf("%s0", ignoredName),
+		fmt.Sprintf("0%s0", ignoredName),
 	}
 	w := &Watcher{
 		config: &WatcherConfig{
@@ -67,7 +114,7 @@ func (s *WatcherTestSuite) Test_isIgnoredName() {
 		},
 	}
 	assert.Truef(s.T(), w.isIgnoredName(ignoredName), "expected '%s' to be ignored but it wasn't", ignoredName)
-	for _, nameToWatch := range notIgnoredNames {
+	for _, nameToWatch := range watchedNames {
 		assert.Falsef(s.T(), w.isIgnoredName(nameToWatch), "expected '%s' to not be ignored but it was", nameToWatch)
 	}
 }

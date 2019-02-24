@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,12 +16,12 @@ func (lf *LogFormat) String() string {
 }
 
 func (lf *LogFormat) Get() logrus.Formatter {
-	if *lf != "json" {
-		return &logrus.TextFormatter{
-			ForceColors: true,
-		}
+	if *lf == "json" {
+		return &logrus.JSONFormatter{}
 	}
-	return &logrus.JSONFormatter{}
+	return &logrus.TextFormatter{
+		ForceColors: true,
+	}
 }
 
 type LogLevel string
@@ -54,7 +56,8 @@ func InitLogger(config *LoggerConfig) *Logger {
 	log.SetFormatter(config.Format.Get())
 	log.SetLevel(config.Level.Get())
 	logger := &Logger{
-		config: config,
+		config:      config,
+		instanceRaw: log,
 		instance: log.WithFields(logrus.Fields{
 			"module": config.Name,
 		}),
@@ -63,8 +66,14 @@ func InitLogger(config *LoggerConfig) *Logger {
 }
 
 type Logger struct {
-	config   *LoggerConfig
-	instance *logrus.Entry
+	config      *LoggerConfig
+	instance    *logrus.Entry
+	instanceRaw *logrus.Logger
+}
+
+// SetOutput exists for characterisation testing
+func (l *Logger) SetOutput(buffer *bytes.Buffer) {
+	l.instanceRaw.SetOutput(buffer)
 }
 
 func (l *Logger) Trace(log ...interface{}) {
