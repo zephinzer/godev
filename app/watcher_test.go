@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -26,6 +28,33 @@ func (s *WatcherTestSuite) SetupTest() {
 		s.T().Errorf("error while retrieving current directory: %s", err)
 	}
 	s.currentDirectory = cwd
+}
+
+func (s *WatcherTestSuite) TestEndWatch() {
+	var logBuffer bytes.Buffer
+	mockLog := InitLogger(&LoggerConfig{
+		Name: "test",
+	})
+	mockLog.SetOutput(&logBuffer)
+	w := &Watcher{
+		logger:     mockLog,
+		watchMutex: make(chan bool, 1),
+	}
+	var wg sync.WaitGroup
+	tick := time.Tick(50 * time.Millisecond)
+	wg.Add(1)
+	go func() {
+		for {
+			select {
+			case <-tick:
+				w.EndWatch()
+			case done := <-w.watchMutex:
+				assert.True(s.T(), done)
+				wg.Done()
+			}
+		}
+	}()
+	wg.Wait()
 }
 
 func (s *WatcherTestSuite) TestRecursivelyWatch() {

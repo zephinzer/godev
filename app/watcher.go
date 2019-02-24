@@ -73,6 +73,24 @@ func (fw *Watcher) EndWatch() {
 	fw.watchMutex <- true
 }
 
+func (fw *Watcher) getDedupedEvents() []WatcherEvent {
+	var eventsProcessed []string
+	var eventsToProcess []WatcherEvent
+	for _, event := range fw.events {
+		proceed := true
+		for _, processedEvent := range eventsProcessed {
+			if processedEvent == event.String() {
+				proceed = false
+			}
+		}
+		if proceed {
+			eventsProcessed = append(eventsProcessed, event.String())
+			eventsToProcess = append(eventsToProcess, event)
+		}
+	}
+	return eventsToProcess
+}
+
 func (fw *Watcher) watchRoutine(tick <-chan time.Time, stop chan bool, handler WatcherEventHandler, onDone func()) {
 	for {
 		select {
@@ -81,20 +99,11 @@ func (fw *Watcher) watchRoutine(tick <-chan time.Time, stop chan bool, handler W
 				fw.logger.Trace("no events recorded, waiting for next tick")
 			} else {
 				fw.logger.Tracef("processing %v raw events...", len(fw.events))
-				var eventsProcessed []string
-				for _, event := range fw.events {
-					proceed := true
-					for _, processedEvent := range eventsProcessed {
-						if processedEvent == event.String() {
-							proceed = false
-						}
-					}
-					if proceed {
-						eventsProcessed = append(eventsProcessed, event.String())
-						handler(&event)
-					}
+				dedupedEvents := fw.getDedupedEvents()
+				for _, event := range dedupedEvents {
+					handler(&event)
 				}
-				fw.logger.Infof("processed %v event(s)", len(eventsProcessed))
+				fw.logger.Infof("processed %v event(s)", len(dedupedEvents))
 				fw.events = make([]WatcherEvent, 0)
 			}
 		case event := <-fw.watcher.Events:
