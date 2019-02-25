@@ -2,54 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"os/exec"
 	"sync"
 )
-
-// Command is the atomic command to run
-type Command struct {
-	application string
-	arguments   []string
-	cmd         *exec.Cmd
-	onStart     func(int)
-	onExit      func(int)
-}
-
-func (command *Command) Run() {
-	if command.onStart == nil {
-		command.onStart = func(int) {}
-	}
-	if command.onExit == nil {
-		command.onExit = func(int) {}
-	}
-	log.Println("running command: ", command.application)
-	command.cmd = exec.Command(command.application, command.arguments...)
-
-	command.cmd.Stderr = os.Stderr
-	command.cmd.Stdout = os.Stdout
-
-	pidReported := false
-	go func() {
-		for {
-			if !pidReported {
-				if command.cmd.Process != nil && command.cmd.Process.Pid > 0 {
-					command.onStart(command.cmd.Process.Pid)
-					pidReported = true
-				}
-			} else if command.cmd.ProcessState != nil && command.cmd.ProcessState.Exited() {
-				command.onExit(command.cmd.ProcessState.Pid())
-				break
-			}
-		}
-	}()
-
-	runErr := command.cmd.Run()
-	if runErr != nil {
-		panic(runErr)
-	}
-}
 
 // ExecutionGroup runs all commands in parallel
 type ExecutionGroup struct {
@@ -63,6 +17,15 @@ func (executionGroup *ExecutionGroup) Run() {
 	defer executionGroup.logger.Info("terminated execution group")
 	executionGroup.logger.Info("starting execution group")
 	for _, command := range executionGroup.commands {
+		command.logger = InitLogger(&LoggerConfig{
+			Name:   "command",
+			Format: "production",
+			Level:  "trace",
+			AdditionalFields: &map[string]interface{}{
+				"application": fmt.Sprintf("%s", command.application),
+				"arguments":   fmt.Sprintf("%s", command.arguments),
+			},
+		})
 		command.onStart = func(pid int) {
 			executionGroup.waitGroup.Add(1)
 			executionGroup.logger.Infof("process %v has started", pid)
@@ -101,9 +64,13 @@ func InitRunner(config *RunnerConfig) *Runner {
 func (runner *Runner) startPipeline() {
 	for index, executionGroup := range runner.config.pipeline {
 		executionGroup.logger = InitLogger(&LoggerConfig{
-			Name:   fmt.Sprintf("run[%v/%v]", RunnerTriggerCount, index),
+			Name:   "execution_group",
 			Format: "production",
 			Level:  "trace",
+			AdditionalFields: &map[string]interface{}{
+				"id":    RunnerTriggerCount,
+				"index": index,
+			},
 		})
 		executionGroup.Run()
 	}

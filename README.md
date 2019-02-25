@@ -45,7 +45,7 @@ test.once: build
 	@$(MAKE) _dev ARG="test -coverprofile c.out"
 # runs the application on the host network
 start: build
-	@$(MAKE) _dev ARG="start"
+	@$(MAKE) _dev ARG="start" ARGS="${ARGS}"
 # creates a shell in a fresh container generated from the image, usable for development on non-linux machines
 shell:
 	$(MAKE) _dev ARG="shell"
@@ -63,7 +63,7 @@ _dev:
     -u $$(id -u) \
     -v "$(CURDIR)/.cache/pkg:/go/pkg" \
     -v "$(CURDIR):/go/src/app" \
-    zephinzer/golang-dev:$(GOLANG_DEV_VERSION) ${ARG}
+    zephinzer/golang-dev:$(GOLANG_DEV_VERSION) ${ARG} ${ARGS}
 ```
 
 Check out [the documentation below on how to bundle your application into a `scratch` Docker image](#building-into-a-docker-image).

@@ -72,21 +72,28 @@ func (ll *LogLevel) Get() logrus.Level {
 }
 
 type LoggerConfig struct {
-	Name   string
-	Format LogFormat
-	Level  LogLevel
+	Name             string
+	Format           LogFormat
+	Level            LogLevel
+	AdditionalFields *map[string]interface{}
 }
 
 func InitLogger(config *LoggerConfig) *Logger {
 	log := logrus.New()
 	log.SetFormatter(config.Format.Get())
 	log.SetLevel(config.Level.Get())
+	fields := logrus.Fields{
+		"module": config.Name,
+	}
+	if config.AdditionalFields != nil {
+		for key, value := range *config.AdditionalFields {
+			fields[key] = value
+		}
+	}
 	logger := &Logger{
 		config:      config,
 		instanceRaw: log,
-		instance: log.WithFields(logrus.Fields{
-			"module": config.Name,
-		}),
+		instance:    log.WithFields(fields),
 	}
 	return logger
 }
@@ -100,6 +107,12 @@ type Logger struct {
 // SetOutput exists for characterisation testing
 func (l *Logger) SetOutput(buffer *bytes.Buffer) {
 	l.instanceRaw.SetOutput(buffer)
+}
+
+// WithFields - enables adding of more fields
+func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
+	l.instanceRaw.WithFields(logrus.Fields(fields))
+	return l
 }
 
 func (l *Logger) Trace(log ...interface{}) {

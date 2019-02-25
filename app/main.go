@@ -12,6 +12,9 @@ func main() {
 	config := InitConfig()
 	var watcher *Watcher
 	var runner *Runner
+	logger.Infof("flag[init]       : %v", config.RunInit)
+	logger.Infof("flag[test]       : %v", config.RunTest)
+	logger.Infof("flag[watch]      : %v", config.RunModWatch)
 	if config.RunModWatch {
 		watcher = InitWatcher(&WatcherConfig{
 			FileExtensions: config.FileExtensions,

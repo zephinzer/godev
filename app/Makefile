@@ -5,7 +5,7 @@ init:
 	@$(MAKE) _dev ARG="init"
 # builds the application - outputs an `app` binary
 build: 
-	@$(MAKE) _dev ARG="build" ARGS=
+	@$(MAKE) _dev ARG="build"
 # runs tests in watch-mode
 test: build
 	@$(MAKE) _dev ARG="test"
@@ -14,7 +14,7 @@ test.once: build
 	@$(MAKE) _dev ARG="test -coverprofile c.out"
 # runs the application on the host network
 start: build
-	@$(MAKE) _dev ARG="start" ARGS=${ARGS}
+	@$(MAKE) _dev ARG="start" ARGS="${ARGS}"
 # creates a shell in a fresh container generated from the image, usable for development on non-linux machines
 shell:
 	$(MAKE) _dev ARG="shell"
