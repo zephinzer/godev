@@ -5,43 +5,9 @@ import (
 	"sync"
 )
 
-// ExecutionGroup runs all commands in parallel
-type ExecutionGroup struct {
-	commands  []*Command
-	waitGroup sync.WaitGroup
-	logger    *Logger
-	pids      []int
-}
-
-func (executionGroup *ExecutionGroup) Run() {
-	defer executionGroup.logger.Info("terminated execution group")
-	executionGroup.logger.Info("starting execution group")
-	for _, command := range executionGroup.commands {
-		command.logger = InitLogger(&LoggerConfig{
-			Name:   "command",
-			Format: "production",
-			Level:  "trace",
-			AdditionalFields: &map[string]interface{}{
-				"application": fmt.Sprintf("%s", command.application),
-				"arguments":   fmt.Sprintf("%s", command.arguments),
-			},
-		})
-		command.onStart = func(pid int) {
-			executionGroup.waitGroup.Add(1)
-			executionGroup.logger.Infof("process %v has started", pid)
-		}
-		command.onExit = func(pid int) {
-			executionGroup.logger.Infof("process %v has exitted", pid)
-			executionGroup.waitGroup.Done()
-		}
-		go command.Run()
-	}
-	executionGroup.waitGroup.Wait()
-}
-
 // RunnerConfig configures the Runner
 type RunnerConfig struct {
-	pipeline  []ExecutionGroup
+	pipeline  []*ExecutionGroup
 	waitGroup sync.WaitGroup
 }
 
@@ -62,6 +28,7 @@ func InitRunner(config *RunnerConfig) *Runner {
 }
 
 func (runner *Runner) startPipeline() {
+	executionGroupCount := len(runner.config.pipeline)
 	for index, executionGroup := range runner.config.pipeline {
 		executionGroup.logger = InitLogger(&LoggerConfig{
 			Name:   "execution_group",
@@ -69,7 +36,7 @@ func (runner *Runner) startPipeline() {
 			Level:  "trace",
 			AdditionalFields: &map[string]interface{}{
 				"id":    RunnerTriggerCount,
-				"index": index,
+				"group": fmt.Sprintf("%v/%v", index+1, executionGroupCount),
 			},
 		})
 		executionGroup.Run()

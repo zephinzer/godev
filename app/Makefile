@@ -15,6 +15,10 @@ test.once: build
 # runs the application on the host network
 start: build
 	@$(MAKE) _dev ARG="start" ARGS="${ARGS}"
+dev:
+	@$(MAKE) run ARGS="--watch --ignore vendor,.cache --exts go,Makefile"
+run:
+	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') ${ARGS}
 # creates a shell in a fresh container generated from the image, usable for development on non-linux machines
 shell:
 	$(MAKE) _dev ARG="shell"

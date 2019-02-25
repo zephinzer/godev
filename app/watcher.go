@@ -30,6 +30,10 @@ func InitWatcher(config *WatcherConfig) *Watcher {
 		logger:  InitLogger(&LoggerConfig{Name: "watcher", Format: "production", Level: "trace"}),
 		watcher: watcher,
 	}
+
+	fw.logger.Infof("file extensions  : %v", fw.config.FileExtensions)
+	fw.logger.Infof("ignored names    : %v", fw.config.IgnoredNames)
+	fw.logger.Infof("refresh interval : %v", fw.config.RefreshRate)
 	return fw
 }
 
