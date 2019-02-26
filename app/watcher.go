@@ -68,27 +68,10 @@ func (fw *Watcher) BeginWatch(waitGroup *sync.WaitGroup, handler WatcherEventHan
 	)
 }
 
+// EndWatch sends the signal to main goroutine to end itself
 func (fw *Watcher) EndWatch() {
 	fw.logger.Trace("received signal to terminate file system watch")
 	fw.watchMutex <- true
-}
-
-func (fw *Watcher) getDedupedEvents() []WatcherEvent {
-	var eventsProcessed []string
-	var eventsToProcess []WatcherEvent
-	for _, event := range fw.events {
-		proceed := true
-		for _, processedEvent := range eventsProcessed {
-			if processedEvent == event.String() {
-				proceed = false
-			}
-		}
-		if proceed {
-			eventsProcessed = append(eventsProcessed, event.String())
-			eventsToProcess = append(eventsToProcess, event)
-		}
-	}
-	return eventsToProcess
 }
 
 func (fw *Watcher) watchRoutine(tick <-chan time.Time, stop chan bool, handler WatcherEventHandler, onDone func()) {
@@ -148,6 +131,25 @@ func (fw *Watcher) assertDirectoryIntegrity(directoryPath string) {
 	}
 }
 
+// getDedupedEvents processes the events so that we don't respond to duplicate items
+func (fw *Watcher) getDedupedEvents() []WatcherEvent {
+	var eventsProcessed []string
+	var eventsToProcess []WatcherEvent
+	for _, event := range fw.events {
+		proceed := true
+		for _, processedEvent := range eventsProcessed {
+			if processedEvent == event.String() {
+				proceed = false
+			}
+		}
+		if proceed {
+			eventsProcessed = append(eventsProcessed, event.String())
+			eventsToProcess = append(eventsToProcess, event)
+		}
+	}
+	return eventsToProcess
+}
+
 // isIgnoredName checks whether the name was faulty
 func (fw *Watcher) isIgnoredName(name string) bool {
 	ignore := false
@@ -163,20 +165,20 @@ func (fw *Watcher) isIgnoredName(name string) bool {
 }
 
 // pathIsDirectory is for argument verification
+func (fw *Watcher) pathExists(absolutePath string) bool {
+	if _, err := os.Lstat(absolutePath); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+// pathIsDirectory is for argument verification
 func (fw *Watcher) pathIsDirectory(absolutePath string) bool {
 	if fileInfo, err := os.Lstat(absolutePath); err != nil {
 		panic(err)
 	} else {
 		return fileInfo.IsDir()
 	}
-}
-
-// pathIsDirectory is for argument verification
-func (fw *Watcher) pathExists(absolutePath string) bool {
-	if _, err := os.Lstat(absolutePath); os.IsNotExist(err) {
-		return false
-	}
-	return true
 }
 
 // recursivelyGetDirectories is here to retrieve a list of all sub-directories from :directoryPath

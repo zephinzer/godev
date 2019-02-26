@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -80,7 +81,6 @@ func (s *WatcherTestSuite) TestRecursivelyWatch() {
 			subDirectory,
 		)
 	}
-
 }
 
 func (s *WatcherTestSuite) TestWatch() {
@@ -121,6 +121,24 @@ func (s *WatcherTestSuite) Test_assertDirectoryIntegrityFail() {
 	w.assertDirectoryIntegrity(path.Join(cwd))
 }
 
+func (s *WatcherTestSuite) Test_getDedupedEvents() {
+	testNameDifferences := []WatcherEvent{
+		WatcherEvent{Name: "/path/to/watched/file/1", Op: fsnotify.Create},
+		WatcherEvent{Name: "/path/to/watched/file/1", Op: fsnotify.Create},
+		WatcherEvent{Name: "/path/to/watched/file/2", Op: fsnotify.Create},
+	}
+	w := &Watcher{events: testNameDifferences}
+	assert.Len(s.T(), w.getDedupedEvents(), 2)
+
+	testOpDifferences := []WatcherEvent{
+		WatcherEvent{Name: "/path/to/watched/file/1", Op: fsnotify.Create},
+		WatcherEvent{Name: "/path/to/watched/file/1", Op: fsnotify.Create},
+		WatcherEvent{Name: "/path/to/watched/file/1", Op: fsnotify.Remove},
+	}
+	w.events = testOpDifferences
+	assert.Len(s.T(), w.getDedupedEvents(), 2)
+}
+
 func (s *WatcherTestSuite) Test_isIgnoredName() {
 	ignoredName := "ignored"
 	watchedNames := []string{
@@ -148,16 +166,22 @@ func (s *WatcherTestSuite) Test_isIgnoredName() {
 	}
 }
 
-func (s *WatcherTestSuite) Test_pathIsDirectory() {
-	w := &Watcher{}
-	cwd := s.currentDirectory
-	assert.Truef(s.T(), w.pathIsDirectory(cwd), "expected '%s' (current working directory) to be a directory but it was not", cwd)
-}
-
 func (s *WatcherTestSuite) Test_pathExists() {
 	w := &Watcher{}
 	cwd := s.currentDirectory
 	assert.Truef(s.T(), w.pathExists(cwd), "expected '%s' (current working directory) to exist but it did not", cwd)
+
+	errd := path.Join(s.currentDirectory, "/____non-existent/____path")
+	assert.Falsef(s.T(), w.pathExists(errd), "expected '%s' (non-existent path) to not exist but it did apparently", errd)
+}
+
+func (s *WatcherTestSuite) Test_pathIsDirectory() {
+	w := &Watcher{}
+	cwd := s.currentDirectory
+	assert.Truef(s.T(), w.pathIsDirectory(cwd), "expected '%s' (current working directory) to be a directory but it was not", cwd)
+
+	filePath := path.Join(s.currentDirectory, "/main.go")
+	assert.Falsef(s.T(), w.pathIsDirectory(filePath), "expected '%s' to not be a directory but it was", filePath)
 }
 
 func (s *WatcherTestSuite) Test_recursivelyGetDirectories() {

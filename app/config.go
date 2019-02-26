@@ -25,12 +25,15 @@ const DefaultRefreshRate = 2 * time.Second
 
 // Config configures the main application entrypoint
 type Config struct {
+	RunView           bool
+	RunVersion        bool
 	RunInit           bool
 	RunTest           bool
 	RunModWatch       bool
 	FileExtensions    ConfigCommaDelimitedString
 	IgnoredNames      ConfigCommaDelimitedString
 	ExecGroups        ConfigMultiflagString
+	View              string
 	CommandsDelimiter string
 	BuildOutput       string
 	Rate              time.Duration
@@ -41,6 +44,8 @@ type Config struct {
 func InitConfig() *Config {
 	currentWorkingDirectory := getCurrentWorkingDirectory()
 	config := &Config{}
+	flag.StringVar(&config.View, "view", "", "check out the original content of a file that godev provisions when --init is specified")
+	flag.BoolVar(&config.RunVersion, "version", false, "display the version number")
 	flag.BoolVar(&config.RunInit, "init", false, "when this flag is specified, godev initiaises the current directory")
 	flag.BoolVar(&config.RunModWatch, "watch", false, "when this flag is specified, godev runs the command in watch mode if applicable")
 	flag.BoolVar(&config.RunTest, "test", false, "when this flag is specified, godev runs the tests with coverage")
@@ -58,6 +63,7 @@ func InitConfig() *Config {
 
 func (config *Config) assignDefaults() {
 	config.BuildOutput = path.Join(config.WatchDirectory, "/"+config.BuildOutput)
+	config.RunView = len(config.View) > 0
 	if len(config.IgnoredNames) == 0 {
 		config.IgnoredNames = strings.Split(DefaultIgnoredNames, ",")
 	}

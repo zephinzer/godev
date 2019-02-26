@@ -1,6 +1,7 @@
 # dev artifacts
 bin/*
 c.out
+godev
 
 # golang dependencies
 vendor

@@ -1,11 +1,14 @@
 GOLANG_DEV_VERSION=latest
 
-# initialises this directory - use once only
-init:
-	@$(MAKE) _dev ARG="init"
 # builds the application - outputs an `app` binary
-build: 
-	@$(MAKE) _dev ARG="build"
+build:
+	go build \
+		-a \
+		-o bin/godev \
+		-ldflags " \
+			-X main.Version=$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*') \
+			-X main.Commit=$$(git rev-list -1 HEAD) \
+		"
 # runs tests in watch-mode
 test: build
 	@$(MAKE) _dev ARG="test"
@@ -24,10 +27,10 @@ shell:
 	$(MAKE) _dev ARG="shell"
 # retrieves the latest version we are at
 version.get:
-	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q
+	@docker run -v "$(CURDIR)/..:/app" zephinzer/vtscripts:latest get-latest -q
 # bumps the version by 1: specify VERSION as "patch", "minor", or "major", to be specific about things
 version.bump: 
-	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
+	@docker run -v "$(CURDIR)/..:/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
 # base command to run other scripts (do not use alone)
 _dev:
 	@docker run \

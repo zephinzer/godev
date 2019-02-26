@@ -1,11 +1,16 @@
+//go:generate go run data/generate.go
 package main
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
-	"github.com/kballard/go-shellquote"
+	shellquote "github.com/kballard/go-shellquote"
 )
+
+var Version string
+var Commit string
 
 func main() {
 	logger := InitLogger(&LoggerConfig{
@@ -13,8 +18,8 @@ func main() {
 		Format: "production",
 	})
 	config := InitConfig()
-	logUniversalConfigurations(logger, config)
 	if config.RunModWatch {
+		logUniversalConfigurations(logger, config)
 		logWatchModeConfigurations(logger, config)
 		watcher := InitWatcher(&WatcherConfig{
 			FileExtensions: config.FileExtensions,
@@ -53,6 +58,27 @@ func main() {
 
 		logger.Info("started watcher")
 		wg.Wait()
+	} else if config.RunView {
+		switch strings.ToLower(config.View) {
+		case "dockerfile":
+			logger.Info("previewing contents of Dockerfile")
+			fmt.Println(DataDockerfile)
+			logger.Info("end of preview for contents of Dockerfile")
+		case "makefile":
+			logger.Info("previewing contents of Makefile")
+			fmt.Println(DataMakefile)
+			logger.Info("end of preview for contents of Makefile")
+		case ".dockerignore":
+			logger.Info("previewing contents of .dockerignore")
+			fmt.Println(DataDotDockerignore)
+			logger.Info("end of preview for contents of .dockerignore")
+		case ".gitignore":
+			logger.Info("previewing contents of .gitignore")
+			fmt.Println(DataDotGitignore)
+			logger.Info("end of preview for contents of .gitignore")
+		}
+	} else if config.RunVersion {
+		fmt.Printf("godev %s-%s\n", Version, Commit)
 	}
 	logger.Info("bye")
 }
@@ -60,6 +86,7 @@ func main() {
 func logUniversalConfigurations(logger *Logger, config *Config) {
 	logger.Infof("flag - init       : %v", config.RunInit)
 	logger.Infof("flag - test       : %v", config.RunTest)
+	logger.Infof("flag - view       : %v", config.RunView)
 	logger.Infof("flag - watch      : %v", config.RunModWatch)
 	logger.Infof("watch directory   : %s", config.WatchDirectory)
 	logger.Infof("build output      : %s", config.BuildOutput)
