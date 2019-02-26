@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"path"
 	"sync"
 )
 
@@ -24,15 +24,14 @@ func (executionGroup *ExecutionGroup) Run() {
 			Format: "production",
 			Level:  "trace",
 			AdditionalFields: &map[string]interface{}{
-				"app":  fmt.Sprintf("%s", command.application),
-				"args": fmt.Sprintf("%s", strings.Join(command.arguments, " ")),
+				"submodule": path.Base(fmt.Sprintf("%s", command.application)),
 			},
 		})
 		command.onStart = func(pid int) {
-			command.logger.Infof("[START] ----- pid:%v -----", pid)
+			command.logger.Infof("\n► ---------------------------------- pid:%v ▼", pid)
 		}
 		command.onExit = func(pid int) {
-			command.logger.Infof("[STOP]  ----- pid:%v -----", pid)
+			command.logger.Infof("\n■ ---------------------------------- pid:%v ▲", pid)
 			executionGroup.waitGroup.Done()
 		}
 		go command.Run()

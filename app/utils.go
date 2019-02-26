@@ -5,15 +5,26 @@ import (
 	"strings"
 )
 
-type commaSeparatedStringArray []string
+type ConfigCommaDelimitedString []string
 
-func (sa *commaSeparatedStringArray) Set(item string) error {
-	*sa = append(*sa, strings.Split(item, ",")...)
+func (ccds *ConfigCommaDelimitedString) Set(item string) error {
+	*ccds = append(*ccds, strings.Split(item, ",")...)
 	return nil
 }
 
-func (sa *commaSeparatedStringArray) String() string {
-	return strings.Join(*sa, ",")
+func (ccds *ConfigCommaDelimitedString) String() string {
+	return strings.Join(*ccds, ",")
+}
+
+type ConfigMultiflagString []string
+
+func (cmfs *ConfigMultiflagString) Set(item string) error {
+	*cmfs = append(*cmfs, item)
+	return nil
+}
+
+func (cmfs *ConfigMultiflagString) String() string {
+	return strings.Join(*cmfs, ",")
 }
 
 func getCurrentWorkingDirectory() string {

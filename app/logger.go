@@ -21,31 +21,42 @@ type productionFormat struct{}
 func (f *productionFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	timestamp := entry.Time.Format("Jan02/15:04")
 	data := entry.Data
+	var moduleLabel string
 	moduleName := data["module"]
-	message := fmt.Sprintf("|%v| [%v] %s", timestamp, moduleName, entry.Message)
-	var otherKeys string
-	for key, value := range data {
-		if key != "module" {
-			otherKeys = fmt.Sprintf("%s\n  %s: %v", otherKeys, key, value)
-		}
+	if moduleName != nil {
+		moduleLabel = fmt.Sprintf("%v", moduleName)
 	}
-	message = fmt.Sprintf("%s%s", message, otherKeys)
+	var submoduleLabel string
+	submoduleName := data["submodule"]
+	if submoduleName != nil {
+		submoduleLabel = fmt.Sprintf("/%v", submoduleName)
+	}
+	message := fmt.Sprintf("|%v| [%v%v] %s", timestamp, moduleLabel, submoduleLabel, entry.Message)
+	if entry.Level > logrus.InfoLevel {
+		var otherKeys string
+		for key, value := range data {
+			if key != "module" && key != "submodule" {
+				otherKeys = fmt.Sprintf("%s\n  %s: %v", otherKeys, key, value)
+			}
+		}
+		message = fmt.Sprintf("%s%s", message, otherKeys)
+	}
 	var log []byte
 	switch entry.Level {
 	case logrus.TraceLevel:
-		log = []byte(Color(CDarkGray, fmt.Sprintf("'%s\n", message)))
+		log = []byte(Color(CDarkGray, fmt.Sprintf("%s\n", message)))
 	case logrus.DebugLevel:
-		log = []byte(Color(CBold, Color(CDarkGray, fmt.Sprintf(".%s\n", message))))
+		log = []byte(Color(CBold, Color(CDarkGray, fmt.Sprintf("%s\n", message))))
 	case logrus.InfoLevel:
-		log = []byte(Color(CGreen, fmt.Sprintf(">%s\n", message)))
+		log = []byte(Color(CGreen, fmt.Sprintf("%s\n", message)))
 	case logrus.WarnLevel:
-		log = []byte(Color(CYellow, fmt.Sprintf("!%s\n", message)))
+		log = []byte(Color(CYellow, fmt.Sprintf("%s\n", message)))
 	case logrus.ErrorLevel:
-		log = []byte(Color(CRed, fmt.Sprintf("x%s\n", message)))
+		log = []byte(Color(CRed, fmt.Sprintf("%s\n", message)))
 	case logrus.PanicLevel:
-		log = []byte(Color(CRed, fmt.Sprintf("X%s\n", message)))
+		log = []byte(Color(CBold, Color(CRed, fmt.Sprintf("%s\n", message))))
 	default:
-		log = []byte(Color(CDefault, fmt.Sprintf("-%s\n", message)))
+		log = []byte(Color(CDefault, fmt.Sprintf("%s\n", message)))
 	}
 	return log, nil
 }

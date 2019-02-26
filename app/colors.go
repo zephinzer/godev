@@ -45,11 +45,13 @@ const (
 	CFormat = "\033["
 )
 
+// Colors applies the color code :color to the string :value
 func Color(color int, value string) string {
 	return fmt.Sprintf("%s%vm%s%s0m", CFormat, color, value, CFormat)
 }
 
-func Multi(value string, colorCodes []int) string {
+// Colors applies multiple :colorCodes to the string :value
+func Colors(colorCodes []int, value string) string {
 	retval := value + "\033[0m"
 	for _, colorCode := range colorCodes {
 		retval = Color(colorCode, retval)
@@ -58,46 +60,57 @@ func Multi(value string, colorCodes []int) string {
 	return retval
 }
 
+// Default sets the string :value to the default color
 func Default(value string) string {
 	return Color(CDefault, value)
 }
 
+// Bold sets the string :value to bold
 func Bold(value string) string {
 	return Color(CBold, value)
 }
 
+// Dim dims the string :value
 func Dim(value string) string {
 	return Color(CDim, value)
 }
 
+// Black sets the string :value to black
 func Black(value string) string {
 	return Color(CBlack, value)
 }
 
+// DarkGray sets the string :value to dark gray
 func DarkGray(value string) string {
 	return Color(CDarkGray, value)
 }
 
+// Red sets the string :value to red
 func Red(value string) string {
 	return Color(CRed, value)
 }
 
+// LightRed sets the string :value to light red
 func LightRed(value string) string {
 	return Color(CLightRed, value)
 }
 
+// Green sets the string :value to green
 func Green(value string) string {
 	return Color(CGreen, value)
 }
 
+// LightGreen sets the string :value to light green
 func LightGreen(value string) string {
 	return Color(CLightGreen, value)
 }
 
+// Yellow sets the string :value to yellow
 func Yellow(value string) string {
 	return Color(CYellow, value)
 }
 
+// LightYellow sets the string :value to light yellow
 func LightYellow(value string) string {
 	return Color(CLightYellow, value)
 }
