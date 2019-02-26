@@ -24,19 +24,20 @@ godev --init
 ### Development with Live-Re-Load/Build/Dependency download
 
 ```sh
-godev
+godev --watch
 ```
 
 ### Testing with Live-Reload
 
 ```sh
-godev --test
+godev --test --watch
 ```
 
 ## Execution Flags
 
 | Flag | Description | Example values |
 | --- | --- | --- |
+| `--help` | Displays the help message | - |
 | `--init` | Initialises the current directory for working with Golang | - |
 | `--test` | Runs the tests instead of the app | - |
 | `--watch` | Runs the application/tests in watch mode | - |
@@ -44,6 +45,9 @@ godev --test
 | `--ignore` | Comma separated strings indicating what file or directory names to ignore | `vendor,cache` |
 | `--rate` | Time interval between when events are deduped and reported to the main handler | `2s` |
 | `--dir` | Absolute path to directory to consider the working directory | `/path/to/your/project` |
+| `--output` | Relative path from the watch directory (`--dir`) to the binary **(only applicable when `--exec` is not defined)**  | `bin/app` |
+| `--exec` | Comma separated list of commands (with arguments) to run in parallel. Each of this flag defines a set of commands to run in parallel (an execution group). When this is specified, `godev` stops being a Golang development tool and becomes a generic development tool for watching for file changes and executing shell scripts on changes | `go build,golint` |
+| `--exec-delim` | Delimiter for the commands specified in `--exec`. Defaults to a comma. | `/path/to/your/project` |
 
 # Development
 
