@@ -59,24 +59,7 @@ func main() {
 		logger.Info("started watcher")
 		wg.Wait()
 	} else if config.RunView {
-		switch strings.ToLower(config.View) {
-		case "dockerfile":
-			logger.Info("previewing contents of Dockerfile")
-			fmt.Println(DataDockerfile)
-			logger.Info("end of preview for contents of Dockerfile")
-		case "makefile":
-			logger.Info("previewing contents of Makefile")
-			fmt.Println(DataMakefile)
-			logger.Info("end of preview for contents of Makefile")
-		case ".dockerignore":
-			logger.Info("previewing contents of .dockerignore")
-			fmt.Println(DataDotDockerignore)
-			logger.Info("end of preview for contents of .dockerignore")
-		case ".gitignore":
-			logger.Info("previewing contents of .gitignore")
-			fmt.Println(DataDotGitignore)
-			logger.Info("end of preview for contents of .gitignore")
-		}
+		viewFile(logger, config.View)
 	} else if config.RunVersion {
 		fmt.Printf("godev %s-%s\n", Version, Commit)
 	}
@@ -110,5 +93,34 @@ func logWatchModeConfigurations(logger *Logger, config *Config) {
 			args := sections[1:]
 			logger.Infof("    %v > %s %v", cIndex+1, app, args)
 		}
+	}
+}
+
+func viewFile(logger *Logger, filename string) {
+	switch strings.ToLower(filename) {
+	case "dockerfile":
+		logger.Info("previewing contents of Dockerfile")
+		fmt.Println(DataDockerfile)
+		logger.Info("end of preview for contents of Dockerfile")
+	case "makefile":
+		logger.Info("previewing contents of Makefile")
+		fmt.Println(DataMakefile)
+		logger.Info("end of preview for contents of Makefile")
+	case ".dockerignore":
+		logger.Info("previewing contents of .dockerignore")
+		fmt.Println(DataDotDockerignore)
+		logger.Info("end of preview for contents of .dockerignore")
+	case ".gitignore":
+		logger.Info("previewing contents of .gitignore")
+		fmt.Println(DataDotGitignore)
+		logger.Info("end of preview for contents of .gitignore")
+	case "main.go":
+		logger.Info("previewing contents of main.go")
+		fmt.Println(DataMainDotgo)
+		logger.Info("end of preview for contents of main.go")
+	case "go.mod":
+		logger.Info("previewing contents of go.mod")
+		fmt.Println(DataGoDotMod)
+		logger.Info("end of preview for contents of go.mod")
 	}
 }
