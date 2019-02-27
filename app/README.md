@@ -32,7 +32,7 @@ godev --init
 To run the application in live-reload mode:
 
 ```sh
-godev --watch
+godev
 ```
 
 The tool should run the following for you on every file system event related to `.go` files:
@@ -47,7 +47,7 @@ On a file system event, the tool should send a `SIGINT` first, wait for 5 second
 To run the tests in live-reload mode, use:
 
 ```sh
-godev --test --watch
+godev --test
 ```
 
 The tool should run the following for you on every file system event related to `.go` files:
@@ -101,6 +101,12 @@ To run custom flags, use:
 
 ```sh
 make start.prd ARGS="<__YOUR_FLAGS__>"
+```
+
+To run it in test mode, use:
+
+```sh
+make run ARGS="--test --ignore .cache,vendor,bin,data"
 ```
 
 ### Running Tests

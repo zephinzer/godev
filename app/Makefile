@@ -18,7 +18,7 @@ generate:
 	@$(MAKE) log.info MSG="generated data.go..."
 start: generate
 	@$(MAKE) log.info MSG="running application for development with live-reload..."
-	@$(MAKE) _dev ARG="start" ARGS="--watch --ignore vendor,.cache --exts go,Makefile ${ARGS}"
+	@$(MAKE) _dev ARG="start" ARGS="--test --ignore bin,data,vendor,.cache ${ARGS}"
 start.prd: generate
 	@$(MAKE) log.info MSG="running application for development in production with live-reload..."
 	@$(MAKE) _dev ARG="start" ARGS="${ARGS}"
