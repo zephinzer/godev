@@ -7,8 +7,8 @@ import (
 
 // RunnerConfig configures the Runner
 type RunnerConfig struct {
-	pipeline  []*ExecutionGroup
-	waitGroup sync.WaitGroup
+	Pipeline []*ExecutionGroup
+	LogLevel LogLevel
 }
 
 var RunnerTriggerCount = 0
@@ -22,21 +22,20 @@ type Runner struct {
 func InitRunner(config *RunnerConfig) *Runner {
 	runner := &Runner{
 		config: config,
-		logger: InitLogger(&LoggerConfig{Name: "runner", Format: "production", Level: "trace"}),
+		logger: InitLogger(&LoggerConfig{Name: "runner", Format: "production", Level: config.LogLevel}),
 	}
 	return runner
 }
 
 func (runner *Runner) startPipeline() {
-	executionGroupCount := len(runner.config.pipeline)
-	for index, executionGroup := range runner.config.pipeline {
+	executionGroupCount := len(runner.config.Pipeline)
+	for index, executionGroup := range runner.config.Pipeline {
 		executionGroup.logger = InitLogger(&LoggerConfig{
-			Name:   "execution_group",
+			Name:   fmt.Sprintf("run[%v]", RunnerTriggerCount),
 			Format: "production",
-			Level:  "trace",
+			Level:  runner.config.LogLevel,
 			AdditionalFields: &map[string]interface{}{
-				"id":    RunnerTriggerCount,
-				"group": fmt.Sprintf("%v/%v", index+1, executionGroupCount),
+				"submodule": fmt.Sprintf("group[%v/%v]", index+1, executionGroupCount),
 			},
 		})
 		executionGroup.Run()
@@ -45,8 +44,8 @@ func (runner *Runner) startPipeline() {
 
 func (runner *Runner) Trigger() {
 	RunnerTriggerCount++
-	defer runner.logger.Infof("terminated run %v", RunnerTriggerCount)
-	runner.logger.Infof("initialising run %v", RunnerTriggerCount)
+	defer runner.logger.Tracef("terminated run %v", RunnerTriggerCount)
+	runner.logger.Tracef("initialising run %v", RunnerTriggerCount)
 	runner.terminateExistingPipeline()
 	runner.waitGroup.Add(1)
 	go runner.startPipeline()

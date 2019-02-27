@@ -23,7 +23,6 @@ func (command *Command) Run() {
 	if command.onExit == nil {
 		command.onExit = func(int) {}
 	}
-	command.logger.Infof("running '%s' with %v", command.application, command.arguments)
 	command.cmd = exec.Command(command.application, command.arguments...)
 
 	command.cmd.Stderr = os.Stderr

@@ -38,9 +38,8 @@ godev --watch
 The tool should run the following for you on every file system event related to `.go` files:
 
 1. `go mod vendor` (retrieve dependencies)
-2. `go generate` (generate any files you may have)
-3. `go build` (builds the binary)
-4. `/path/to/binary` (runs the binary)
+1. `go build` (builds the binary)
+1. `/path/to/binary` (runs the binary)
 
 On a file system event, the tool should send a `SIGINT` first, wait for 5 seconds, send a `SIGTERM`, wait for another 5 seconds, and finally a `SIGKILL`.
 
@@ -54,26 +53,26 @@ godev --test --watch
 The tool should run the following for you on every file system event related to `.go` files:
 
 1. `go mod vendor` (see above)
-2. `go generate` (see above)
-3. `go test ./...` (runs all files with file names ending in `_test.go` recursively)
+1. `go test ./...` (runs all files with file names ending in `_test.go` recursively)
 
 ## Execution Flags
 Prepend a `-` before the flag when calling the `godev` command.
 
 | Flag | Parameters | Description | Example values |
 | --- | --- | --- |
-| `help` | - | Displays the help message | - |
-| `init` | - | Initialises the current directory for working with Golang | - |
-| `test` | - | Runs the tests instead of the app | - |
-| `watch` | - | Runs the application/tests in watch mode | - |
-| `exts` | `string` | Comma separated strings denoting what extensions to look out for. Extensions should not contain the initial dot | `go,Makefile` |
-| `ignore` | `string` | Comma separated strings indicating what file or directory names to ignore | `vendor,cache` |
-| `rate` | `duration` | Time interval between when events are deduped and reported to the main handler. Defaults to 2 seconds. | `2s` |
-| `dir` | `string` | Absolute path to directory to consider the working directory. Defaults to the directory that `godev` is called from | `/path/to/your/project` |
-| `output` | `string` | Relative path from the watch directory (`--dir`) to the binary **(only applicable when `--exec` is not defined)**  | `bin/app` |
 | `exec` | `string...` | Comma separated list of commands (with arguments) to run in parallel. Each of this flag defines a set of commands to run in parallel (an execution group). When this is specified, `godev` stops being a Golang development tool and becomes a generic development tool for watching for file changes and executing shell scripts on changes | `go build,golint` |
 | `exec-delim` | `string` | Delimiter for the commands specified in `--exec`. Defaults to a comma. | `/path/to/your/project` |
+| `exts` | `string` | Comma separated strings denoting what extensions to look out for. Extensions should not contain the initial dot | `go,Makefile` |
+| `help` | - | Displays the help message | - |
+| `ignore` | `string` | Comma separated strings indicating what file or directory names to ignore | `vendor,cache` |
+| `init` | - | Initialises the current directory for working with Golang | - |
+| `output` | `string` | Relative path from the watch directory (`--dir`) to the binary **(only applicable when `--exec` is not defined)**  | `bin/app` |
+| `rate` | `duration` | Time interval between when events are deduped and reported to the main handler. Defaults to 2 seconds. | `2s` |
+| `test` | - | Runs the tests instead of the app | - |
 | `view` | `string` | Checks out the file contents of the specified file. Can be any of `{dockerfile, makefile, .gitignore, .dockerignore, go.mod, main.go}` | `dockerfile` |
+| `vv` | - | Logs in verbose mode (debug level) | - |
+| `vvv` | - | Logs in super verbose mode (trace level) | - |
+| `watch` | - | Absolute path to directory to consider the working directory. Defaults to the directory that `godev` is called from | `/path/to/your/project` |
 
 # Development
 

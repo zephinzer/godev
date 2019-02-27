@@ -15,8 +15,8 @@ type ExecutionGroup struct {
 }
 
 func (executionGroup *ExecutionGroup) Run() {
-	defer executionGroup.logger.Info("terminated execution group")
-	executionGroup.logger.Info("starting execution group")
+	defer executionGroup.logger.Tracef("terminated execution group")
+	executionGroup.logger.Tracef("starting execution group")
 	for _, command := range executionGroup.commands {
 		executionGroup.waitGroup.Add(1)
 		command.logger = InitLogger(&LoggerConfig{
@@ -28,10 +28,10 @@ func (executionGroup *ExecutionGroup) Run() {
 			},
 		})
 		command.onStart = func(pid int) {
-			command.logger.Infof("\n► ---------------------------------- pid:%v ▼", pid)
+			command.logger.Infof("%v\n► ---------------------------------- pid:%v ►", command.arguments, pid)
 		}
 		command.onExit = func(pid int) {
-			command.logger.Infof("\n■ ---------------------------------- pid:%v ▲", pid)
+			command.logger.Infof("%s\n■ ---------------------------------- pid:%v ■", command.cmd.ProcessState.String(), pid)
 			executionGroup.waitGroup.Done()
 		}
 		go command.Run()

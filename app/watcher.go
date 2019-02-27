@@ -17,6 +17,7 @@ type WatcherConfig struct {
 	FileExtensions []string
 	IgnoredNames   []string
 	RefreshRate    time.Duration
+	LogLevel       LogLevel
 }
 
 // InitWatcher returns a workable Watcher instance
@@ -27,7 +28,7 @@ func InitWatcher(config *WatcherConfig) *Watcher {
 	}
 	fw := &Watcher{
 		config:  config,
-		logger:  InitLogger(&LoggerConfig{Name: "watcher", Format: "production", Level: "trace"}),
+		logger:  InitLogger(&LoggerConfig{Name: "watcher", Format: "production", Level: config.LogLevel}),
 		watcher: watcher,
 	}
 	return fw
@@ -52,13 +53,13 @@ func (fw *Watcher) Close() {
 }
 
 // WatcherEventHandler defines the callback for BeginWatch() to use
-type WatcherEventHandler func(*WatcherEvent) bool
+type WatcherEventHandler func(*[]WatcherEvent) bool
 
 // BeginWatch starts the file system watching in blocking mode
 func (fw *Watcher) BeginWatch(waitGroup *sync.WaitGroup, handler WatcherEventHandler) {
 	fw.logger.Trace("initialising file system watch")
 	fw.watchMutex = make(chan bool)
-	fw.intervalTicker = time.Tick(fw.config.RefreshRate)
+	fw.intervalTicker = time.After(fw.config.RefreshRate)
 	waitGroup.Add(1)
 	go fw.watchRoutine(
 		fw.intervalTicker,
@@ -78,21 +79,18 @@ func (fw *Watcher) watchRoutine(tick <-chan time.Time, stop chan bool, handler W
 	for {
 		select {
 		case <-tick:
-			if len(fw.events) == 0 {
-				fw.logger.Trace("no events recorded, waiting for next tick")
-			} else {
+			if len(fw.events) > 0 {
 				fw.logger.Tracef("processing %v raw events...", len(fw.events))
 				dedupedEvents := fw.getDedupedEvents()
-				for _, event := range dedupedEvents {
-					handler(&event)
-				}
-				fw.logger.Infof("processed %v event(s)", len(dedupedEvents))
+				handler(&dedupedEvents)
+				fw.logger.Tracef("processed %v event(s)", len(dedupedEvents))
 				fw.events = make([]WatcherEvent, 0)
 			}
 		case event := <-fw.watcher.Events:
 			eventToAdd := WatcherEvent(event)
 			if eventToAdd.IsAnyOf(fw.config.FileExtensions) {
 				fw.events = append(fw.events, eventToAdd)
+				tick = time.After(2 * time.Second)
 			}
 		case shouldWeStop := <-stop:
 			fw.logger.Tracef("received signal to terminate watch routine: %v", shouldWeStop)

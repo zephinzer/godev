@@ -13,18 +13,24 @@ var Version string
 var Commit string
 
 func main() {
+	config := InitConfig()
 	logger := InitLogger(&LoggerConfig{
 		Name:   "main",
 		Format: "production",
+		Level:  config.LogLevel,
 	})
-	config := InitConfig()
-	if config.RunModWatch {
+	if config.RunView {
+		viewFile(logger, config.View)
+	} else if config.RunVersion {
+		fmt.Printf("godev %s-%s\n", Version, Commit)
+	} else {
 		logUniversalConfigurations(logger, config)
 		logWatchModeConfigurations(logger, config)
 		watcher := InitWatcher(&WatcherConfig{
 			FileExtensions: config.FileExtensions,
 			IgnoredNames:   config.IgnoredNames,
 			RefreshRate:    config.Rate,
+			LogLevel:       config.LogLevel,
 		})
 		watcher.RecursivelyWatch(config.WatchDirectory)
 		var pipeline []*ExecutionGroup
@@ -46,43 +52,41 @@ func main() {
 			pipeline = append(pipeline, executionGroup)
 		}
 		runner := InitRunner(&RunnerConfig{
-			pipeline: pipeline,
+			Pipeline: pipeline,
+			LogLevel: config.LogLevel,
 		})
 
 		var wg sync.WaitGroup
-		watcher.BeginWatch(&wg, func(event *WatcherEvent) bool {
-			logger.Info(event)
+		watcher.BeginWatch(&wg, func(events *[]WatcherEvent) bool {
+			for _, e := range *events {
+				logger.Info(e)
+			}
 			runner.Trigger()
 			return true
 		})
 
-		logger.Info("started watcher")
+		logger.Infof("started watcher at %s", config.WatchDirectory)
 		wg.Wait()
-	} else if config.RunView {
-		viewFile(logger, config.View)
-	} else if config.RunVersion {
-		fmt.Printf("godev %s-%s\n", Version, Commit)
 	}
 	logger.Info("bye")
 }
 
 func logUniversalConfigurations(logger *Logger, config *Config) {
-	logger.Infof("flag - init       : %v", config.RunInit)
-	logger.Infof("flag - test       : %v", config.RunTest)
-	logger.Infof("flag - view       : %v", config.RunView)
-	logger.Infof("flag - watch      : %v", config.RunModWatch)
-	logger.Infof("watch directory   : %s", config.WatchDirectory)
-	logger.Infof("build output      : %s", config.BuildOutput)
+	logger.Debugf("flag - init       : %v", config.RunInit)
+	logger.Debugf("flag - test       : %v", config.RunTest)
+	logger.Debugf("flag - view       : %v", config.RunView)
+	logger.Debugf("watch directory   : %s", config.WatchDirectory)
+	logger.Debugf("build output      : %s", config.BuildOutput)
 }
 
 func logWatchModeConfigurations(logger *Logger, config *Config) {
-	logger.Infof("file extensions   : %v", config.FileExtensions)
-	logger.Infof("ignored names     : %v", config.IgnoredNames)
-	logger.Infof("refresh interval  : %v", config.Rate)
-	logger.Infof("execution delim   : %s", config.CommandsDelimiter)
-	logger.Info("execution groups as follows...")
+	logger.Debugf("file extensions   : %v", config.FileExtensions)
+	logger.Debugf("ignored names     : %v", config.IgnoredNames)
+	logger.Debugf("refresh interval  : %v", config.Rate)
+	logger.Debugf("execution delim   : %s", config.CommandsDelimiter)
+	logger.Trace("execution groups as follows...")
 	for egIndex, execGroup := range config.ExecGroups {
-		logger.Infof("  %v) %s", egIndex+1, execGroup)
+		logger.Tracef("  %v) %s", egIndex+1, execGroup)
 		commands := strings.Split(execGroup, config.CommandsDelimiter)
 		for cIndex, command := range commands {
 			sections, err := shellquote.Split(command)
@@ -91,7 +95,7 @@ func logWatchModeConfigurations(logger *Logger, config *Config) {
 			}
 			app := sections[0]
 			args := sections[1:]
-			logger.Infof("    %v > %s %v", cIndex+1, app, args)
+			logger.Tracef("    %v > %s %v", cIndex+1, app, args)
 		}
 	}
 }

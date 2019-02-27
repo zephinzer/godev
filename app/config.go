@@ -14,11 +14,17 @@ const DefaultBuildOutput = "bin/app"
 // DefaultCommandsDelimiter - default string to split --execs into commands with
 const DefaultCommandsDelimiter = ","
 
+// DefaultExecutionGroupsBase - default commands to run when no --execs are specified
+var DefaultExecutionGroupsBase = []string{"go mod vendor"}
+
 // DefaultFileExtensions - default commma-separated list of file extensions to watch for
-const DefaultFileExtensions = "go"
+const DefaultFileExtensions = "go,Makefile"
 
 // DefaultIgnoredNames - default comma-separated list of file/dir names to ignore
 const DefaultIgnoredNames = "bin,vendor"
+
+// DefaultLogLevel - default log level from 'trace', 'debug', 'info', 'warn', 'error', 'panic'
+const DefaultLogLevel = "info"
 
 // DefaultRefreshRate - default duration at which to handle file system events
 const DefaultRefreshRate = 2 * time.Second
@@ -29,7 +35,9 @@ type Config struct {
 	RunVersion        bool
 	RunInit           bool
 	RunTest           bool
-	RunModWatch       bool
+	LogVerbose        bool
+	LogSuperVerbose   bool
+	LogLevel          LogLevel
 	FileExtensions    ConfigCommaDelimitedString
 	IgnoredNames      ConfigCommaDelimitedString
 	ExecGroups        ConfigMultiflagString
@@ -45,9 +53,10 @@ func InitConfig() *Config {
 	currentWorkingDirectory := getCurrentWorkingDirectory()
 	config := &Config{}
 	flag.StringVar(&config.View, "view", "", "check out the original content of a file that godev provisions when --init is specified")
+	flag.BoolVar(&config.LogVerbose, "vv", false, "show verbose logs")
+	flag.BoolVar(&config.LogSuperVerbose, "vvv", false, "show super verbose logs")
 	flag.BoolVar(&config.RunVersion, "version", false, "display the version number")
 	flag.BoolVar(&config.RunInit, "init", false, "when this flag is specified, godev initiaises the current directory")
-	flag.BoolVar(&config.RunModWatch, "watch", false, "when this flag is specified, godev runs the command in watch mode if applicable")
 	flag.BoolVar(&config.RunTest, "test", false, "when this flag is specified, godev runs the tests with coverage")
 	flag.Var(&config.ExecGroups, "exec", "list of comma-separated commands to run (specify multiple --execs to indicate execution groups)")
 	flag.StringVar(&config.CommandsDelimiter, "exec-delim", DefaultCommandsDelimiter, "delimiter character to use to split commands within an execution group")
@@ -55,13 +64,24 @@ func InitConfig() *Config {
 	flag.Var(&config.IgnoredNames, "ignore", fmt.Sprintf("comma separated list of names to ignore (defaults to: %s)", DefaultIgnoredNames))
 	flag.DurationVar(&config.Rate, "rate", DefaultRefreshRate, "specifies the refresh rate of the file system watch")
 	flag.StringVar(&config.BuildOutput, "output", DefaultBuildOutput, "specifies the path to the built binary relative to the watch directory (applicable only when --exec is not specified)")
-	flag.StringVar(&config.WatchDirectory, "dir", currentWorkingDirectory, "specifies the directory to watch")
+	flag.StringVar(&config.WatchDirectory, "watch", currentWorkingDirectory, "specifies the directory to watch")
 	flag.Parse()
 	config.assignDefaults()
+	config.interpretLogLevel()
 	return config
 }
 
+func (config *Config) interpretLogLevel() {
+	if config.LogVerbose {
+		config.LogLevel = "debug"
+	}
+	if config.LogSuperVerbose {
+		config.LogLevel = "trace"
+	}
+}
+
 func (config *Config) assignDefaults() {
+	config.LogLevel = DefaultLogLevel
 	config.BuildOutput = path.Join(config.WatchDirectory, "/"+config.BuildOutput)
 	config.RunView = len(config.View) > 0
 	if len(config.IgnoredNames) == 0 {
@@ -72,13 +92,17 @@ func (config *Config) assignDefaults() {
 	}
 	if len(config.ExecGroups) == 0 {
 		if config.RunTest {
-			config.ExecGroups = []string{
-				fmt.Sprintf("go mod vendor,go build -o %s,go test ./... -coverprofile c.out", config.BuildOutput),
-			}
+			config.ExecGroups = append(
+				DefaultExecutionGroupsBase,
+				fmt.Sprintf("go build -o %s", config.BuildOutput),
+				"go test ./... -coverprofile c.out",
+			)
 		} else {
-			config.ExecGroups = []string{
-				fmt.Sprintf("go mod vendor,go build -o %s,%s", config.BuildOutput, config.BuildOutput),
-			}
+			config.ExecGroups = append(
+				DefaultExecutionGroupsBase,
+				fmt.Sprintf("go build -o %s", config.BuildOutput),
+				config.BuildOutput,
+			)
 		}
 	}
 }
