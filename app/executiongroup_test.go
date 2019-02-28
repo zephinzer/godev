@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,39 +15,6 @@ type ExecutionGroupTestSuite struct {
 	logger         *Logger
 }
 
-type CommandMock struct {
-	Command
-}
-
-func (cm *CommandMock) getArguments() []string {
-	if len(cm.config.Arguments) > 0 {
-		return cm.config.Arguments
-	} else {
-		return []string{"command", "mock"}
-	}
-}
-
-func (cm *CommandMock) getCommand() *exec.Cmd {
-	return &exec.Cmd{
-		ProcessState: &os.ProcessState{},
-	}
-}
-
-func InitCommandMock(s *ExecutionGroupTestSuite, application string, arguments []string) *CommandMock {
-	command := &CommandMock{}
-	command.config = &CommandConfig{
-		Application: application,
-		Arguments:   arguments,
-	}
-	command.logger = InitLogger(&LoggerConfig{
-		Name:   application,
-		Format: "production",
-		Level:  "trace",
-	})
-	command.logger.SetOutput(&s.logs)
-	return command
-}
-
 func TestExecutionGroup(t *testing.T) {
 	suite.Run(t, new(ExecutionGroupTestSuite))
 }
@@ -57,9 +22,9 @@ func TestExecutionGroup(t *testing.T) {
 func (s *ExecutionGroupTestSuite) SetupTest() {
 	s.executionGroup = &ExecutionGroup{
 		commands: []ICommand{
-			InitCommandMock(s, "echo", []string{"1"}),
-			InitCommandMock(s, "echo", []string{"2"}),
-			InitCommandMock(s, "echo", []string{"3"}),
+			InitCommandMock("echo", []string{"1"}, &s.logs),
+			InitCommandMock("echo", []string{"2"}, &s.logs),
+			InitCommandMock("echo", []string{"3"}, &s.logs),
 		},
 	}
 	s.executionGroup.logger = InitLogger(&LoggerConfig{
@@ -87,7 +52,7 @@ func (s *ExecutionGroupTestSuite) Test_addPid() {
 }
 
 func (s *ExecutionGroupTestSuite) Test_assertCommandIsValid() {
-	// we are running using `go` so there's no reason why it shouldn't be unavailable
+	// we are running using `go` so there's no reason why it should be unavailable
 	expectedApplication := "go"
 	testCommand := InitCommand(&CommandConfig{
 		Application: expectedApplication,
@@ -98,7 +63,7 @@ func (s *ExecutionGroupTestSuite) Test_assertCommandIsValid() {
 
 func (s *ExecutionGroupTestSuite) Test_getExitMessage() {
 	expectedPid := 65535
-	testCommand := InitCommandMock(s, "test", []string{})
+	testCommand := InitCommandMock("test", []string{}, &s.logs)
 	exitMessage := s.executionGroup.getExitMessage(testCommand, expectedPid)
 	assert.Contains(s.T(), exitMessage, "pid:65535")
 	assert.Contains(s.T(), exitMessage, "exit status 0")
@@ -106,7 +71,7 @@ func (s *ExecutionGroupTestSuite) Test_getExitMessage() {
 
 func (s *ExecutionGroupTestSuite) Test_getStartMessage() {
 	expectedPid := 65535
-	testCommand := InitCommandMock(s, "test", []string{})
+	testCommand := InitCommandMock("test", []string{}, &s.logs)
 	exitMessage := s.executionGroup.getStartMessage(testCommand, expectedPid)
 	assert.Contains(s.T(), exitMessage, "pid:65535")
 	assert.Contains(s.T(), exitMessage, "[command mock]")
@@ -114,7 +79,7 @@ func (s *ExecutionGroupTestSuite) Test_getStartMessage() {
 
 func (s *ExecutionGroupTestSuite) Test_provisionCommand() {
 	expectedPid := 65535
-	testCommand := InitCommandMock(s, "test", []string{})
+	testCommand := InitCommandMock("test", []string{}, &s.logs)
 	s.executionGroup.provisionCommand(testCommand)
 	assert.NotNil(s.T(), testCommand.onStart)
 	assert.NotNil(s.T(), testCommand.onExit)

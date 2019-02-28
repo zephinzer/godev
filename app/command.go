@@ -7,6 +7,7 @@ import (
 	"path"
 )
 
+// ICommand is the interface for the Command class
 type ICommand interface {
 	Run()
 	getApplication() string
@@ -16,6 +17,7 @@ type ICommand interface {
 	setOnExit(func(int) string) ICommand
 }
 
+// InitCommand is for creating a new Command
 func InitCommand(config *CommandConfig) *Command {
 	command := &Command{}
 	command.config = config
@@ -30,6 +32,7 @@ func InitCommand(config *CommandConfig) *Command {
 	return command
 }
 
+// CommandConfig configures Command
 type CommandConfig struct {
 	Application string
 	Arguments   []string

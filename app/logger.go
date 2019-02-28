@@ -16,6 +16,12 @@ func (lf *LogFormat) String() string {
 	return "text"
 }
 
+type rawFormat struct{}
+
+func (f *rawFormat) Format(entry *logrus.Entry) ([]byte, error) {
+	return []byte(entry.Message + "\n"), nil
+}
+
 type productionFormat struct{}
 
 func (f *productionFormat) Format(entry *logrus.Entry) ([]byte, error) {
@@ -44,19 +50,19 @@ func (f *productionFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	var log []byte
 	switch entry.Level {
 	case logrus.TraceLevel:
-		log = []byte(Color(CDarkGray, fmt.Sprintf("%s\n", message)))
+		log = []byte(Color("gray", fmt.Sprintf("%s\n", message)))
 	case logrus.DebugLevel:
-		log = []byte(Color(CBold, Color(CDarkGray, fmt.Sprintf("%s\n", message))))
+		log = []byte(Color("bold", Color("gray", fmt.Sprintf("%s\n", message))))
 	case logrus.InfoLevel:
-		log = []byte(Color(CGreen, fmt.Sprintf("%s\n", message)))
+		log = []byte(Color("green", fmt.Sprintf("%s\n", message)))
 	case logrus.WarnLevel:
-		log = []byte(Color(CYellow, fmt.Sprintf("%s\n", message)))
+		log = []byte(Color("yellow", fmt.Sprintf("%s\n", message)))
 	case logrus.ErrorLevel:
-		log = []byte(Color(CRed, fmt.Sprintf("%s\n", message)))
+		log = []byte(Color("red", fmt.Sprintf("%s\n", message)))
 	case logrus.PanicLevel:
-		log = []byte(Color(CBold, Color(CRed, fmt.Sprintf("%s\n", message))))
+		log = []byte(Color("bold", Color("red", fmt.Sprintf("%s\n", message))))
 	default:
-		log = []byte(Color(CDefault, fmt.Sprintf("%s\n", message)))
+		log = []byte(Color("default", fmt.Sprintf("%s\n", message)))
 	}
 	return log, nil
 }
@@ -67,6 +73,8 @@ func (lf *LogFormat) Get() logrus.Formatter {
 		return &logrus.JSONFormatter{}
 	case "production":
 		return new(productionFormat)
+	case "raw":
+		return new(rawFormat)
 	default:
 		return &logrus.TextFormatter{
 			ForceColors: true,

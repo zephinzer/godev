@@ -103,7 +103,7 @@ var DataDotDockerignore = ` + "`" + `
 var DataMainDotgo = ` + "`" + `
 {{.MainDotGo}}
 ` + "`" + `
-// DataGoMod defines the 'go.mod' contents when --init is used
+// DataGoDotMod defines the 'go.mod' contents when --init is used
 // hash:{{.GoDotModHash}}
 var DataGoDotMod = ` + "`" + `
 {{.GoDotMod}}

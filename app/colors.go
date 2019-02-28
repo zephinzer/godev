@@ -1,148 +1,178 @@
 package main
 
-import "fmt"
-
-const (
-	// CDefault - color code
-	CDefault = 0
-	// CBold - color code
-	CBold = 1
-	// CDim - color code
-	CDim = 2
-	// CBlack - color code
-	CBlack = 30
-	// CDarkGray - color code
-	CDarkGray = 90
-	// CRed - color code
-	CRed = 31
-	// CLightRed - color code
-	CLightRed = 91
-	// CGreen - color code
-	CGreen = 32
-	// CLightGreen - color code
-	CLightGreen = 92
-	// CYellow - color code
-	CYellow = 33
-	// CLightYellow - color code
-	CLightYellow = 93
-	// CBlue - color code
-	CBlue = 34
-	// CLightBlue - color code
-	CLightBlue = 94
-	// CViolet - color code
-	CViolet = 35
-	// CLightViolet - color code
-	CLightViolet = 95
-	// CCyan - color code
-	CCyan = 36
-	// CLightCyan - color code
-	CLightCyan = 96
-	// CLightGray - color code
-	CLightGray = 37
-	// CWhite - color code
-	CWhite = 97
-	// CFormat - color code
-	CFormat = "\033["
+import (
+	"fmt"
+	"strconv"
+	"strings"
 )
 
-// Colors applies the color code :color to the string :value
-func Color(color int, value string) string {
-	return fmt.Sprintf("%s%vm%s%s0m", CFormat, color, value, CFormat)
+// ColorStub is the text string stub which the shell
+// can interpret as an ANSI color
+const ColorStub = "\033["
+
+// Colorer is the convenience function to color things
+var Colorer = Colors{}
+
+// Palette stores the color code to int map
+var Palette = map[string]int{
+	"default":   0,
+	"bold":      1,
+	"dim":       2,
+	"italics":   3,
+	"underline": 4,
+	"black":     30,
+	"white":     97,
+	"gray":      90,
+	"grey":      90,
+	"red":       31,
+	"yellow":    33,
+	"green":     32,
+	"cyan":      36,
+	"blue":      34,
+	"violet":    35,
+	"bgwhite":   47,
+	"bgblack":   40,
+	"bgred":     41,
+	"bgyellow":  43,
+	"bggreen":   42,
+	"bgcyan":    46,
+	"bgblue":    44,
+	"bgviolet":  45,
+	"lgray":     37,
+	"lgrey":     37,
+	"lred":      91,
+	"lyellow":   93,
+	"lgreen":    92,
+	"lcyan":     96,
+	"lblue":     94,
+	"lviolet":   95,
 }
 
-// Colors applies multiple :colorCodes to the string :value
-func Colors(colorCodes []int, value string) string {
-	retval := value + "\033[0m"
-	for _, colorCode := range colorCodes {
-		retval = Color(colorCode, retval)
+// Color applies the color code :color to the string :value
+func Color(color string, value string) string {
+	format := ColorStub + strconv.Itoa(Palette[color]) + "m"
+	unformat := ColorStub + "0m"
+	finalValue := value
+	if strings.Contains(value, unformat) {
+		finalValue = strings.Replace(value, unformat, unformat+format, -1)
 	}
-
-	return retval
+	return fmt.Sprintf("%s%s%s%s", ColorStub, format, finalValue, unformat)
 }
+
+// Colors defines a struct for the Colorer
+type Colors struct{}
 
 // Default sets the string :value to the default color
-func Default(value string) string {
-	return Color(CDefault, value)
+func (*Colors) Default(value string) string {
+	return Color("default", value)
 }
 
 // Bold sets the string :value to bold
-func Bold(value string) string {
-	return Color(CBold, value)
+func (*Colors) Bold(value string) string {
+	return Color("bold", value)
 }
 
 // Dim dims the string :value
-func Dim(value string) string {
-	return Color(CDim, value)
+func (*Colors) Dim(value string) string {
+	return Color("dim", value)
+}
+
+// Italics italicises the string :value
+func (*Colors) Italics(value string) string {
+	return Color("italics", value)
+}
+
+// Underline underlines the string :value
+func (*Colors) Underline(value string) string {
+	return Color("underline", value)
 }
 
 // Black sets the string :value to black
-func Black(value string) string {
-	return Color(CBlack, value)
+func (*Colors) Black(value string) string {
+	return Color("black", value)
 }
 
-// DarkGray sets the string :value to dark gray
-func DarkGray(value string) string {
-	return Color(CDarkGray, value)
+// Gray sets the string :value to gray
+func (*Colors) Gray(value string) string {
+	return Color("gray", value)
+}
+
+// Grey sets the string :value to grey
+func (*Colors) Grey(value string) string {
+	return Color("grey", value)
 }
 
 // Red sets the string :value to red
-func Red(value string) string {
-	return Color(CRed, value)
+func (*Colors) Red(value string) string {
+	return Color("red", value)
 }
 
 // LightRed sets the string :value to light red
-func LightRed(value string) string {
-	return Color(CLightRed, value)
+func (*Colors) LightRed(value string) string {
+	return Color("lred", value)
 }
 
 // Green sets the string :value to green
-func Green(value string) string {
-	return Color(CGreen, value)
+func (*Colors) Green(value string) string {
+	return Color("green", value)
 }
 
 // LightGreen sets the string :value to light green
-func LightGreen(value string) string {
-	return Color(CLightGreen, value)
+func (*Colors) LightGreen(value string) string {
+	return Color("lgreen", value)
 }
 
 // Yellow sets the string :value to yellow
-func Yellow(value string) string {
-	return Color(CYellow, value)
+func (*Colors) Yellow(value string) string {
+	return Color("yellow", value)
 }
 
 // LightYellow sets the string :value to light yellow
-func LightYellow(value string) string {
-	return Color(CLightYellow, value)
+func (*Colors) LightYellow(value string) string {
+	return Color("lyellow", value)
 }
 
-func Blue(value string) string {
-	return Color(CBlue, value)
+// Blue sets the string :value to blue
+func (*Colors) Blue(value string) string {
+	return Color("blue", value)
 }
 
-func LightBlue(value string) string {
-	return Color(CLightBlue, value)
+// LightBlue sets the string :value to light blue
+func (*Colors) LightBlue(value string) string {
+	return Color("lblue", value)
 }
 
-func Violet(value string) string {
-	return Color(CViolet, value)
+// Violet sets the string :value to violet
+func (*Colors) Violet(value string) string {
+	return Color("violet", value)
 }
 
-func LightViolet(value string) string {
-	return Color(CLightViolet, value)
+// LightViolet sets the string :value to light violet
+func (*Colors) LightViolet(value string) string {
+	return Color("lviolet", value)
 }
 
-func Cyan(value string) string {
-	return Color(CCyan, value)
+// Cyan sets the string :value to cyan
+func (*Colors) Cyan(value string) string {
+	return Color("cyan", value)
 }
 
-func LightCyan(value string) string {
-	return Color(CLightCyan, value)
+// LightCyan sets the string :value to light cyan
+func (*Colors) LightCyan(value string) string {
+	return Color("lcyan", value)
 }
 
-func LightGray(value string) string {
-	return Color(CLightGray, value)
+// LightGray sets the string :value to light gray
+func (*Colors) LightGray(value string) string {
+	return Color("lgray", value)
 }
 
-func White(value string) string {
-	return Color(CWhite, value)
+// LightGrey sets the string :value to light grey
+func (*Colors) LightGrey(value string) string {
+	return Color("lgrey", value)
+}
+
+// White sets the string :value to light white
+func (*Colors) White(value string) string {
+	return Color("white", value)
 }
