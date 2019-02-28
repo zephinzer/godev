@@ -36,16 +36,20 @@ func main() {
 		var pipeline []*ExecutionGroup
 		for _, execGroup := range config.ExecGroups {
 			executionGroup := &ExecutionGroup{}
-			var executionCommands []*Command
+			var executionCommands []ICommand
 			commands := strings.Split(execGroup, config.CommandsDelimiter)
 			for _, command := range commands {
 				if sections, err := shellquote.Split(command); err != nil {
 					panic(err)
 				} else {
-					executionCommands = append(executionCommands, &Command{
-						application: sections[0],
-						arguments:   sections[1:],
-					})
+					executionCommands = append(
+						executionCommands,
+						InitCommand(&CommandConfig{
+							Application: sections[0],
+							Arguments:   sections[1:],
+							LogLevel:    config.LogLevel,
+						}),
+					)
 				}
 			}
 			executionGroup.commands = executionCommands
