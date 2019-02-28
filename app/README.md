@@ -59,7 +59,7 @@ The tool should run the following for you on every file system event related to 
 Prepend a `-` before the flag when calling the `godev` command.
 
 | Flag | Parameters | Description | Example values |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | `exec` | `string...` | Comma separated list of commands (with arguments) to run in parallel. Each of this flag defines a set of commands to run in parallel (an execution group). When this is specified, `godev` stops being a Golang development tool and becomes a generic development tool for watching for file changes and executing shell scripts on changes | `go build,golint` |
 | `exec-delim` | `string` | Delimiter for the commands specified in `--exec`. Defaults to a comma. | `/path/to/your/project` |
 | `exts` | `string` | Comma separated strings denoting what extensions to look out for. Extensions should not contain the initial dot | `go,Makefile` |
