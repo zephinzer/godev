@@ -73,6 +73,8 @@ func main() {
 		})
 
 		logger.Infof("started watcher at %s", config.WatchDirectory)
+
+		runner.Trigger()
 		wg.Wait()
 	}
 	logger.Info("bye")

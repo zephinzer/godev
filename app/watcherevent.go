@@ -96,6 +96,7 @@ func (e *WatcherEvent) FileType() string {
 	}
 }
 
+// IsAnyOf verifies that the file extension matches :theseTypes
 func (e *WatcherEvent) IsAnyOf(theseTypes []string) bool {
 	for _, fileExtension := range theseTypes {
 		if strings.TrimLeft(e.FileType(), ".") == strings.TrimLeft(fileExtension, ".") {
