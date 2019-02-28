@@ -22,7 +22,11 @@ type Runner struct {
 func InitRunner(config *RunnerConfig) *Runner {
 	runner := &Runner{
 		config: config,
-		logger: InitLogger(&LoggerConfig{Name: "runner", Format: "production", Level: config.LogLevel}),
+		logger: InitLogger(&LoggerConfig{
+			Name:   "runner",
+			Format: "production",
+			Level:  config.LogLevel},
+		),
 	}
 	return runner
 }
@@ -40,14 +44,24 @@ func (runner *Runner) startPipeline() {
 		})
 		executionGroup.Run()
 	}
+	runner.waitGroup.Done()
+}
+
+func (runner *Runner) isPipelineRunning() bool {
+	for _, executionGroup := range runner.config.Pipeline {
+		if executionGroup.started && len(executionGroup.pids) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (runner *Runner) Trigger() {
 	RunnerTriggerCount++
-	defer runner.logger.Tracef("terminated run %v", RunnerTriggerCount)
-	runner.logger.Tracef("initialising run %v", RunnerTriggerCount)
-	runner.terminateExistingPipeline()
+	defer runner.logger.Tracef("completed pipeline %v", RunnerTriggerCount)
+	runner.logger.Tracef("starting pipeline %v", RunnerTriggerCount)
 	runner.waitGroup.Add(1)
+	runner.terminateExistingPipeline()
 	go runner.startPipeline()
 	runner.waitGroup.Wait()
 }
@@ -58,5 +72,7 @@ func (runner *Runner) terminateExistingPipeline() {
 			runner.logger.Warn(r)
 		}
 	}()
-	runner.waitGroup.Done()
+	if runner.isPipelineRunning() {
+		runner.waitGroup.Done()
+	}
 }
