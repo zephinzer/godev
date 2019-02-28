@@ -9,7 +9,10 @@ import (
 	shellquote "github.com/kballard/go-shellquote"
 )
 
+// Version should be populated with -ldflags on build with the semver version
 var Version string
+
+// Commit should be populated with -ldflags on build with the current git commit
 var Commit string
 
 func main() {

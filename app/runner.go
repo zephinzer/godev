@@ -11,14 +11,17 @@ type RunnerConfig struct {
 	LogLevel LogLevel
 }
 
+// RunnerTriggerCount keeps track of the number of piplines run
 var RunnerTriggerCount = 0
 
+// Runner is the main component responsible for running the commands
 type Runner struct {
 	config    *RunnerConfig
 	logger    *Logger
 	waitGroup sync.WaitGroup
 }
 
+// InitRunner initialises a runner
 func InitRunner(config *RunnerConfig) *Runner {
 	runner := &Runner{
 		config: config,

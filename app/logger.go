@@ -52,7 +52,7 @@ func (f *productionFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	case logrus.TraceLevel:
 		log = []byte(Color("gray", fmt.Sprintf("%s\n", message)))
 	case logrus.DebugLevel:
-		log = []byte(Color("bold", Color("gray", fmt.Sprintf("%s\n", message))))
+		log = []byte(Color("gray", fmt.Sprintf("%s\n", message)))
 	case logrus.InfoLevel:
 		log = []byte(Color("green", fmt.Sprintf("%s\n", message)))
 	case logrus.WarnLevel:
