@@ -74,6 +74,50 @@ Prepend a `-` before the flag when calling the `godev` command.
 | `vvv` | - | Logs in super verbose mode (trace level) | - |
 | `watch` | - | Absolute path to directory to consider the working directory. Defaults to the directory that `godev` is called from | `/path/to/your/project` |
 
+## Examples
+
+### Go Usage 1: Initialising a Project Directory
+
+```sh
+godev --init
+```
+
+### Go Usage 2: Running Tests with Live-Reload
+
+```sh
+godev --test
+```
+
+### Go Usage 3: Running Application with Live-Reload
+
+```sh
+godev
+```
+
+### Basic Usage 1: Running Script with `echo 1` on `.go` File Changes
+
+```sh
+godev --exec 'echo 1'
+```
+
+### Basic Usage 2: Running Script with `echo 1` followed by `echo 2` on `.go` File Changes
+
+```sh
+godev --exec 'echo 1' --exec 'echo 2'
+```
+
+### Basic Usage 3: Running Script with `echo 1` and `echo 2` Simultaneously on `.go` File Changes
+
+```sh
+godev --exec 'echo 1,echo 2'
+```
+
+### Basic Usage 4: Running Script with `echo 1` and `echo 2` Simultaneously on `.md` File Changes
+
+```sh
+godev --exts 'md' --exec 'echo 1,echo 2'
+```
+
 # Development
 
 ## Architecture Overview
