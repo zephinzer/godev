@@ -40,6 +40,10 @@ test.once: install.deps generate
 shell:
 	@$(MAKE) log.info MSG="creating a shell in the docker development environment..."
 	$(MAKE) _dev ARG="shell"
+contributors:
+	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS
+	@echo "# last generated on $$(date -u)\n" >> $(CURDIR)/CONTRIBUTORS
+	@git shortlog -se | sed -e 's|@|-at-|g' -e 's|\.|-dot-|g' | cut -f 2- >> $(CURDIR)/CONTRIBUTORS
 ## retrieves the latest version we are at
 version.get:
 	@docker run -v "$(CURDIR)/..:/app" zephinzer/vtscripts:latest get-latest -q
