@@ -12,6 +12,7 @@ type ExecutionGroup struct {
 	waitGroup sync.WaitGroup
 	logger    *Logger
 	pids      []int
+	started   bool
 }
 
 // Run starts the execution group's commands in parallel
@@ -19,6 +20,7 @@ type ExecutionGroup struct {
 func (executionGroup *ExecutionGroup) Run() {
 	defer executionGroup.logger.Tracef("terminated execution group")
 	executionGroup.logger.Tracef("starting execution group")
+	executionGroup.started = true
 	for _, command := range executionGroup.commands {
 		executionGroup.waitGroup.Add(1)
 		executionGroup.assertCommandIsValid(command)
