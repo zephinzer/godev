@@ -91,6 +91,8 @@ func (fw *Watcher) watchRoutine(tick <-chan time.Time, stop chan bool, handler W
 			if eventToAdd.IsAnyOf(fw.config.FileExtensions) {
 				fw.events = append(fw.events, eventToAdd)
 				tick = time.After(2 * time.Second)
+			} else if eventToAdd.FileType() == WatcherFileTypeDir {
+				fw.Watch(eventToAdd.FilePath())
 			}
 		case shouldWeStop := <-stop:
 			fw.logger.Tracef("received signal to terminate watch routine: %v", shouldWeStop)

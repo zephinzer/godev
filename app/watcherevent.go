@@ -20,6 +20,12 @@ const (
 	WatcherEventRename = "/"
 	// WatcherEventPermission denotes chmodding of a file/dir
 	WatcherEventPermission = "%"
+	// WatcherFileTypeDir indicates a directory
+	WatcherFileTypeDir = "dir"
+	// WatcherFileTypeErrored indicates an error
+	WatcherFileTypeErrored = "err"
+	// WatcherFileTypeDeleted indicates a deleted item
+	WatcherFileTypeDeleted = "rm"
 )
 
 var watcherEventType = []string{
@@ -79,20 +85,21 @@ func (e *WatcherEvent) FileName() string {
 func (e *WatcherEvent) FileType() string {
 	switch e.EventType() {
 	case WatcherEventRemove:
-		return "deleted"
+		return WatcherFileTypeDeleted
 	default:
 		fileType := path.Ext(e.Name)
 		if len(fileType) == 0 {
 			fileInfo, err := os.Lstat(e.Name)
 			if err != nil {
-				fileType = "errored"
+				return WatcherFileTypeErrored
 			} else if fileInfo.IsDir() {
-				fileType = "dir"
+				return WatcherFileTypeDir
 			} else {
-				fileType = path.Base(e.Name)
+				return path.Base(e.Name)
 			}
+		} else {
+			return fileType
 		}
-		return fileType
 	}
 }
 
