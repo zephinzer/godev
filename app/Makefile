@@ -23,8 +23,11 @@ start.prd: generate
 	@$(MAKE) log.info MSG="running application for development in production with live-reload..."
 	@$(MAKE) _dev ARG="start" ARGS="${ARGS}"
 run: install.deps generate
-	@$(MAKE) log.info MSG="running application in development..."
+	@$(MAKE) log.info MSG="running application..."
 	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') ${ARGS}
+run.dev: install.deps generate
+	@$(MAKE) log.info MSG="running application in development..."
+	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') --test --ignore bin,data,vendor,.cache ${ARGS}
 run.prd: install.deps compile
 	@$(MAKE) log.info MSG="running application in production..."
 	@bin/godev ${ARGS}
