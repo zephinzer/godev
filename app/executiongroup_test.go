@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -51,14 +52,41 @@ func (s *ExecutionGroupTestSuite) Test_addPid() {
 	assert.Lenf(s.T(), s.executionGroup.pids, 1, "the pid %v seems to have been duplicated when it shouldn't", expectedPid)
 }
 
-func (s *ExecutionGroupTestSuite) Test_assertCommandIsValid() {
+func (s *ExecutionGroupTestSuite) Test_isCommandValidFromRegisteredPath() {
 	// we are running using `go` so there's no reason why it should be unavailable
 	expectedApplication := "go"
 	testCommand := InitCommand(&CommandConfig{
 		Application: expectedApplication,
 		Arguments:   []string{},
 	})
-	s.executionGroup.assertCommandIsValid(testCommand)
+	results, err := s.executionGroup.isCommandValid(testCommand)
+	assert.True(s.T(), results)
+	assert.Nil(s.T(), err)
+}
+
+func (s *ExecutionGroupTestSuite) Test_isCommandValidFromAbsolutePathNoPermissions() {
+	cwd := getCurrentWorkingDirectory()
+	expectedApplication := path.Join(cwd, "/data/test-exec/nonexec.sh")
+	testCommand := InitCommand(&CommandConfig{
+		Application: expectedApplication,
+		Arguments:   []string{},
+	})
+	results, err := s.executionGroup.isCommandValid(testCommand)
+	assert.False(s.T(), results)
+	assert.NotNil(s.T(), err)
+	assert.Contains(s.T(), err.Error(), "you don't have permissions to execute")
+}
+
+func (s *ExecutionGroupTestSuite) Test_isCommandValidFromAbsolutePathWithPermissions() {
+	cwd := getCurrentWorkingDirectory()
+	expectedApplication := path.Join(cwd, "/data/test-exec/exec.sh")
+	testCommand := InitCommand(&CommandConfig{
+		Application: expectedApplication,
+		Arguments:   []string{},
+	})
+	results, err := s.executionGroup.isCommandValid(testCommand)
+	assert.True(s.T(), results)
+	assert.Nil(s.T(), err)
 }
 
 func (s *ExecutionGroupTestSuite) Test_getExitMessage() {
