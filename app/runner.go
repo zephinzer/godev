@@ -35,11 +35,13 @@ func InitRunner(config *RunnerConfig) *Runner {
 }
 
 func (runner *Runner) startPipeline() {
+	RunnerTriggerCount++
 	defer runner.logger.Tracef("completed pipeline %v", RunnerTriggerCount)
+	runner.logger.Tracef("starting pipeline %v", RunnerTriggerCount)
 	executionGroupCount := len(runner.config.Pipeline)
 	for index, executionGroup := range runner.config.Pipeline {
 		executionGroup.logger = InitLogger(&LoggerConfig{
-			Name:   "iteration",
+			Name:   "run",
 			Format: "production",
 			Level:  runner.config.LogLevel,
 			AdditionalFields: &map[string]interface{}{
@@ -50,22 +52,12 @@ func (runner *Runner) startPipeline() {
 	}
 }
 
-func (runner *Runner) IsRunning() bool {
-	for _, executionGroup := range runner.config.Pipeline {
-		if executionGroup.IsRunning() {
-			return true
-		}
-	}
-	return false
-}
-
 func (runner *Runner) Trigger() {
-	runner.terminateExistingPipeline()
-	RunnerTriggerCount++
+	runner.terminateIfRunning()
 	go runner.startPipeline()
 }
 
-func (runner *Runner) terminateExistingPipeline() {
+func (runner *Runner) terminateIfRunning() {
 	defer func() {
 		if r := recover(); r != nil {
 			runner.logger.Warn(r)
@@ -73,11 +65,11 @@ func (runner *Runner) terminateExistingPipeline() {
 	}()
 	for index, executionGroup := range runner.config.Pipeline {
 		if executionGroup.IsRunning() {
-			runner.logger.Warnf("terminating pipeline %v...", RunnerTriggerCount)
+			runner.logger.Infof("terminating pipeline %v...", RunnerTriggerCount)
 			executionGroup.Terminate()
-			runner.logger.Errorf("terminated pipeline %v", RunnerTriggerCount)
+			runner.logger.Infof("terminated pipeline %v", RunnerTriggerCount)
 		} else {
-			runner.logger.Infof("execution group %v is not running", index)
+			runner.logger.Tracef("execution group %v/%v is not running", index, len(runner.config.Pipeline))
 		}
 	}
 }
