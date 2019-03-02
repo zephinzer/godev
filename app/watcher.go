@@ -101,6 +101,7 @@ func (fw *Watcher) watchRoutine(tick <-chan time.Time, stop chan bool, handler W
 			if shouldWeStop {
 				break
 			}
+		default:
 		}
 	}
 }

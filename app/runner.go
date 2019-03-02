@@ -35,24 +35,24 @@ func InitRunner(config *RunnerConfig) *Runner {
 }
 
 func (runner *Runner) startPipeline() {
+	defer runner.logger.Tracef("completed pipeline %v", RunnerTriggerCount)
 	executionGroupCount := len(runner.config.Pipeline)
 	for index, executionGroup := range runner.config.Pipeline {
 		executionGroup.logger = InitLogger(&LoggerConfig{
-			Name:   fmt.Sprintf("run[%v]", RunnerTriggerCount),
+			Name:   "iteration",
 			Format: "production",
 			Level:  runner.config.LogLevel,
 			AdditionalFields: &map[string]interface{}{
-				"submodule": fmt.Sprintf("group[%v/%v]", index+1, executionGroupCount),
+				"submodule": fmt.Sprintf("%v/%v/%v]", RunnerTriggerCount, index+1, executionGroupCount),
 			},
 		})
 		executionGroup.Run()
 	}
-	runner.waitGroup.Done()
 }
 
-func (runner *Runner) isPipelineRunning() bool {
+func (runner *Runner) IsRunning() bool {
 	for _, executionGroup := range runner.config.Pipeline {
-		if executionGroup.started && len(executionGroup.pids) > 0 {
+		if executionGroup.IsRunning() {
 			return true
 		}
 	}
@@ -60,13 +60,9 @@ func (runner *Runner) isPipelineRunning() bool {
 }
 
 func (runner *Runner) Trigger() {
-	RunnerTriggerCount++
-	defer runner.logger.Tracef("completed pipeline %v", RunnerTriggerCount)
-	runner.logger.Tracef("starting pipeline %v", RunnerTriggerCount)
-	runner.waitGroup.Add(1)
 	runner.terminateExistingPipeline()
+	RunnerTriggerCount++
 	go runner.startPipeline()
-	runner.waitGroup.Wait()
 }
 
 func (runner *Runner) terminateExistingPipeline() {
@@ -75,7 +71,13 @@ func (runner *Runner) terminateExistingPipeline() {
 			runner.logger.Warn(r)
 		}
 	}()
-	if runner.isPipelineRunning() {
-		runner.waitGroup.Done()
+	for index, executionGroup := range runner.config.Pipeline {
+		if executionGroup.IsRunning() {
+			runner.logger.Warnf("terminating pipeline %v...", RunnerTriggerCount)
+			executionGroup.Terminate()
+			runner.logger.Errorf("terminated pipeline %v", RunnerTriggerCount)
+		} else {
+			runner.logger.Infof("execution group %v is not running", index)
+		}
 	}
 }

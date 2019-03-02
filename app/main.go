@@ -66,7 +66,7 @@ func main() {
 		var wg sync.WaitGroup
 		watcher.BeginWatch(&wg, func(events *[]WatcherEvent) bool {
 			for _, e := range *events {
-				logger.Info(e)
+				logger.Trace(e)
 			}
 			runner.Trigger()
 			return true

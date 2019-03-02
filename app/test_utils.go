@@ -13,14 +13,6 @@ type CommandMock struct {
 	Command
 }
 
-func (cm *CommandMock) getArguments() []string {
-	if len(cm.config.Arguments) > 0 {
-		return cm.config.Arguments
-	} else {
-		return []string{"command", "mock"}
-	}
-}
-
 func (cm *CommandMock) getCommand() *exec.Cmd {
 	return &exec.Cmd{
 		ProcessState: &os.ProcessState{},
