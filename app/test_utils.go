@@ -13,7 +13,7 @@ type CommandMock struct {
 	Command
 }
 
-func (cm *CommandMock) getCommand() *exec.Cmd {
+func (cm *CommandMock) GetCommand() *exec.Cmd {
 	return &exec.Cmd{
 		ProcessState: &os.ProcessState{},
 	}

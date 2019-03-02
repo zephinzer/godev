@@ -16,9 +16,9 @@ var CommandCount = 0
 // ICommand is the interface for the Command class
 type ICommand interface {
 	Run()
-	getCommand() *exec.Cmd
-	getID() string
-	getStatus() *chan error
+	GetCommand() *exec.Cmd
+	GetID() string
+	GetStatus() *chan error
 	IsRunning() bool
 	IsValid() error
 	Interrupt()
@@ -68,43 +68,31 @@ type Command struct {
 
 // Interrupt sends SIGINT to the command
 func (command *Command) Interrupt() {
-	command.logger.Tracef("SIGINT received by command %s", command.getID())
-	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGINT >>> %v", command.getID(), command.started, command.terminated, &command.signal)
+	command.logger.Tracef("SIGINT received by command %s", command.id)
+	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGINT >>> %v", command.id, command.started, command.terminated, &command.signal)
 	command.signal <- syscall.SIGINT
 }
 
 // Terminate sends SIGTERM to the command
 func (command *Command) Terminate() {
-	command.logger.Tracef("SIGTERM received by command %s", command.getID())
-	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGTERM >>> %v", command.getID(), command.started, command.terminated, &command.signal)
+	command.logger.Tracef("SIGTERM received by command %s", command.id)
+	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGTERM >>> %v", command.id, command.started, command.terminated, &command.signal)
 	command.signal <- syscall.SIGTERM
 }
 
 // Kill sends SIGKILL to the command
 func (command *Command) Kill() {
-	command.logger.Tracef("SIGKILL received by command %s", command.getID())
-	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGKILL >>> %v", command.getID(), command.started, command.terminated, &command.signal)
+	command.logger.Tracef("SIGKILL received by command %s", command.id)
+	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGKILL >>> %v", command.id, command.started, command.terminated, &command.signal)
 	command.signal <- syscall.SIGKILL
 }
 
 // Run executes the command
 func (command *Command) Run() {
-	command.logger.Tracef("command[%s] is starting", command.getID())
+	command.logger.Tracef("command[%s] is starting", command.id)
 	command.initialise()
 	go command.handleProcessRun()
-	go func() error {
-		for {
-			select {
-			case signal := <-command.signal: // caller -> Command: shut down please
-				command.handleSignalReceived(signal)
-				return nil
-			case cmdRunStatus := <-command.run: // process -> Command: i'm done here
-				return command.handleProcessExited(cmdRunStatus)
-			default: // just run
-				command.handleRunning()
-			}
-		}
-	}()
+	go command.handleProcessRunning()
 	select {
 	case terminateCommand := <-command.terminated:
 		command.handleTerminated(terminateCommand)
@@ -120,6 +108,19 @@ func (command *Command) handleProcessExited(status error) error {
 func (command *Command) handleProcessRun() {
 	command.started = true
 	command.run <- command.cmd.Run()
+}
+
+func (command *Command) handleProcessRunning() error {
+	for {
+		select {
+		case signal := <-command.signal: // caller -> Command: shut down please
+			return command.handleSignalReceived(signal)
+		case cmdRunStatus := <-command.run: // process -> Command: i'm done here
+			return command.handleProcessExited(cmdRunStatus)
+		default: // just run
+			command.handleRunning()
+		}
+	}
 }
 
 func (command *Command) handleRunning() {
@@ -142,7 +143,7 @@ func (command *Command) handleSignalReceived(signal os.Signal) error {
 }
 
 func (command *Command) handleTerminated(terminateCommand error) {
-	command.logger.Tracef("command[%s] is exiting (%v)", command.getID(), terminateCommand)
+	command.logger.Tracef("command[%s] is exiting (%v)", command.id, terminateCommand)
 	command.logger.Infof("%v\n■ ─────────────────────────────── pid:%v ■", strings.Join(command.config.Arguments, ","), command.cmd.Process.Pid)
 	command.stopped = true
 	command.status <- terminateCommand
@@ -164,15 +165,15 @@ func (command *Command) initialise() {
 	command.cmd.Stdout = os.Stdout
 }
 
-func (command *Command) getCommand() *exec.Cmd {
+func (command *Command) GetCommand() *exec.Cmd {
 	return command.cmd
 }
 
-func (command *Command) getID() string {
+func (command *Command) GetID() string {
 	return strconv.Itoa(command.id)
 }
 
-func (command *Command) getStatus() *chan error {
+func (command *Command) GetStatus() *chan error {
 	return &command.status
 }
 

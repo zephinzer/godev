@@ -27,13 +27,13 @@ func (executionGroup *ExecutionGroup) Run() {
 			go func() {
 				for {
 					select {
-					case err := <-*command.getStatus(): // Command letting us know its done
+					case err := <-*command.GetStatus(): // Command letting us know its done
 						executionGroup.handleCommandStatus(command, err)
 					default:
 					}
 				}
 			}()
-			executionGroup.logger.Tracef("command[%s] is starting", command.getID())
+			executionGroup.logger.Tracef("command[%s] is starting", command.GetID())
 			go command.Run()
 		}
 	}
@@ -43,9 +43,9 @@ func (executionGroup *ExecutionGroup) Run() {
 
 func (executionGroup *ExecutionGroup) handleCommandStatus(command ICommand, err error) {
 	if err != nil {
-		executionGroup.logger.Warnf("command[%s] exited with: %s", command.getID(), err)
+		executionGroup.logger.Warnf("command[%s] exited with: %s", command.GetID(), err)
 	} else {
-		executionGroup.logger.Debugf("command[%s] exited without error", command.getID())
+		executionGroup.logger.Debugf("command[%s] exited without error", command.GetID())
 	}
 	executionGroup.waitGroup.Done()
 }
@@ -53,9 +53,9 @@ func (executionGroup *ExecutionGroup) handleCommandStatus(command ICommand, err 
 func (executionGroup *ExecutionGroup) Terminate() {
 	for _, command := range executionGroup.commands {
 		if command.IsRunning() {
-			executionGroup.logger.Tracef("sending SIGINT to command %v", command.getID())
+			executionGroup.logger.Tracef("sending SIGINT to command %v", command.GetID())
 			command.Interrupt()
-			executionGroup.logger.Tracef("SIGINT sent to command %v", command.getID())
+			executionGroup.logger.Tracef("SIGINT sent to command %v", command.GetID())
 		}
 	}
 }
