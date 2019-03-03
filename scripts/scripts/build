@@ -1,0 +1,17 @@
+#!/bin/bash
+
+ARGS=${@};
+
+go env;
+
+GO111MODULE=on go mod download;
+GO111MODULE=on go mod vendor;
+
+if [ -z "${ARGS}" ]; then
+  go build ${ARGS};
+else
+  go build -a -ldflags '-w -s' -o app.${GOOS}.${GOARCH};
+  if [ "${GOOS}" = "windows" ]; then
+    mv app.${GOOS}.${GOARCH} app.${GOOS}.${GOARCH}.exe;
+  fi;
+fi;

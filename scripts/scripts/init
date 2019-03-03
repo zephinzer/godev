@@ -1,0 +1,211 @@
+#!/bin/bash
+noop()
+{
+  printf -- '';
+}
+
+success_printf()
+{
+  printf -- "\033[32m${@}\033[0m";
+}
+
+error_printf()
+{
+  printf -- "\033[31m${@}\033[0m";
+}
+
+add_gitignore()
+{
+  printf -- 'Add .gitignore? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      mkdir -p $(pwd)/.cache/pkg;
+      printf -- "*\n!.gitignore" > $(pwd)/.cache/pkg/.gitignore;
+      printf -- ".cache\nvendor\napp\n*.out" > $(pwd)/.gitignore;
+      printf -- '.gitignore has been setup.';
+    ;;
+  esac;
+  printf -- '\n\n';
+}
+
+add_git()
+{
+  printf -- "Initialize git repository at $(pwd)? [y/N] ";
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      git init;
+      printf -- 'Git repository setup done.';
+      add_gitignore;
+    ;;
+  esac;
+  printf -- '\n\n';
+}
+
+add_go_mod()
+{
+  printf -- 'Setup Go modules? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      GO111MODULE=on go mod init;
+      printf -- 'Go mod set up successfully.\n\n';
+    ;;
+  esac;
+  printf -- '\n\n';
+}
+
+add_dockerfile()
+{
+  printf -- 'Seed a Dockerfile? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      cat << 'EOF' > $(pwd)/Dockerfile
+FROM zephinzer/golang-dev:latest as development
+COPY . /go/src/app
+ENTRYPOINT [ "start" ]
+
+FROM development as build
+RUN build
+ENTRYPOINT [ "/go/src/app/app" ]
+
+FROM scratch as production
+COPY --from=build /go/src/app/app /
+ENTRYPOINT [ "/app" ]
+EOF
+      printf -- 'Dockerfile setup done.';
+    ;;
+  esac;
+  printf -- '\n\n';
+}
+
+add_main_go()
+{
+  printf -- 'Seed a main.go? [y/N] ';
+  read YESNO;
+  case $YESNO in
+    'yes')
+      noop;
+    ;&
+    'y')
+      noop;
+    ;&
+    'Y')
+      noop;
+    ;&
+    '1')
+      cat << 'EOF' > $(pwd)/main.go
+package main
+
+import (
+  "fmt"
+)
+
+func main() {
+  fmt.Println("hello world")
+}
+EOF
+      printf -- 'main.go seeded successfully.';
+    ;;
+  esac;
+  printf -- '\n\n';
+}
+
+printf -- 'Initialising .cache directory...';
+mkdir -p "$(pwd)/.cache/pkg";
+
+printf -- 'Checking for git setup... ';
+git status &>/dev/null;
+if [ "$?" != "0" ]; then
+  error_printf 'Git setup not found!\n';
+  add_git;
+else
+  success_printf 'Git setup found!\n';
+fi;
+
+git status &>/dev/null;
+if [ "$?" = "0" ]; then
+  printf -- "Checking for .gitignore at $(pwd)/.gitignore... ";
+  stat $(pwd)/.gitignore &>/dev/null;
+  if [ "$?" != "0" ]; then
+    error_printf '.gitignore not found!\n';
+    add_gitignore;
+  else
+    success_printf '.gitignore found!\n';
+  fi;
+fi;
+
+printf -- "Checking for go mod at $(pwd)/go.mod... ";
+stat $(pwd)/go.mod &>/dev/null;
+if [ "$?" != "0" ]; then
+  error_printf 'go.mod not found!\n';
+  add_go_mod;
+else
+  printf -- 'go.mod found!\n';
+fi;
+
+printf -- "Checking for Dockerfile at $(pwd)/Dockerfile... ";
+stat $(pwd)/Dockerfile &>/dev/null;
+if [ "$?" != "0" ]; then
+  error_printf 'Dockerfile not found!\n';
+  add_dockerfile;
+else
+  success_printf 'Dockerfile found!\n';
+fi;
+
+printf -- "Checking for main.go at $(pwd)/main.go... ";
+stat $(pwd)/main.go &>/dev/null;
+if [ "$?" != "0" ]; then
+  error_printf 'main.go not found!\n';
+  add_main_go;
+else
+  success_printf 'main.go found!\n';
+fi;
+
+success_printf -- "You're all set up!\n\n";
+
+printf -- 'Post installation notes:\n';
+printf -- "- run 'make start' now to start developing\n";
+printf -- "- run 'make test' now to start the test watching\n";
+printf -- "- run 'make build' now to run a logical build\n";
+printf -- "- (if Dockerfile is present) run 'docker build .' now to run an image build\n\n";
+
+success_printf -- "If your friend would find this useful, share this link: https://github.com/zephinzer/golang-dev (:\n\n";

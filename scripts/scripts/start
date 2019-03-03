@@ -1,0 +1,116 @@
+#!/bin/bash
+ALL_PARAMETERS=$@;
+BUILED_FAILED=0;
+APP_PID=0;
+
+app_printf()
+{
+  printf -- "\033[32m${@}\033[0m";
+}
+
+runner_printf()
+{
+  printf -- "\033[90m${@}\033[0m";
+}
+
+runner_errorf()
+{
+  printf -- "\033[31m${@}\033[0m";
+}
+
+set_red()
+{
+  printf -- "\033[31m";
+}
+
+set_grey()
+{
+  printf -- "\033[90m";
+}
+
+set_normal()
+{
+  printf -- "\033[0m";
+}
+
+update_dependencies()
+{
+  if [ -e "$(pwd)/go.mod" ]; then
+    runner_printf 'retrieving dependencies... ';
+    set_grey;
+    GO111MODULE=on go mod download;
+    GO111MODULE=on go mod vendor;
+    set_normal;
+    runner_printf 'dependencies retrieved.\n';
+  fi;
+}
+
+build_it()
+{
+  runner_printf 'building app... ';
+  set_red;
+  go build -o $(pwd)/app;
+  BUILD_FAILED=$?;
+  set_normal;
+  if [ ${BUILD_FAILED} -eq 0 ]; then
+    runner_printf 'built.\n';
+  else
+    runner_errorf "failed to build (build exited with status code ${BUILD_FAILED}).\n";
+  fi;
+}
+
+run_it()
+{
+  runner_printf 'starting app... ';
+  $(pwd)/app ${ALL_PARAMETERS} &
+  APP_PID=$!;
+  app_printf "\n- - - app:${APP_PID} logs below this line - - -\n";
+}
+
+kill_it()
+{
+  app_printf "- - - app:${APP_PID} logs above this line - - -\n";
+  runner_printf "killing process ID ${APP_PID}... ";
+  set_grey;
+  ps | grep app | grep ${APP_PID} && kill ${APP_PID} >/dev/null & wait;
+  set_normal;
+  runner_printf "process with PID ${APP_PID} killed.\n";
+}
+
+# use set -e only for first run because if
+# application cannot build then there's no use
+# retrying
+update_dependencies;
+build_it;
+if [ $BUILD_FAILED -eq 0 ]; then run_it; else APP_PID=0; fi;
+
+
+# create the watch pattern - check if there
+# are any .go files and **/*.go files before adding
+# it to a pattern we will use later for inotifywatch
+WATCH_PATTERN='';
+ls *.go &>/dev/null && STAR_GO=1 || STAR_GO=0;
+ls **/*.go &>/dev/null && STAR_STAR_GO=1 || STAR_STAR_GO=0;
+if [ $STAR_GO -eq 1 ]; then
+  WATCH_PATTERN="*.go ${WATCH_PATTERN}"
+fi;
+if [ $STAR_STAR_GO -eq 1 ]; then
+  WATCH_PATTERN="**/*.go ${WATCH_PATTERN}"
+fi;
+
+
+# start the application and watch it
+INIT=0;
+inotifywait -q \
+  -e close_write,modify,attrib,move,create,delete \
+  -m ${WATCH_PATTERN} \
+  @./app |
+while read -r directory events filename; do
+  if [ ${INIT} -ne 0 ]; then
+    if [ ${APP_PID} -ne 0 ]; then kill_it; fi;
+    update_dependencies;
+    build_it;
+    if [ ${BUILD_FAILED} -eq 0 ]; then run_it; fi;
+  fi;
+  INIT=1;
+done;

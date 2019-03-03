@@ -1,86 +1,76 @@
-# global variables - change these to your own Docker Hub configuration if 
-# you are forking this repository and building your own image out of this
-DOCKER_NAMESPACE=zephinzer
-DOCKER_IMAGE_NAME=golang-dev
+GOLANG_DEV_VERSION=latest
 
-# builds the image for use locally
-build:
-	@docker build -t $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest .
-
-# publishes the image to Docker Hub via 3 tags:
-# 1. $SEMVER_VERSION tag (if you're fussy about the methodology of this image)
-# 2. $GO_VERSION tag (if you're fussy about the golang version but don't care about all else)
-# 3. `latest` tag (for development use)
-publish: build
-	@$(MAKE) publish.app
-	@$(MAKE) publish.go
-	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest
-
-# publishes the image with the $SEMVER_VERSION tag
-publish.app: tag.app
-	@printf -- "$$(docker run \
-		-v "$(CURDIR):/app" \
-		$(DOCKER_NAMESPACE)/vtscripts:latest \
-		get-latest -q)" > $(CURDIR)/.app.version
-	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.app.version)
-	@rm -rf $(CURDIR)/.app.version
-
-# publishes the image with the $GO_VERSION tag
-publish.go: tag.go
-	@printf -- "$$(docker run \
-		-v "$(CURDIR):/app" \
-		$(DOCKER_NAMESPACE)/vtscripts:latest \
-		get-latest -q)" > $(CURDIR)/.app.version
-	@printf -- "$$(docker run \
-		--entrypoint=go \
-		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
-		version)" | cut -f 3 -d ' ' | sed -e 's|go||g' > $(CURDIR)/.go.version
-	@docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)-dev-$$(cat $(CURDIR)/.app.version)
-	@rm -rf $(CURDIR)/.app.version
-	@rm -rf $(CURDIR)/.go.version
-
-# tags the image with the $SEMVER_VERSION tag
-tag.app:
-	@printf -- "$$(docker run \
-		-v "$(CURDIR):/app" \
-		$(DOCKER_NAMESPACE)/vtscripts:latest \
-		get-latest -q)" > $(CURDIR)/.app.version
-	@docker tag $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
-		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.app.version)
-	@rm -rf $(CURDIR)/.app.version
-
-# tags the image with the $GO_VERSION tag
-tag.go:
-	@printf -- "$$(docker run \
-		-v "$(CURDIR):/app" \
-		$(DOCKER_NAMESPACE)/vtscripts:latest \
-		get-latest -q)" > $(CURDIR)/.app.version
-	@printf -- "$$(docker run \
-		--entrypoint=go \
-		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
-		version)" | cut -f 3 -d ' ' | sed -e 's|go||g' > $(CURDIR)/.go.version
-	@docker tag $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
-		$(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):go-$$(cat $(CURDIR)/.go.version)-dev-$$(cat $(CURDIR)/.app.version)
-	@rm -rf $(CURDIR)/.go.version
-	@rm -rf $(CURDIR)/.app.version
-
-# retrieves the latest tagged version of this repository
+compile: generate
+	@$(MAKE) log.info MSG="generating static binary..."
+	@CGO_ENABLED=0 GO111MODULE=on \
+		go build \
+			-a \
+			-o $(CURDIR)/bin/godev \
+			-ldflags " \
+				-extldflags -static \
+				-X main.Version=$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*') \
+				-X main.Commit=$$(git rev-list -1 HEAD) \
+			"
+	@$(MAKE) log.info MSG="generated binary at $(CURDIR)/bin/godev"
+generate:
+	@$(MAKE) log.info MSG="generating static data file data.go (see ./data/generate.go)..."
+	@go generate
+	@$(MAKE) log.info MSG="generated data.go..."
+start: generate
+	@$(MAKE) log.info MSG="running application for development with live-reload..."
+	@$(MAKE) _dev ARG="start" ARGS="--test --ignore bin,data,vendor,.cache ${ARGS}"
+start.prd: generate
+	@$(MAKE) log.info MSG="running application for development in production with live-reload..."
+	@$(MAKE) _dev ARG="start" ARGS="${ARGS}"
+run: install.deps generate
+	@$(MAKE) log.info MSG="running application..."
+	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') ${ARGS}
+run.dev: install.deps generate
+	@$(MAKE) log.info MSG="running application in development..."
+	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') --test --ignore bin,data,vendor,.cache ${ARGS}
+run.prd: install.deps compile
+	@$(MAKE) log.info MSG="running application in production..."
+	@bin/godev ${ARGS}
+install.deps:
+	@$(MAKE) log.info MSG="installing dependencies with go modules..."
+	@GO111MODULE=on go mod vendor
+test: install.deps generate
+	@$(MAKE) log.info MSG="running tests with live-reload"
+	@$(MAKE) _dev ARG="test"
+test.once: install.deps generate
+	@$(MAKE) log.info MSG="running tests once with coverage output"
+	@$(MAKE) _dev ARG="test -coverprofile c.out"
+shell:
+	@$(MAKE) log.info MSG="creating a shell in the docker development environment..."
+	$(MAKE) _dev ARG="shell"
+contributors:
+	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS
+	@echo "# last generated on $$(date -u)\n" >> $(CURDIR)/CONTRIBUTORS
+	@git shortlog -se | sed -e 's|@|-at-|g' -e 's|\.|-dot-|g' | cut -f 2- >> $(CURDIR)/CONTRIBUTORS
+## retrieves the latest version we are at
 version.get:
+	@docker run -v "$(CURDIR)/..:/app" zephinzer/vtscripts:latest get-latest -q
+## bumps the version by 1: specify VERSION as "patch", "minor", or "major", to be specific about things
+version.bump: 
+	@docker run -v "$(CURDIR)/..:/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
+## driver recipe to run other scripts (do not use alone)
+_dev:
 	@docker run \
-		-v "$(CURDIR):/app" \
-		zephinzer/vtscripts:latest \
-		get-latest -q
-
-# bumps the version of this repository
-# to bump the patch version, run this without arguments
-# to bump the minor version, run this with VERSION=minor argument
-# to bump the major version, run this with VERSION=major argument
-version.bump:
-	@docker run \
-		-v "$(CURDIR):/app" \
-		zephinzer/vtscripts:latest \
-		iterate ${VERSION} -i
-
-# runs some sanity checks, see ./test for more information
-test: build
-	cd $(CURDIR)/test && $(MAKE) test
+    -it \
+    --network host \
+    -u $$(id -u) \
+    -v "$(CURDIR)/.cache/pkg:/go/pkg" \
+    -v "$(CURDIR):/go/src/app" \
+    zephinzer/golang-dev:$(GOLANG_DEV_VERSION) ${ARG} ${ARGS}
+## blue logs
+log.debug:
+	-@printf -- "\033[36m\033[1m_ [DEBUG] ${MSG}\033[0m\n"
+## green logs
+log.info:
+	-@printf -- "\033[32m\033[1m>  [INFO] ${MSG}\033[0m\n"
+## yellow logs
+log.warn:
+	-@printf -- "\033[33m\033[1m?  [WARN] ${MSG}\033[0m\n"
+## red logs (die mf)
+log.error:
+	-@printf -- "\033[31m\033[1m! [ERROR] ${MSG}\033[0m\n"
