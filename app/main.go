@@ -17,70 +17,94 @@ var Commit string
 
 func main() {
 	config := InitConfig()
-	logger := InitLogger(&LoggerConfig{
-		Name:   "main",
-		Format: "production",
-		Level:  config.LogLevel,
-	})
-	if config.RunView {
-		viewFile(logger, config.View)
-	} else if config.RunVersion {
-		fmt.Printf("godev %s-%s\n", Version, Commit)
-	} else {
-		logUniversalConfigurations(logger, config)
-		logWatchModeConfigurations(logger, config)
-		watcher := InitWatcher(&WatcherConfig{
-			FileExtensions: config.FileExtensions,
-			IgnoredNames:   config.IgnoredNames,
-			RefreshRate:    config.Rate,
-			LogLevel:       config.LogLevel,
-		})
-		watcher.RecursivelyWatch(config.WatchDirectory)
-		var pipeline []*ExecutionGroup
-		for _, execGroup := range config.ExecGroups {
-			executionGroup := &ExecutionGroup{}
-			var executionCommands []ICommand
-			commands := strings.Split(execGroup, config.CommandsDelimiter)
-			for _, command := range commands {
-				if sections, err := shellquote.Split(command); err != nil {
-					panic(err)
-				} else {
-					executionCommands = append(
-						executionCommands,
-						InitCommand(&CommandConfig{
-							Application: sections[0],
-							Arguments:   sections[1:],
-							LogLevel:    config.LogLevel,
-						}),
-					)
-				}
-			}
-			executionGroup.commands = executionCommands
-			pipeline = append(pipeline, executionGroup)
-		}
-		runner := InitRunner(&RunnerConfig{
-			Pipeline: pipeline,
-			LogLevel: config.LogLevel,
-		})
-
-		var wg sync.WaitGroup
-		watcher.BeginWatch(&wg, func(events *[]WatcherEvent) bool {
-			for _, e := range *events {
-				logger.Trace(e)
-			}
-			runner.Trigger()
-			return true
-		})
-
-		logger.Infof("started watcher at %s", config.WatchDirectory)
-
-		runner.Trigger()
-		wg.Wait()
-	}
-	logger.Info("bye")
+	godev := InitGoDev(config)
+	godev.Start()
 }
 
-func logUniversalConfigurations(logger *Logger, config *Config) {
+func InitGoDev(config *Config) *GoDev {
+	return &GoDev{
+		logger: InitLogger(&LoggerConfig{
+			Name:   "main",
+			Format: "production",
+			Level:  config.LogLevel,
+		}),
+	}
+}
+
+type GoDev struct {
+	config *Config
+	logger *Logger
+}
+
+func (godev *GoDev) Start() {
+	defer godev.logger.Infof("godev ended")
+	godev.logger.Infof("godev started")
+	if godev.config.RunView {
+		godev.viewFile()
+	} else if godev.config.RunVersion {
+		fmt.Printf("godev %s-%s\n", Version, Commit)
+	} else {
+		godev.startWatching()
+	}
+}
+
+func (godev *GoDev) startWatching() {
+	config := godev.config
+	logger := godev.logger
+	godev.logUniversalConfigurations()
+	godev.logWatchModeConfigurations()
+	watcher := InitWatcher(&WatcherConfig{
+		FileExtensions: config.FileExtensions,
+		IgnoredNames:   config.IgnoredNames,
+		RefreshRate:    config.Rate,
+		LogLevel:       config.LogLevel,
+	})
+	watcher.RecursivelyWatch(config.WatchDirectory)
+	var pipeline []*ExecutionGroup
+	for _, execGroup := range config.ExecGroups {
+		executionGroup := &ExecutionGroup{}
+		var executionCommands []ICommand
+		commands := strings.Split(execGroup, config.CommandsDelimiter)
+		for _, command := range commands {
+			if sections, err := shellquote.Split(command); err != nil {
+				panic(err)
+			} else {
+				executionCommands = append(
+					executionCommands,
+					InitCommand(&CommandConfig{
+						Application: sections[0],
+						Arguments:   sections[1:],
+						LogLevel:    config.LogLevel,
+					}),
+				)
+			}
+		}
+		executionGroup.commands = executionCommands
+		pipeline = append(pipeline, executionGroup)
+	}
+	runner := InitRunner(&RunnerConfig{
+		Pipeline: pipeline,
+		LogLevel: config.LogLevel,
+	})
+
+	var wg sync.WaitGroup
+	watcher.BeginWatch(&wg, func(events *[]WatcherEvent) bool {
+		for _, e := range *events {
+			logger.Trace(e)
+		}
+		runner.Trigger()
+		return true
+	})
+
+	logger.Infof("started watcher at %s", config.WatchDirectory)
+
+	runner.Trigger()
+	wg.Wait()
+}
+
+func (godev *GoDev) logUniversalConfigurations() {
+	config := godev.config
+	logger := godev.logger
 	logger.Debugf("flag - init       : %v", config.RunInit)
 	logger.Debugf("flag - test       : %v", config.RunTest)
 	logger.Debugf("flag - view       : %v", config.RunView)
@@ -88,7 +112,9 @@ func logUniversalConfigurations(logger *Logger, config *Config) {
 	logger.Debugf("build output      : %s", config.BuildOutput)
 }
 
-func logWatchModeConfigurations(logger *Logger, config *Config) {
+func (godev *GoDev) logWatchModeConfigurations() {
+	config := godev.config
+	logger := godev.logger
 	logger.Debugf("file extensions   : %v", config.FileExtensions)
 	logger.Debugf("ignored names     : %v", config.IgnoredNames)
 	logger.Debugf("refresh interval  : %v", config.Rate)
@@ -109,8 +135,10 @@ func logWatchModeConfigurations(logger *Logger, config *Config) {
 	}
 }
 
-func viewFile(logger *Logger, filename string) {
-	switch strings.ToLower(filename) {
+func (godev *GoDev) viewFile() {
+	config := godev.config
+	logger := godev.logger
+	switch strings.ToLower(config.View) {
 	case "dockerfile":
 		logger.Info("previewing contents of Dockerfile")
 		fmt.Println(DataDockerfile)
