@@ -15,6 +15,10 @@ import (
 // functions
 const CommandDelimiter = "───────────────────────────────────────────"
 
+const CommandProcessStartSymbol = "►"
+
+const CommandProcessStopSymbol = "■"
+
 // ICommand is the interface for the Command class
 type ICommand interface {
 	// runs the command
@@ -128,6 +132,9 @@ func (command *Command) SendInterrupt() {
 }
 
 func (command *Command) handleInitialisation() {
+	if command.config == nil {
+		panic("command.config needs to be defined before initialisation can be done")
+	}
 	command.signal = make(chan os.Signal, 0)
 	command.status = make(chan error, 0)
 	command.run = make(chan error, 0)
@@ -143,6 +150,7 @@ func (command *Command) handleInitialisation() {
 	command.cmd.Stdout = os.Stdout
 }
 
+// handleProcessExited handles the exit status being sent by the process
 func (command *Command) handleProcessExited(status error) error {
 	command.logger.Tracef("process status: %v", command.cmd.ProcessState)
 	command.terminated <- status
@@ -162,21 +170,26 @@ func (command *Command) handleProcessLifecycle() error {
 	}
 }
 
+// handleProcessReporting handles the CLI reporting after a process
+// has its PID reported
 func (command *Command) handleProcessReporting() {
 	if !command.reported {
 		if command.cmd.Process != nil {
 			command.logger.Infof(
-				"'%v'\n► %s pid:%v id:%s ►",
+				"'%v'\n%s %s pid:%v id:%s %s",
 				strings.Join(command.config.Arguments, "', '"),
+				CommandProcessStartSymbol,
 				CommandDelimiter,
 				command.cmd.Process.Pid,
 				command.id,
+				CommandProcessStartSymbol,
 			)
 			command.reported = true
 		}
 	}
 }
 
+// handleSignalReceived handles the signal received by the caller
 func (command *Command) handleSignalReceived(signal os.Signal) error {
 	command.logger.Tracef("caller sent signal %v", signal)
 	command.terminated <- errors.New(signal.String())
@@ -187,11 +200,14 @@ func (command *Command) handleSignalReceived(signal os.Signal) error {
 	return nil
 }
 
+// handleStart starts the process
 func (command *Command) handleStart() {
 	command.started = true
 	command.run <- command.cmd.Run()
 }
 
+// handleStopped processes the end of a command as reported
+// by (*exec.Cmd).Run or (*exec.Cmd).Wait
 func (command *Command) handleStopped(terminateCommand error) {
 	command.logger.Tracef("command[%s] is exiting (%v)", command.id, terminateCommand)
 	pid := -1
@@ -199,10 +215,12 @@ func (command *Command) handleStopped(terminateCommand error) {
 		pid = command.cmd.Process.Pid
 	}
 	command.logger.Infof(
-		"\n■ %s pid:%v id:%s ■",
+		"\n%s %s pid:%v id:%s %s",
+		CommandProcessStopSymbol,
 		CommandDelimiter,
 		pid,
 		command.id,
+		CommandProcessStopSymbol,
 	)
 	command.stopped = true
 	command.status <- terminateCommand
