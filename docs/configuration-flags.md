@@ -71,3 +71,7 @@ Sets the absolute path to be watched.
 Usage: `godev --watch $(pwd)/bin`
 
 > When this flag is not set, the watched directory defaults to the current working directory you ran `godev` from.
+
+- - -
+
+[Back](../)
