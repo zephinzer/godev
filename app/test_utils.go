@@ -37,6 +37,7 @@ func mockCommand(application string, arguments []string, logOutput *bytes.Buffer
 			Format: "production",
 			Level:  "trace",
 		}),
+		signal: make(chan os.Signal),
 	}
 	command.logger.SetOutput(logOutput)
 	return command

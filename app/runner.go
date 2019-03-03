@@ -14,11 +14,13 @@ type RunnerConfig struct {
 // RunnerTriggerCount keeps track of the number of piplines run
 var RunnerTriggerCount = 0
 
-// Runner is the main component responsible for running the commands
+// Runner is the main component responsible for running the execution pipeline
 type Runner struct {
 	config    *RunnerConfig
 	logger    *Logger
 	waitGroup sync.WaitGroup
+	started   bool
+	stopped   bool
 }
 
 // InitRunner initialises a runner
@@ -50,9 +52,11 @@ func (runner *Runner) startPipeline() {
 		})
 		executionGroup.Run()
 	}
+	runner.stopped = true
 }
 
 func (runner *Runner) Trigger() {
+	runner.stopped = false
 	runner.terminateIfRunning()
 	go runner.startPipeline()
 }
