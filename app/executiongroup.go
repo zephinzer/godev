@@ -37,6 +37,7 @@ func (executionGroup *ExecutionGroup) Run() {
 					select {
 					case err := <-*commandStatus: // Command letting us know its done
 						executionGroup.handleCommandStatus(command, err)
+						return
 					default:
 					}
 				}
