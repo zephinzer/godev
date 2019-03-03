@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"regexp"
+	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,41 +22,68 @@ func TestExecutionGroup(t *testing.T) {
 }
 
 func (s *ExecutionGroupTestSuite) SetupTest() {
-	s.executionGroup = &ExecutionGroup{
-		commands: []ICommand{
-			InitCommandMock("echo", []string{"1"}, &s.logs),
-			InitCommandMock("echo", []string{"2"}, &s.logs),
-			InitCommandMock("echo", []string{"3"}, &s.logs),
-		},
-	}
-	s.executionGroup.logger = InitLogger(&LoggerConfig{
-		Name: "ExecutionGroupTestSuite",
+	logger := InitLogger(&LoggerConfig{
+		Name:   "ExecutionGroupTestSuite",
+		Format: "production",
+		Level:  "trace",
 	})
-	s.executionGroup.logger.SetOutput(&s.logs)
+	logger.SetOutput(&s.logs)
+	s.executionGroup = &ExecutionGroup{
+		logger: logger,
+	}
+}
+
+func (s *ExecutionGroupTestSuite) TestIsRunning() {
+	t := s.T()
+	s.executionGroup.commands = []*Command{
+		mockCommand("echo", []string{"1"}, &s.logs),
+	}
+	s.executionGroup.commands[0].started = false
+	assert.False(t, s.executionGroup.IsRunning())
+	s.executionGroup.commands[0].started = true
+	assert.True(t, s.executionGroup.IsRunning())
+	s.executionGroup.commands[0].stopped = true
+	assert.False(t, s.executionGroup.IsRunning())
 }
 
 func (s *ExecutionGroupTestSuite) TestRun() {
+	s.executionGroup.commands = []*Command{
+		mockCommand("echo", []string{"1"}, &s.logs),
+		mockCommand("echo", []string{"2"}, &s.logs),
+		mockCommand("echo", []string{"3"}, &s.logs),
+	}
+	s.executionGroup.logger.SetOutput(&s.logs)
+	t := s.T()
 	s.executionGroup.Run()
-	assert.Contains(s.T(), s.logs.String(), "starting execution group")
-	assert.Contains(s.T(), s.logs.String(), "[echo] [1]")
-	assert.Contains(s.T(), s.logs.String(), "[echo] [2]")
-	assert.Contains(s.T(), s.logs.String(), "[echo] [3]")
-	assert.Contains(s.T(), s.logs.String(), "terminated execution group")
+	assert.Contains(t, s.logs.String(), "command[echo[1]] is starting")
+	assert.Contains(t, s.logs.String(), "command[echo[2]] is starting")
+	assert.Contains(t, s.logs.String(), "command[echo[3]] is starting")
+	assert.Regexp(t, regexp.MustCompile(`execution group\[\d\] is starting`), s.logs.String())
+	assert.Regexp(t, regexp.MustCompile(`execution group\[\d\] exited`), s.logs.String())
 }
 
-func (s *ExecutionGroupTestSuite) Test_provisionCommand() {
-	expectedPid := 65535
-	testCommand := InitCommandMock("test", []string{}, &s.logs)
-	s.executionGroup.provisionCommand(testCommand)
-	assert.NotNil(s.T(), testCommand.onStart)
-	assert.NotNil(s.T(), testCommand.onExit)
+func (s *ExecutionGroupTestSuite) TestTerminate() {
+	t := s.T()
+	s.executionGroup.commands = []*Command{
+		mockCommand("echo", []string{"1"}, &s.logs),
+	}
+	s.executionGroup.commands[0].handleInitialisation()
+	s.executionGroup.commands[0].started = true
+	s.executionGroup.commands[0].stopped = false
+	go func() {
+		select {
+		case signal := <-s.executionGroup.commands[0].signal:
+			assert.Equal(t, signal, syscall.SIGINT)
+		}
+	}()
+	s.executionGroup.Terminate()
+}
 
-	startMessage := testCommand.onStart(expectedPid)
-	assert.Contains(s.T(), startMessage, "pid:65535")
-	assert.Contains(s.T(), s.executionGroup.pids, expectedPid)
-
+func (s *ExecutionGroupTestSuite) Test_handleCommandStatus() {
+	t := s.T()
+	testCommand := mockCommand("echo", []string{"1"}, &s.logs)
 	s.executionGroup.waitGroup.Add(1)
-	exitMessage := testCommand.onExit(expectedPid)
-	assert.Contains(s.T(), exitMessage, "pid:65535")
-	assert.NotContains(s.T(), s.executionGroup.pids, expectedPid)
+	s.executionGroup.handleCommandStatus(testCommand, nil)
+	s.executionGroup.waitGroup.Wait()
+	assert.Contains(t, s.logs.String(), "command[echo[1]] exited without error")
 }

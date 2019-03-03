@@ -23,6 +23,7 @@ func main() {
 
 func InitGoDev(config *Config) *GoDev {
 	return &GoDev{
+		config: config,
 		logger: InitLogger(&LoggerConfig{
 			Name:   "main",
 			Format: "production",
@@ -37,8 +38,8 @@ type GoDev struct {
 }
 
 func (godev *GoDev) Start() {
-	defer godev.logger.Infof("godev ended")
-	godev.logger.Infof("godev started")
+	defer godev.logger.Infof("godev has ended")
+	godev.logger.Infof("godev has started")
 	if godev.config.RunView {
 		godev.viewFile()
 	} else if godev.config.RunVersion {
@@ -63,7 +64,7 @@ func (godev *GoDev) startWatching() {
 	var pipeline []*ExecutionGroup
 	for _, execGroup := range config.ExecGroups {
 		executionGroup := &ExecutionGroup{}
-		var executionCommands []ICommand
+		var executionCommands []*Command
 		commands := strings.Split(execGroup, config.CommandsDelimiter)
 		for _, command := range commands {
 			if sections, err := shellquote.Split(command); err != nil {
@@ -119,9 +120,9 @@ func (godev *GoDev) logWatchModeConfigurations() {
 	logger.Debugf("ignored names     : %v", config.IgnoredNames)
 	logger.Debugf("refresh interval  : %v", config.Rate)
 	logger.Debugf("execution delim   : %s", config.CommandsDelimiter)
-	logger.Trace("execution groups as follows...")
+	logger.Debug("execution groups as follows...")
 	for egIndex, execGroup := range config.ExecGroups {
-		logger.Tracef("  %v) %s", egIndex+1, execGroup)
+		logger.Debugf("  %v) %s", egIndex+1, execGroup)
 		commands := strings.Split(execGroup, config.CommandsDelimiter)
 		for cIndex, command := range commands {
 			sections, err := shellquote.Split(command)
@@ -130,7 +131,7 @@ func (godev *GoDev) logWatchModeConfigurations() {
 			}
 			app := sections[0]
 			args := sections[1:]
-			logger.Tracef("    %v > %s %v", cIndex+1, app, args)
+			logger.Debugf("    %v > %s %v", cIndex+1, app, args)
 		}
 	}
 }

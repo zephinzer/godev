@@ -2,22 +2,12 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-type CommandMock struct {
-	Command
-}
-
-func (cm *CommandMock) GetCommand() *exec.Cmd {
-	return &exec.Cmd{
-		ProcessState: &os.ProcessState{},
-	}
-}
 
 func createFile(t *testing.T, pathToFile string) {
 	testFileCreation, err := os.Create(pathToFile)
@@ -31,17 +21,23 @@ func createFile(t *testing.T, pathToFile string) {
 	defer testFileCreation.Close()
 }
 
-func InitCommandMock(application string, arguments []string, logOutput *bytes.Buffer) *CommandMock {
-	command := &CommandMock{}
-	command.config = &CommandConfig{
-		Application: application,
-		Arguments:   arguments,
+type MockCommand struct {
+	Command
+}
+
+func mockCommand(application string, arguments []string, logOutput *bytes.Buffer) *Command {
+	command := &Command{
+		id: fmt.Sprintf("%s%v", application, arguments),
+		config: &CommandConfig{
+			Application: application,
+			Arguments:   arguments,
+		},
+		logger: InitLogger(&LoggerConfig{
+			Name:   application,
+			Format: "production",
+			Level:  "trace",
+		}),
 	}
-	command.logger = InitLogger(&LoggerConfig{
-		Name:   application,
-		Format: "production",
-		Level:  "trace",
-	})
 	command.logger.SetOutput(logOutput)
 	return command
 }

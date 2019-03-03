@@ -35,6 +35,7 @@ type Config struct {
 	RunVersion        bool
 	RunInit           bool
 	RunTest           bool
+	LogSilent         bool
 	LogVerbose        bool
 	LogSuperVerbose   bool
 	LogLevel          LogLevel
@@ -53,6 +54,7 @@ func InitConfig() *Config {
 	currentWorkingDirectory := getCurrentWorkingDirectory()
 	config := &Config{}
 	flag.StringVar(&config.View, "view", "", "check out the original content of a file that godev provisions when --init is specified")
+	flag.BoolVar(&config.LogSilent, "silent", false, "do not show any logs from godev")
 	flag.BoolVar(&config.LogVerbose, "vv", false, "show verbose logs")
 	flag.BoolVar(&config.LogSuperVerbose, "vvv", false, "show super verbose logs")
 	flag.BoolVar(&config.RunVersion, "version", false, "display the version number")
@@ -78,6 +80,9 @@ func (config *Config) interpretLogLevel() {
 	if config.LogSuperVerbose {
 		config.LogLevel = "trace"
 	}
+	if config.LogSilent {
+		config.LogLevel = "panic"
+	}
 }
 
 func (config *Config) assignDefaults() {
@@ -92,10 +97,14 @@ func (config *Config) assignDefaults() {
 	}
 	if len(config.ExecGroups) == 0 {
 		if config.RunTest {
+			testFlags := "-coverprofile c.out"
+			if config.LogVerbose || config.LogSuperVerbose {
+				testFlags = fmt.Sprintf("-v %s", testFlags)
+			}
 			config.ExecGroups = append(
 				DefaultExecutionGroupsBase,
 				fmt.Sprintf("go build -o %s", config.BuildOutput),
-				"go test ./... -coverprofile c.out",
+				fmt.Sprintf("go test ./... %s", testFlags),
 			)
 		} else {
 			config.ExecGroups = append(

@@ -1,36 +1,41 @@
 package main
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"strings"
 	"syscall"
 )
 
-var CommandCount = 0
+// CommandDelimiter is used when demarcating boundaries between
+// functions
+const CommandDelimiter = "───────────────────────────────────────────"
 
 // ICommand is the interface for the Command class
 type ICommand interface {
+	// runs the command
 	Run()
-	GetCommand() *exec.Cmd
+	// gets the id of the command
 	GetID() string
+	// get a pointer to the status channel
 	GetStatus() *chan error
+	// checks if the command is still running
 	IsRunning() bool
+	// checks if the command is valid
 	IsValid() error
-	Interrupt()
-	Terminate()
-	Kill()
+	// tells command to exit nicely
+	SendInterrupt()
 }
 
 // InitCommand is for creating a new Command
 func InitCommand(config *CommandConfig) *Command {
-	CommandCount++
+	commandHash := fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%s%v", config.Application, config.Arguments))))
 	command := &Command{
-		id: CommandCount,
+		id: commandHash[:6],
 	}
 	command.config = config
 	command.logger = InitLogger(&LoggerConfig{
@@ -53,7 +58,7 @@ type CommandConfig struct {
 
 // Command is the atomic command to run
 type Command struct {
-	id         int
+	id         string
 	signal     chan os.Signal
 	status     chan error
 	run        chan error
@@ -66,119 +71,17 @@ type Command struct {
 	stopped    bool
 }
 
-// Interrupt sends SIGINT to the command
-func (command *Command) Interrupt() {
-	command.logger.Tracef("SIGINT received by command %s", command.id)
-	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGINT >>> %v", command.id, command.started, command.terminated, &command.signal)
-	command.signal <- syscall.SIGINT
-}
-
-// Terminate sends SIGTERM to the command
-func (command *Command) Terminate() {
-	command.logger.Tracef("SIGTERM received by command %s", command.id)
-	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGTERM >>> %v", command.id, command.started, command.terminated, &command.signal)
-	command.signal <- syscall.SIGTERM
-}
-
-// Kill sends SIGKILL to the command
-func (command *Command) Kill() {
-	command.logger.Tracef("SIGKILL received by command %s", command.id)
-	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGKILL >>> %v", command.id, command.started, command.terminated, &command.signal)
-	command.signal <- syscall.SIGKILL
-}
-
-// Run executes the command
-func (command *Command) Run() {
-	command.logger.Tracef("command[%s] is starting", command.id)
-	command.initialise()
-	go command.handleProcessRun()
-	go command.handleProcessRunning()
-	select {
-	case terminateCommand := <-command.terminated:
-		command.handleTerminated(terminateCommand)
-	}
-}
-
-func (command *Command) handleProcessExited(status error) error {
-	command.logger.Tracef("process status: %v", command.cmd.ProcessState)
-	command.terminated <- status
-	return nil
-}
-
-func (command *Command) handleProcessRun() {
-	command.started = true
-	command.run <- command.cmd.Run()
-}
-
-func (command *Command) handleProcessRunning() error {
-	for {
-		select {
-		case signal := <-command.signal: // caller -> Command: shut down please
-			return command.handleSignalReceived(signal)
-		case cmdRunStatus := <-command.run: // process -> Command: i'm done here
-			return command.handleProcessExited(cmdRunStatus)
-		default: // just run
-			command.handleRunning()
-		}
-	}
-}
-
-func (command *Command) handleRunning() {
-	if !command.reported {
-		if command.cmd.Process != nil {
-			command.logger.Infof("%v\n► ─────────────────────────────── pid:%v ►", strings.Join(command.config.Arguments, ","), command.cmd.Process.Pid)
-			command.reported = true
-		}
-	}
-}
-
-func (command *Command) handleSignalReceived(signal os.Signal) error {
-	command.logger.Tracef("caller sent signal %v", signal)
-	command.terminated <- errors.New(signal.String())
-	if err := command.cmd.Process.Signal(signal); err != nil {
-		command.logger.Warn(err)
-		return err
-	}
-	return nil
-}
-
-func (command *Command) handleTerminated(terminateCommand error) {
-	command.logger.Tracef("command[%s] is exiting (%v)", command.id, terminateCommand)
-	command.logger.Infof("%v\n■ ─────────────────────────────── pid:%v ■", strings.Join(command.config.Arguments, ","), command.cmd.Process.Pid)
-	command.stopped = true
-	command.status <- terminateCommand
-}
-
-func (command *Command) initialise() {
-	command.signal = make(chan os.Signal, 0)
-	command.status = make(chan error, 0)
-	command.run = make(chan error, 0)
-	command.terminated = make(chan error, 0)
-	command.started = false
-	command.reported = false
-	command.stopped = false
-	command.cmd = exec.Command(
-		command.config.Application,
-		command.config.Arguments...,
-	)
-	command.cmd.Stderr = os.Stderr
-	command.cmd.Stdout = os.Stdout
-}
-
-func (command *Command) GetCommand() *exec.Cmd {
-	return command.cmd
-}
-
 func (command *Command) GetID() string {
-	return strconv.Itoa(command.id)
+	return command.id
 }
 
 func (command *Command) GetStatus() *chan error {
 	return &command.status
 }
 
+// IsRunning allows callers to check if the command is running,
+// the logic is tied into the Run()
 func (command *Command) IsRunning() bool {
-	command.logger.Infof("command %v: (s/t) %v/%v", command.id, command.started, command.terminated)
 	return command.started && !command.stopped
 }
 
@@ -205,7 +108,98 @@ func (command *Command) IsValid() error {
 	return nil
 }
 
-func (command *Command) setLogger(logger *Logger) *Command {
-	command.logger = logger
-	return command
+// Run executes the command
+func (command *Command) Run() {
+	command.logger.Tracef("command[%s] is starting", command.id)
+	command.handleInitialisation()
+	go command.handleStart()
+	go command.handleProcessLifecycle()
+	select {
+	case terminateCommand := <-command.terminated:
+		command.handleStopped(terminateCommand)
+	}
+}
+
+// SendInterrupt sends SIGINT to the command
+func (command *Command) SendInterrupt() {
+	command.logger.Tracef("SIGINT received by command %s", command.id)
+	command.logger.Tracef("command[%v] status: %v/%v, msg: SIGINT >>> %v", command.id, command.started, command.terminated, &command.signal)
+	command.signal <- syscall.SIGINT
+}
+
+func (command *Command) handleInitialisation() {
+	command.signal = make(chan os.Signal, 0)
+	command.status = make(chan error, 0)
+	command.run = make(chan error, 0)
+	command.terminated = make(chan error, 0)
+	command.started = false
+	command.reported = false
+	command.stopped = false
+	command.cmd = exec.Command(
+		command.config.Application,
+		command.config.Arguments...,
+	)
+	command.cmd.Stderr = os.Stderr
+	command.cmd.Stdout = os.Stdout
+}
+
+func (command *Command) handleProcessExited(status error) error {
+	command.logger.Tracef("process status: %v", command.cmd.ProcessState)
+	command.terminated <- status
+	return nil
+}
+
+func (command *Command) handleProcessLifecycle() error {
+	for {
+		select {
+		case signal := <-command.signal: // caller -> Command: shut down please
+			return command.handleSignalReceived(signal)
+		case cmdRunStatus := <-command.run: // process -> Command: i'm done here
+			return command.handleProcessExited(cmdRunStatus)
+		default: // just run
+			command.handleProcessReporting()
+		}
+	}
+}
+
+func (command *Command) handleProcessReporting() {
+	if !command.reported {
+		if command.cmd.Process != nil {
+			command.logger.Infof(
+				"'%v'\n► %s pid:%v id:%s ►",
+				strings.Join(command.config.Arguments, "', '"),
+				CommandDelimiter,
+				command.cmd.Process.Pid,
+				command.id,
+			)
+			command.reported = true
+		}
+	}
+}
+
+func (command *Command) handleSignalReceived(signal os.Signal) error {
+	command.logger.Tracef("caller sent signal %v", signal)
+	command.terminated <- errors.New(signal.String())
+	if err := command.cmd.Process.Signal(signal); err != nil {
+		command.logger.Warn(err)
+		return err
+	}
+	return nil
+}
+
+func (command *Command) handleStart() {
+	command.started = true
+	command.run <- command.cmd.Run()
+}
+
+func (command *Command) handleStopped(terminateCommand error) {
+	command.logger.Tracef("command[%s] is exiting (%v)", command.id, terminateCommand)
+	command.logger.Infof(
+		"\n■ %s pid:%v id:%s ■",
+		CommandDelimiter,
+		command.cmd.Process.Pid,
+		command.id,
+	)
+	command.stopped = true
+	command.status <- terminateCommand
 }

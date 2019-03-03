@@ -42,9 +42,8 @@ func (s *WatcherTestSuite) TestEndWatch() {
 		watchMutex: make(chan bool, 1),
 	}
 	var wg sync.WaitGroup
-	tick := time.Tick(50 * time.Millisecond)
 	wg.Add(1)
-	go func() {
+	go func(tick <-chan time.Time) {
 		for {
 			select {
 			case <-tick:
@@ -54,7 +53,7 @@ func (s *WatcherTestSuite) TestEndWatch() {
 				wg.Done()
 			}
 		}
-	}()
+	}(time.After(10 * time.Millisecond))
 	wg.Wait()
 }
 
