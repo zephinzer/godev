@@ -80,7 +80,7 @@ func (config *Config) interpretLogLevel() {
 	if config.LogSuperVerbose {
 		config.LogLevel = "trace"
 	}
-	if config.LogSilent {
+	if config.LogSilent || config.RunVersion {
 		config.LogLevel = "panic"
 	}
 }

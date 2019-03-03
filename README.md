@@ -5,6 +5,7 @@ Live-reload development tool with first class support for Golang development.
 
 
 - [Getting Started](./docs/getting-started.md)
+- [Configuration Flags](./docs/configuration-flags.md)
 - [System Requirements](./docs/system-requirements.md)
 
 - - -

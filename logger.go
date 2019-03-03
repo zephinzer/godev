@@ -170,6 +170,8 @@ func (ll *LogLevel) Get() logrus.Level {
 		return logrus.ErrorLevel
 	case "fatal":
 		return logrus.FatalLevel
+	case "panic":
+		return logrus.PanicLevel
 	default:
 		return logrus.TraceLevel
 	}

@@ -12,9 +12,15 @@ go get github.com/zephinzer/godev
 
 ### Linux
 
+Coming soon.
+
 ### MacOS
 
+Coming soon.
+
 ### Windows
+
+Coming soon.
 
 ## Usage
 
@@ -70,7 +76,3 @@ If your command uses a comma, specify the `--exec-delim` flag to change the deli
 ```sh
 godev --exec 'echo 1|echo 2' --exec 'echo 3' --exec-delim '|'
 ```
-
-
-## Configuration Flags
-

@@ -9,7 +9,7 @@ compile: generate
 			-ldflags " \
 				-extldflags -static \
 				-X main.Version=$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*') \
-				-X main.Commit=$$(git rev-list -1 HEAD) \
+				-X main.Commit=$$(git rev-list -1 HEAD | head -c 7) \
 			"
 	@$(MAKE) log.info MSG="generated binary at $(CURDIR)/bin/godev"
 generate:
@@ -49,10 +49,10 @@ contributors:
 	@git shortlog -se | sed -e 's|@|-at-|g' -e 's|\.|-dot-|g' | cut -f 2- >> $(CURDIR)/CONTRIBUTORS
 ## retrieves the latest version we are at
 version.get:
-	@docker run -v "$(CURDIR)/..:/app" zephinzer/vtscripts:latest get-latest -q
+	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q
 ## bumps the version by 1: specify VERSION as "patch", "minor", or "major", to be specific about things
 version.bump: 
-	@docker run -v "$(CURDIR)/..:/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
+	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
 ## driver recipe to run other scripts (do not use alone)
 _dev:
 	@docker run \
