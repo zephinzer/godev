@@ -1,7 +1,7 @@
 # `godev`
 Live-reload development tool with first class support for Golang development.
 
-> If you were looking for the previous `golang-dev` which used Makefiles and Docker, you can find it in [the ./scripts directory](./scripts-version).
+> If you were looking for the previous `golang-dev` which used Makefiles and Docker, you can find it in [the ./scripts directory](./scripts).
 
 
 - [Getting Started](./docs/getting-started.md)
