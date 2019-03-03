@@ -194,10 +194,14 @@ func (command *Command) handleStart() {
 
 func (command *Command) handleStopped(terminateCommand error) {
 	command.logger.Tracef("command[%s] is exiting (%v)", command.id, terminateCommand)
+	pid := -1
+	if command.cmd.Process != nil {
+		pid = command.cmd.Process.Pid
+	}
 	command.logger.Infof(
 		"\n■ %s pid:%v id:%s ■",
 		CommandDelimiter,
-		command.cmd.Process.Pid,
+		pid,
 		command.id,
 	)
 	command.stopped = true
