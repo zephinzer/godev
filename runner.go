@@ -32,6 +32,8 @@ func InitRunner(config *RunnerConfig) *Runner {
 			Format: "production",
 			Level:  config.LogLevel},
 		),
+		started: false,
+		stopped: false,
 	}
 	return runner
 }
@@ -41,6 +43,7 @@ func (runner *Runner) startPipeline() {
 	defer runner.logger.Tracef("completed pipeline %v", RunnerTriggerCount)
 	runner.logger.Tracef("starting pipeline %v", RunnerTriggerCount)
 	executionGroupCount := len(runner.config.Pipeline)
+	runner.started = true
 	for index, executionGroup := range runner.config.Pipeline {
 		executionGroup.logger = InitLogger(&LoggerConfig{
 			Name:   "run",
@@ -56,6 +59,7 @@ func (runner *Runner) startPipeline() {
 }
 
 func (runner *Runner) Trigger() {
+	runner.started = false
 	runner.stopped = false
 	runner.terminateIfRunning()
 	go runner.startPipeline()
