@@ -140,12 +140,14 @@ The application consists of two major components, the Watcher and the Runner. Th
 
 ## Getting Started
 
+
 ### Dependency Installation
 Go Modules are used. To start development, install the dependencies with:
 
 ```sh
-make install.deps
+make deps
 ```
+
 
 ### Writing Code
 The live-reloading from the Makefile version of this tool is used.
@@ -168,6 +170,7 @@ To run it in test mode, use:
 make run ARGS="--test --ignore .cache,vendor,bin,data"
 ```
 
+
 ### Running Tests
 We use standard Go tooling for this. To run the tests in live-reload mode, use:
 
@@ -181,12 +184,14 @@ To run it once to generate coverage information:
 make test.once
 ```
 
+
 ### Modifying the `--init` files
 The seed files used during `--init` can be found at [data/generate](data/generate). After modification, use `go generate` to re-generate the `data.go` in this directory. You can use the convenience recipe:
 
 ```sh
 make generate
 ```
+
 
 ### Building the Binary
 The binary build is done with static linking. To build the binary and output it to `bin/godev`, use:
@@ -195,9 +200,11 @@ The binary build is done with static linking. To build the binary and output it 
 make compile
 ```
 
+
 ### Building the Docker Image
 
 `TODO`
+
 
 ### Versioning Matters (For collaborators)
 We try to stick to [Semver rules](https://semver.org/). Patch versions are for hot/quick-fixes that should never impact existing users via automated updates. Minor versions are for new functionalities. Major versions are for non-backward compatible functionalities that may break existing scripts.
@@ -218,19 +225,27 @@ For minor, substitute the `"major"` with `"minor"`.
 
 
 
+
+
 # Other Things
 
 ## Licensing
 The binary, like [the Makefile](../), is licensed under the permissive MIT license. See [the LICENSE file](./LICENSE) for the full text.
 
+
+
 ## All Relevant Links
 
 `TODO`
+
+
 
 ## Support/Work Hours
 This is a side-project of mine meant to support my own development needs. I have a day job, so unless I have an urgent need while using this in my professional work, most of my code-level work on this repository will be done during weekends. Pull requests are supported throughout the week!(:
 
 Thanks for understanding!
+
+
 
 ## Cheers 😎
 Leave me a 🌟 or watch this repository to indicate your interest in my sustained development on this. It'll help me decide whether or not I should deprecate this once my own use case for this is over.

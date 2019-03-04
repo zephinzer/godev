@@ -75,6 +75,7 @@ func (godev *GoDev) startWatching() {
 					InitCommand(&CommandConfig{
 						Application: sections[0],
 						Arguments:   sections[1:],
+						Directory:   config.WatchDirectory,
 						LogLevel:    config.LogLevel,
 					}),
 				)

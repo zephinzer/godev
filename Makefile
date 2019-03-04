@@ -1,48 +1,61 @@
+# relative path to the binary directory - remove any directory separators
+# from the start and end of the variable before use
+BINARY_PATH=bin
+# name of the binary filename
+BINARY_FILENAME=godev
 GOLANG_DEV_VERSION=latest
 
-compile: generate
+compile:
+	@$(MAKE) compile.linux
+	@$(MAKE) compile.macos
+	@$(MAKE) compile.windows
+compile.linux:
+	@$(MAKE) GOARCH=amd64 GOOS=linux .compile
+compile.macos:
+	@$(MAKE) GOARCH=amd64 GOOS=darwin .compile
+compile.windows:
+	@$(MAKE) GOARCH=386 GOOS=windows BINARY_EXT=.exe .compile
+## run this to generate the binary
+# - BINARY_EXT
+# - GOARCH
+# - GOOS
+.compile: generate
 	@$(MAKE) log.info MSG="generating static binary..."
-	@CGO_ENABLED=0 GO111MODULE=on \
+	@CGO_ENABLED=0 \
+		GO111MODULE=on \
+		GOARCH=${GOARCH} \
+		GOOS=${GOOS} \
 		go build \
 			-a \
-			-o $(CURDIR)/bin/godev \
+			-o $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)${BINARY_EXT} \
 			-ldflags " \
 				-extldflags -static \
 				-X main.Version=$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*') \
 				-X main.Commit=$$(git rev-list -1 HEAD | head -c 7) \
 			"
-	@$(MAKE) log.info MSG="generated binary at $(CURDIR)/bin/godev"
+	@$(MAKE) log.info MSG="generated binary at $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)${BINARY_EXT}"
+start:
+	@$(MAKE) start.dev
+start.dev:
+	@$(MAKE) log.info MSG="running application in development (watching application at $(CURDIR)/dev)..."
+	@$(MAKE) .start ARGS="-vvv --watch $(CURDIR)/dev"
+start.prd:
+	@$(MAKE) log.info MSG="running application in production (watching application at $(CURDIR)/dev)..."
+	@$(MAKE) .start ARGS="--watch $(CURDIR)/dev"
+start.test:
+	@$(MAKE) log.info MSG="running tests..."
+	@$(MAKE) .start ARGS="--test -vvv --ignore .cache,.vscode,bin,data,docs,scripts,vendor"
+.start: deps generate
+	@$(MAKE) log.info MSG="running application..."
+	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') ${ARGS}
 generate:
 	@$(MAKE) log.info MSG="generating static data file data.go (see ./data/generate.go)..."
 	@go generate
 	@$(MAKE) log.info MSG="generated data.go..."
-start: generate
-	@$(MAKE) log.info MSG="running application for development with live-reload..."
-	@$(MAKE) _dev ARG="start" ARGS="--test --ignore bin,data,vendor,.cache ${ARGS}"
-start.prd: generate
-	@$(MAKE) log.info MSG="running application for development in production with live-reload..."
-	@$(MAKE) _dev ARG="start" ARGS="${ARGS}"
-run: install.deps generate
-	@$(MAKE) log.info MSG="running application..."
-	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') ${ARGS}
-run.dev: install.deps generate
-	@$(MAKE) log.info MSG="running application in development..."
-	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') --test --ignore bin,data,vendor,.cache ${ARGS}
-run.prd: install.deps compile
-	@$(MAKE) log.info MSG="running application in production..."
-	@bin/godev ${ARGS}
-install.deps:
+deps:
 	@$(MAKE) log.info MSG="installing dependencies with go modules..."
 	@GO111MODULE=on go mod vendor
-test: install.deps generate
-	@$(MAKE) log.info MSG="running tests with live-reload"
-	@$(MAKE) _dev ARG="test"
-test.once: install.deps generate
-	@$(MAKE) log.info MSG="running tests once with coverage output"
-	@$(MAKE) _dev ARG="test -coverprofile c.out"
-shell:
-	@$(MAKE) log.info MSG="creating a shell in the docker development environment..."
-	$(MAKE) _dev ARG="shell"
+## generates the contributors file
 contributors:
 	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS
 	@echo "# last generated on $$(date -u)\n" >> $(CURDIR)/CONTRIBUTORS
@@ -53,15 +66,6 @@ version.get:
 ## bumps the version by 1: specify VERSION as "patch", "minor", or "major", to be specific about things
 version.bump: 
 	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
-## driver recipe to run other scripts (do not use alone)
-_dev:
-	@docker run \
-    -it \
-    --network host \
-    -u $$(id -u) \
-    -v "$(CURDIR)/.cache/pkg:/go/pkg" \
-    -v "$(CURDIR):/go/src/app" \
-    zephinzer/golang-dev:$(GOLANG_DEV_VERSION) ${ARG} ${ARGS}
 ## blue logs
 log.debug:
 	-@printf -- "\033[36m\033[1m_ [DEBUG] ${MSG}\033[0m\n"
