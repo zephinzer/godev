@@ -12,7 +12,9 @@ type Initialiser interface {
 	Handle(...bool) error
 }
 
-const InitialiserRetryText = "sorry, i didn't get that"
+const InitialiserRetryText = "godev> sorry, i didn't get that"
+const InitialiserFileSkipFormat = "godev> skipping '%s' - already exists"
+const InitialiserDirSkipFormat = "godev> skipping - %s"
 
 type FileInitialiser struct {
 	Path     string
@@ -36,7 +38,7 @@ func (fi FileInitialiser) Handle(skip ...bool) error {
 	if len(skip) > 0 && skip[0] {
 		fmt.Println(
 			Color("gray",
-				fmt.Sprintf("godev> skipping '%s' - already exists", path.Base(fi.Path)),
+				fmt.Sprintf(InitialiserFileSkipFormat, path.Base(fi.Path)),
 			),
 		)
 		return nil
@@ -76,7 +78,7 @@ func (di DirInitialiser) Handle(skip ...bool) error {
 	if len(skip) > 0 && skip[0] {
 		fmt.Println(
 			Color("gray",
-				fmt.Sprintf("godev> skipping - %s", di.Skip),
+				fmt.Sprintf(InitialiserDirSkipFormat, di.Skip),
 			),
 		)
 		return nil
