@@ -80,34 +80,34 @@ package main
 
 // DataDockerfile defines the 'Dockerfile' contents when --init is used
 // hash:{{.DockerfileHash}}
-var DataDockerfile = ` + "`" + `
-{{.Dockerfile}}
+var DataDockerfile = ` + "`" + `{{.Dockerfile}}
 ` + "`" + `
+
 // DataMakefile defines the 'Makefile' contents when --init is used
 // hash:{{.MakefileHash}}
-var DataMakefile = ` + "`" + `
-{{.Makefile}}
+var DataMakefile = ` + "`" + `{{.Makefile}}
 ` + "`" + `
+
 // DataDotGitignore defines the '.gitignore' contents when --init is used
 // hash:{{.DotGitignoreHash}}
-var DataDotGitignore = ` + "`" + `
-{{.DotGitignore}}
+var DataDotGitignore = ` + "`" + `{{.DotGitignore}}
 ` + "`" + `
+
 // DataDotDockerignore defines the '.dockerignore' contents when --init is used
 // hash:{{.DotDockerignoreHash}}
-var DataDotDockerignore = ` + "`" + `
-{{.DotDockerignore}}
+var DataDotDockerignore = ` + "`" + `{{.DotDockerignore}}
 ` + "`" + `
+
 // DataMainDotgo defines the '.dockerignore' contents when --init is used
 // hash:{{.MainDotGoHash}}
-var DataMainDotgo = ` + "`" + `
-{{.MainDotGo}}
+var DataMainDotgo = ` + "`" + `{{.MainDotGo}}
 ` + "`" + `
+
 // DataGoDotMod defines the 'go.mod' contents when --init is used
 // hash:{{.GoDotModHash}}
-var DataGoDotMod = ` + "`" + `
-{{.GoDotMod}}
+var DataGoDotMod = ` + "`" + `{{.GoDotMod}}
 ` + "`" + `
+
 ` + generatedFileWarning + `
 // < data.go
 `))

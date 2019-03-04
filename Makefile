@@ -38,10 +38,10 @@ start:
 	@$(MAKE) start.dev
 start.dev:
 	@$(MAKE) log.info MSG="running application in development (watching application at $(CURDIR)/dev)..."
-	@$(MAKE) .start ARGS="-vvv --watch $(CURDIR)/dev"
+	@$(MAKE) .start ARGS="-vvv --dir $(CURDIR)/dev"
 start.prd:
 	@$(MAKE) log.info MSG="running application in production (watching application at $(CURDIR)/dev)..."
-	@$(MAKE) .start ARGS="--watch $(CURDIR)/dev"
+	@$(MAKE) .start ARGS="--dir $(CURDIR)/dev"
 start.test:
 	@$(MAKE) log.info MSG="running tests..."
 	@$(MAKE) .start ARGS="--test -vvv --ignore .cache,.vscode,bin,data,docs,scripts,vendor"

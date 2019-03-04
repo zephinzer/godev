@@ -18,8 +18,8 @@ You will also require **Go > 1.11.x** for GoDev to work out of the box.
 
 | Platform | How-to |
 | --- | --- |
-| Linux | `curl https://linux.getgo.dev | sh` |
-| MacOS | `curl https://macos.getgo.dev | sh` |
+| Linux | `curl https://linux.getgo.dev \| sh` |
+| MacOS | `curl https://macos.getgo.dev \| sh` |
 | Windows | Go to [the Releases page](./releases) |
 
 All releases will also include binaries for all three supported packages with source code so you can build it yourself. See [the section on Compilation](#compilation) for details.
@@ -76,14 +76,24 @@ docker run -it \
   -v "$(pwd):/go/src/app" \
   -v "$(pwd)/.cache/pkg:/go/pkg" \
   zephinzer/godev:latest \
-  /bin/bash;
+  godev
+# ^ add any other flags you want after godev
+
 ```
 
 - - -
 
 ## Advanced Usage
-- Flags
-- Examples
+While GoDev was written focused on Golang development happiness, it can also be used for projects in other languages. Use the configuration flags to adjust it to your needs
+
+
+
+### Flags
+
+
+
+
+### JavaScript Project
 
 - - -
 

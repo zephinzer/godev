@@ -2,7 +2,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"path"
 	"strings"
 	"sync"
 
@@ -40,10 +43,13 @@ type GoDev struct {
 func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")
-	if godev.config.RunView {
-		godev.viewFile()
-	} else if godev.config.RunVersion {
+	if godev.config.RunVersion {
 		fmt.Printf("godev %s-%s\n", Version, Commit)
+	} else if godev.config.RunView {
+		godev.viewFile()
+	} else if godev.config.RunInit {
+		godev.initialiseDirectory()
+
 	} else {
 		godev.startWatching()
 	}
@@ -133,6 +139,130 @@ func (godev *GoDev) logWatchModeConfigurations() {
 			app := sections[0]
 			args := sections[1:]
 			logger.Debugf("    %v > %s %v", cIndex+1, app, args)
+		}
+	}
+}
+
+func (godev *GoDev) initialiseDirectory() {
+	types := []string{"git", ".gitignore", "go.mod", "main.go", "Dockerfile", ".dockerignore", "Makefile"}
+	checks := map[string]func() bool{
+		"git": func() bool {
+			return directoryExists(path.Join(godev.config.WatchDirectory, "/.git"))
+		},
+		".gitignore": func() bool {
+			return fileExists(path.Join(godev.config.WatchDirectory, "/.gitignore"))
+		},
+		"go.mod": func() bool {
+			return fileExists(path.Join(godev.config.WatchDirectory, "/go.mod"))
+		},
+		"main.go": func() bool {
+			return fileExists(path.Join(godev.config.WatchDirectory, "/main.go"))
+		},
+		"Dockerfile": func() bool {
+			return fileExists(path.Join(godev.config.WatchDirectory, "/Dockerfile"))
+		},
+		".dockerignore": func() bool {
+			return fileExists(path.Join(godev.config.WatchDirectory, "/.dockerignore"))
+		},
+		"Makefile": func() bool {
+			return fileExists(path.Join(godev.config.WatchDirectory, "/Makefile"))
+		},
+	}
+	questions := map[string]string{
+		"git":           "initialise git repository?",
+		".gitignore":    "seed a .gitignore?",
+		"go.mod":        "seed a go.mod?",
+		"main.go":       "seed a main.go?",
+		"Dockerfile":    "seed a Dockerfile?",
+		".dockerignore": "seed a .dockerignore?",
+		"Makefile":      "seed a Makefile?",
+	}
+	handlers := map[string]func(...bool) error{
+		"git": func(skip ...bool) error {
+			if len(skip) > 0 && skip[0] {
+				fmt.Println(Color("gray", "godev> skipping initialisation of git repository - already initialised"))
+				return nil
+			}
+			fmt.Println("git todo")
+			return errors.New("todo")
+		},
+		".gitignore": func(skip ...bool) error {
+			if len(skip) > 0 && skip[0] {
+				fmt.Println(Color("gray", "godev> skipping seeding of .gitignore - already exists"))
+				return nil
+			}
+			fmt.Println(".gitignore todo")
+			return errors.New("todo")
+		},
+		"go.mod": func(skip ...bool) error {
+			if len(skip) > 0 && skip[0] {
+				fmt.Println(Color("gray", "godev> skipping seeding of go.mod - already exists"))
+				return nil
+			}
+			fmt.Println("go.mod todo")
+			return errors.New("todo")
+		},
+		"main.go": func(skip ...bool) error {
+			if len(skip) > 0 && skip[0] {
+				fmt.Println(Color("gray", "godev> skipping seeding of main.go - already exists"))
+				return nil
+			}
+			fmt.Println("main.go todo")
+			return errors.New("todo")
+		},
+		"Dockerfile": func(skip ...bool) error {
+			if len(skip) > 0 && skip[0] {
+				fmt.Println(Color("gray", "godev> skipping seeding of Dockerfile - already exists"))
+				return nil
+			}
+			fmt.Println("Dockerfile todo")
+			return errors.New("todo")
+		},
+		".dockerignore": func(skip ...bool) error {
+			if len(skip) > 0 && skip[0] {
+				fmt.Println(Color("gray", "godev> skipping seeding of .dockerignore - already exists"))
+				return nil
+			}
+			filePath := path.Join(getCurrentWorkingDirectory(), "/.dockerignore")
+			file, err := os.Create(filePath)
+			if err != nil {
+				return err
+			}
+			size, err := file.Write([]byte(DataDotDockerignore))
+			if err != nil {
+				return err
+			}
+			fmt.Println(Color("green", fmt.Sprintf("godev> written %v bytes to %s", size, filePath)))
+			return errors.New("todo")
+		},
+		"Makefile": func(skip ...bool) error {
+			if len(skip) > 0 && skip[0] {
+				fmt.Println(Color("gray", "godev> skipping seeding of Makefile - already exists"))
+				return nil
+			}
+			fmt.Println("Makefile todo")
+			return errors.New("todo")
+		},
+	}
+	for i := 0; i < len(types); i++ {
+		id := types[i]
+		if checks[id]() {
+			err := handlers[id](true)
+			if err != nil {
+				fmt.Println(Color("red", err.Error()))
+			}
+		} else {
+			c := confirm(
+				Color("white", "godev> "+questions[id]),
+				false,
+				Color("bold", Color("red", "sorry, i didn't get that")),
+			)
+			if *c {
+				fmt.Println(Color("green", "godev> sure thing"))
+				handlers[id]()
+			} else {
+				fmt.Println(Color("yellow", "godev> lets skip that then"))
+			}
 		}
 	}
 }
