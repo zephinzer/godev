@@ -18,15 +18,12 @@ GIT_ROOT=$(CURDIR)/../../..
 
 ## starts the application for development with live-reload
 start:
-	@godev --watch
+	@godev
 ## installs the dependencies using go modules
 deps:
 	@go mod vendor
 ## runs the tests with live-reload
 test:
-	@godev --test --watch
-## runs the tests just once with coverage
-test.once:
 	@godev --test
 ## compiles binaries for all systems
 compile:

@@ -2,9 +2,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 	"sync"
@@ -144,122 +144,86 @@ func (godev *GoDev) logWatchModeConfigurations() {
 }
 
 func (godev *GoDev) initialiseDirectory() {
-	types := []string{"git", ".gitignore", "go.mod", "main.go", "Dockerfile", ".dockerignore", "Makefile"}
-	checks := map[string]func() bool{
-		"git": func() bool {
-			return directoryExists(path.Join(godev.config.WatchDirectory, "/.git"))
+	if !directoryExists(godev.config.WatchDirectory) {
+		godev.logger.Errorf("the directory at '%s' does not exist - create it first with:\n  mkdir -p %s", godev.config.WatchDirectory, godev.config.WatchDirectory)
+		os.Exit(1)
+	}
+	initialisers := []Initialiser{
+		DirInitialiser{
+			Path: path.Join(godev.config.WatchDirectory, "/.git"),
+			Initialiser: func() error {
+				_, err := exec.LookPath("git")
+				if err != nil {
+					return nil
+				}
+				cmd := exec.Command("git", "init")
+				cmd.Dir = godev.config.WatchDirectory
+				done := make(chan error, 0)
+				var wait sync.WaitGroup
+				go func() {
+					wait.Add(1)
+					done <- cmd.Run()
+				}()
+				go func() {
+					for {
+						select {
+						case d := <-done:
+							if d != nil {
+								fmt.Println(d)
+							}
+							wait.Done()
+							return
+						}
+					}
+				}()
+				wait.Wait()
+				return nil
+			},
+			Question: "initialise git repository?",
+			Skip:     "git repository found",
 		},
-		".gitignore": func() bool {
-			return fileExists(path.Join(godev.config.WatchDirectory, "/.gitignore"))
+		FileInitialiser{
+			Path:     path.Join(godev.config.WatchDirectory, "/.gitignore"),
+			Data:     []byte(DataDotGitignore),
+			Question: "seed a .gitignore?",
 		},
-		"go.mod": func() bool {
-			return fileExists(path.Join(godev.config.WatchDirectory, "/go.mod"))
+		FileInitialiser{
+			Path:     path.Join(godev.config.WatchDirectory, "/go.mod"),
+			Data:     []byte(DataGoDotMod),
+			Question: "seed a go.mod?",
 		},
-		"main.go": func() bool {
-			return fileExists(path.Join(godev.config.WatchDirectory, "/main.go"))
+		FileInitialiser{
+			Path:     path.Join(godev.config.WatchDirectory, "/main.go"),
+			Data:     []byte(DataMainDotgo),
+			Question: "seed a main.go?",
 		},
-		"Dockerfile": func() bool {
-			return fileExists(path.Join(godev.config.WatchDirectory, "/Dockerfile"))
+		FileInitialiser{
+			Path:     path.Join(godev.config.WatchDirectory, "/Dockerfile"),
+			Data:     []byte(DataDockerfile),
+			Question: "seed a Dockerfile?",
 		},
-		".dockerignore": func() bool {
-			return fileExists(path.Join(godev.config.WatchDirectory, "/.dockerignore"))
+		FileInitialiser{
+			Path:     path.Join(godev.config.WatchDirectory, "/.dockerignore"),
+			Data:     []byte(DataDotDockerignore),
+			Question: "seed a .dockerignore?",
 		},
-		"Makefile": func() bool {
-			return fileExists(path.Join(godev.config.WatchDirectory, "/Makefile"))
+		FileInitialiser{
+			Path:     path.Join(godev.config.WatchDirectory, "/Makefile"),
+			Data:     []byte(DataMakefile),
+			Question: "seed a Makefile?",
 		},
 	}
-	questions := map[string]string{
-		"git":           "initialise git repository?",
-		".gitignore":    "seed a .gitignore?",
-		"go.mod":        "seed a go.mod?",
-		"main.go":       "seed a main.go?",
-		"Dockerfile":    "seed a Dockerfile?",
-		".dockerignore": "seed a .dockerignore?",
-		"Makefile":      "seed a Makefile?",
-	}
-	handlers := map[string]func(...bool) error{
-		"git": func(skip ...bool) error {
-			if len(skip) > 0 && skip[0] {
-				fmt.Println(Color("gray", "godev> skipping initialisation of git repository - already initialised"))
-				return nil
-			}
-			fmt.Println("git todo")
-			return errors.New("todo")
-		},
-		".gitignore": func(skip ...bool) error {
-			if len(skip) > 0 && skip[0] {
-				fmt.Println(Color("gray", "godev> skipping seeding of .gitignore - already exists"))
-				return nil
-			}
-			fmt.Println(".gitignore todo")
-			return errors.New("todo")
-		},
-		"go.mod": func(skip ...bool) error {
-			if len(skip) > 0 && skip[0] {
-				fmt.Println(Color("gray", "godev> skipping seeding of go.mod - already exists"))
-				return nil
-			}
-			fmt.Println("go.mod todo")
-			return errors.New("todo")
-		},
-		"main.go": func(skip ...bool) error {
-			if len(skip) > 0 && skip[0] {
-				fmt.Println(Color("gray", "godev> skipping seeding of main.go - already exists"))
-				return nil
-			}
-			fmt.Println("main.go todo")
-			return errors.New("todo")
-		},
-		"Dockerfile": func(skip ...bool) error {
-			if len(skip) > 0 && skip[0] {
-				fmt.Println(Color("gray", "godev> skipping seeding of Dockerfile - already exists"))
-				return nil
-			}
-			fmt.Println("Dockerfile todo")
-			return errors.New("todo")
-		},
-		".dockerignore": func(skip ...bool) error {
-			if len(skip) > 0 && skip[0] {
-				fmt.Println(Color("gray", "godev> skipping seeding of .dockerignore - already exists"))
-				return nil
-			}
-			filePath := path.Join(getCurrentWorkingDirectory(), "/.dockerignore")
-			file, err := os.Create(filePath)
-			if err != nil {
-				return err
-			}
-			size, err := file.Write([]byte(DataDotDockerignore))
-			if err != nil {
-				return err
-			}
-			fmt.Println(Color("green", fmt.Sprintf("godev> written %v bytes to %s", size, filePath)))
-			return errors.New("todo")
-		},
-		"Makefile": func(skip ...bool) error {
-			if len(skip) > 0 && skip[0] {
-				fmt.Println(Color("gray", "godev> skipping seeding of Makefile - already exists"))
-				return nil
-			}
-			fmt.Println("Makefile todo")
-			return errors.New("todo")
-		},
-	}
-	for i := 0; i < len(types); i++ {
-		id := types[i]
-		if checks[id]() {
-			err := handlers[id](true)
+	for i := 0; i < len(initialisers); i++ {
+		initialiser := initialisers[i]
+		if initialiser.Check() {
+			err := initialiser.Handle(true)
 			if err != nil {
 				fmt.Println(Color("red", err.Error()))
 			}
 		} else {
-			c := confirm(
-				Color("white", "godev> "+questions[id]),
-				false,
-				Color("bold", Color("red", "sorry, i didn't get that")),
-			)
-			if *c {
+			if initialiser.Confirm() {
 				fmt.Println(Color("green", "godev> sure thing"))
-				handlers[id]()
+				initialiser.Handle()
 			} else {
 				fmt.Println(Color("yellow", "godev> lets skip that then"))
 			}

@@ -37,8 +37,6 @@ func getCurrentWorkingDirectory() string {
 	return cwd
 }
 
-type Confirmation *bool
-
 const ConfirmationTrueCanonical = "y"
 
 var ConfirmationTrue = []string{ConfirmationTrueCanonical, "yes", "yupp", "yeah", "yea", "ok", "okay"}
@@ -47,7 +45,7 @@ const ConfirmationFalseCanonical = "n"
 
 var ConfirmationFalse = []string{ConfirmationFalseCanonical, "no", "nope", "nah", "neh", "stop", "dont"}
 
-func confirm(question string, byDefault bool, retryText ...string) Confirmation {
+func confirm(question string, byDefault bool, retryText ...string) bool {
 	var options string
 	if byDefault {
 		options = fmt.Sprintf("%s/%s", strings.ToUpper(ConfirmationTrueCanonical), ConfirmationFalseCanonical)
@@ -61,21 +59,19 @@ func confirm(question string, byDefault bool, retryText ...string) Confirmation 
 		panic(err)
 	}
 	if len(userInput) < 2 {
-		return Confirmation(&byDefault)
+		return byDefault
 	} else {
 		content := strings.Trim(strings.ToLower(userInput), " \n")
-		confirmation := true
+		confirmation := false
 		if sliceContainsString(ConfirmationTrue, content) {
 			confirmation = true
 		} else if sliceContainsString(ConfirmationFalse, content) {
 			confirmation = false
 		} else if len(retryText) > 0 {
 			fmt.Println(retryText[0])
-			confirmation = *confirm(question, byDefault, retryText...)
-		} else {
-			return nil
+			confirmation = confirm(question, byDefault, retryText...)
 		}
-		return &confirmation
+		return confirmation
 	}
 }
 
