@@ -19,20 +19,34 @@ compile.windows:
 # - BINARY_EXT
 # - GOARCH
 # - GOOS
-.compile: generate
+.compile: deps generate
 	@$(MAKE) log.info MSG="generating static binary..."
+	@mkdir -p $(CURDIR)/.compile
+	@printf -- 'if this file is here, a compilation is in process/has errored out' > $(CURDIR)/.compile/README
+	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" > $(CURDIR)/.compile/.Commit
+	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" > $(CURDIR)/.compile/.Version
+	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)${BINARY_EXT}" > $(CURDIR)/.compile/.bin
+	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)-${GOOS}-${GOARCH}${BINARY_EXT}" > $(CURDIR)/.compile/.binarch
+	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)-$$(cat $(CURDIR)/.compile/.Version)-${GOOS}-${GOARCH}${BINARY_EXT}" > $(CURDIR)/.compile/.binver
+	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)-$$(cat $(CURDIR)/.compile/.Version)-$$(git rev-list -1 HEAD | head -c 7)-${GOOS}-${GOARCH}${BINARY_EXT}" > $(CURDIR)/.compile/.binext
 	@CGO_ENABLED=0 \
 		GO111MODULE=on \
 		GOARCH=${GOARCH} \
 		GOOS=${GOOS} \
 		go build \
 			-a \
-			-o $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)${BINARY_EXT} \
+			-o $$(cat $(CURDIR)/.compile/.binext) \
 			-ldflags " \
 				-extldflags -static \
-				-X main.Version=$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*') \
-				-X main.Commit=$$(git rev-list -1 HEAD | head -c 7) \
+				-X main.Version=$$(cat $(CURDIR)/.compile/.Version) \
+				-X main.Commit=$$(cat $(CURDIR)/.compile/.Commit) \
 			"
+	@chmod +x $$(cat $(CURDIR)/.compile/.binext)
+	@ln -s $$(cat $(CURDIR)/.compile/.binext) $$(cat $(CURDIR)/.compile/.bin)
+	@ln -s $$(cat $(CURDIR)/.compile/.binext) $$(cat $(CURDIR)/.compile/.binarch)
+	@ln -s $$(cat $(CURDIR)/.compile/.binext) $$(cat $(CURDIR)/.compile/.binver)
+	@cp 
+	@rm -rf $(CURDIR)/.compile
 	@$(MAKE) log.info MSG="generated binary at $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)${BINARY_EXT}"
 start:
 	@$(MAKE) start.dev
@@ -55,6 +69,8 @@ generate:
 deps:
 	@$(MAKE) log.info MSG="installing dependencies with go modules..."
 	@GO111MODULE=on go mod vendor
+docker:
+	
 ## generates the contributors file
 contributors:
 	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS

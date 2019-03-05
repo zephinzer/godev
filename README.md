@@ -15,14 +15,22 @@ You will also require **Go > 1.11.x** for GoDev to work out of the box.
 
 
 ### Installation
-
-| Platform | How-to |
-| --- | --- |
-| Linux | `curl https://linux.getgo.dev \| sh` |
-| MacOS | `curl https://macos.getgo.dev \| sh` |
-| Windows | Go to [the Releases page](./releases) |
-
 All releases will also include binaries for all three supported packages with source code so you can build it yourself. See [the section on Compilation](#compilation) for details.
+
+
+
+#### Linux
+Coming soon...
+
+
+
+#### MacOS
+Coming soon...
+
+
+
+#### Windows
+Coming soon...
 
 
 
@@ -58,6 +66,8 @@ To initialise a directory for development in the Golang language with Go Modules
 ```sh
 godev --init
 ```
+
+> If you'd like to preview files before you install them, you can use the `--view` flag to check out the file first.
 
 
 
