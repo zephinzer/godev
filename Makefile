@@ -3,74 +3,41 @@
 BINARY_PATH=bin
 # name of the binary filename
 BINARY_FILENAME=godev
-GOLANG_DEV_VERSION=latest
+# THIS/zephinzer/godev:latest
+DOCKER_IMAGE_REGISTRY=docker.io
+# docker.io/THIS/godev:latest
+DOCKER_IMAGE_NAMESPACE=zephinzer
+# docker.io/zephinzer/THIS:latest
+DOCKER_IMAGE_NAME=godev
 
+##
+# - VERSION
+# - COMMIT
 compile:
-	@$(MAKE) compile.linux
-	@$(MAKE) compile.macos
-	@$(MAKE) compile.windows
-compile.linux:
-	@$(MAKE) GOARCH=amd64 GOOS=linux .compile
-compile.macos:
-	@$(MAKE) GOARCH=amd64 GOOS=darwin .compile
-compile.windows:
-	@$(MAKE) GOARCH=386 GOOS=windows BINARY_EXT=.exe .compile
-## run this to generate the binary
-# - BINARY_EXT
-# - GOARCH
-# - GOOS
-.compile: deps generate
-	@$(MAKE) log.info MSG="generating static binary..."
-	@mkdir -p $(CURDIR)/.compile
-	@printf -- 'if this file is here, a compilation is in process/has errored out' > $(CURDIR)/.compile/README
-	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" > $(CURDIR)/.compile/.Commit
-	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" > $(CURDIR)/.compile/.Version
-	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)${BINARY_EXT}" > $(CURDIR)/.compile/.bin
-	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)-${GOOS}-${GOARCH}${BINARY_EXT}" > $(CURDIR)/.compile/.binarch
-	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)-$$(cat $(CURDIR)/.compile/.Version)-${GOOS}-${GOARCH}${BINARY_EXT}" > $(CURDIR)/.compile/.binver
-	@printf -- "$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)-$$(cat $(CURDIR)/.compile/.Version)-$$(git rev-list -1 HEAD | head -c 7)-${GOOS}-${GOARCH}${BINARY_EXT}" > $(CURDIR)/.compile/.binext
-	@CGO_ENABLED=0 \
-		GO111MODULE=on \
-		GOARCH=${GOARCH} \
-		GOOS=${GOOS} \
-		go build \
-			-a \
-			-o $$(cat $(CURDIR)/.compile/.binext) \
-			-ldflags " \
-				-extldflags -static \
-				-X main.Version=$$(cat $(CURDIR)/.compile/.Version) \
-				-X main.Commit=$$(cat $(CURDIR)/.compile/.Commit) \
-			"
-	@chmod +x $$(cat $(CURDIR)/.compile/.binext)
-	@ln -s $$(cat $(CURDIR)/.compile/.binext) $$(cat $(CURDIR)/.compile/.bin)
-	@ln -s $$(cat $(CURDIR)/.compile/.binext) $$(cat $(CURDIR)/.compile/.binarch)
-	@ln -s $$(cat $(CURDIR)/.compile/.binext) $$(cat $(CURDIR)/.compile/.binver)
-	@cp 
-	@rm -rf $(CURDIR)/.compile
-	@$(MAKE) log.info MSG="generated binary at $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)${BINARY_EXT}"
-start:
-	@$(MAKE) start.dev
-start.dev:
-	@$(MAKE) log.info MSG="running application in development (watching application at $(CURDIR)/dev)..."
-	@$(MAKE) .start ARGS="-vvv --dir $(CURDIR)/dev"
-start.prd:
-	@$(MAKE) log.info MSG="running application in production (watching application at $(CURDIR)/dev)..."
-	@$(MAKE) .start ARGS="--dir $(CURDIR)/dev"
-start.test:
-	@$(MAKE) log.info MSG="running tests..."
-	@$(MAKE) .start ARGS="--test -vvv --ignore .cache,.vscode,bin,data,docs,scripts,vendor"
-.start: deps generate
-	@$(MAKE) log.info MSG="running application..."
-	@go run $$(ls -a | grep .go | grep -v "test" | tr -s '\n' ' ') ${ARGS}
-generate:
-	@$(MAKE) log.info MSG="generating static data file data.go (see ./data/generate.go)..."
-	@go generate
-	@$(MAKE) log.info MSG="generated data.go..."
-deps:
-	@$(MAKE) log.info MSG="installing dependencies with go modules..."
-	@GO111MODULE=on go mod vendor
+	go build \
+		-a \
+		-o $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) \
+		-ldflags " \
+			-extldflags -static \
+			-X main.Version=${VERSION} \
+			-X main.Commit=${COMMIT} \
+		"
 docker:
-	
+	@mkdir -p $(CURDIR)/.docker
+	@printf -- 'if this .docker directory is here, it means "make docker" was terminated unexpectedly' > $(CURDIR)/.docker/README
+	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" > $(CURDIR)/.docker/.Commit
+	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" > $(CURDIR)/.docker/.Version
+	@docker build \
+		--build-arg VERSION=$$(cat $(CURDIR)/.docker/.Version) \
+		--build-arg COMMIT=$$(cat $(CURDIR)/.docker/.Commit) \
+		-t $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
+		.
+	@docker tag $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.docker/.Version)
+	@docker run $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest go version > $(CURDIR)/.docker/.GoVersion
+	@docker tag $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.docker/.Version)
+	@rm -rf $(CURDIR)/.docker
+release.docker: docker
+	@docker tag 
 ## generates the contributors file
 contributors:
 	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS

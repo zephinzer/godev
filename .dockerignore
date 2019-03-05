@@ -1,4 +1,10 @@
+# Makefile artifacts
+.docker
 .cache
+
+# development tooling
 .vscode
+
+# dependencies/binaries
 bin
 vendor
