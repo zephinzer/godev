@@ -47,6 +47,7 @@ type Config struct {
 	RunView           bool
 	View              string
 	WatchDirectory    string
+	WorkDirectory     string
 }
 
 // InitConfig creates a configuration from environment variables and flags
@@ -79,7 +80,9 @@ func InitConfig() *Config {
 		"display the version number")
 	flag.StringVar(&config.View, "view", "",
 		"check out the original content of a file that godev provisions when --init is specified")
-	flag.StringVar(&config.WatchDirectory, "dir", currentWorkingDirectory,
+	flag.StringVar(&config.WatchDirectory, "watch", currentWorkingDirectory,
+		"specifies the directory to watch")
+	flag.StringVar(&config.WorkDirectory, "dir", currentWorkingDirectory,
 		"specifies the directory to operate in")
 	flag.Parse()
 	config.assignDefaults()
@@ -101,7 +104,7 @@ func (config *Config) interpretLogLevel() {
 
 func (config *Config) assignDefaults() {
 	config.LogLevel = DefaultLogLevel
-	config.BuildOutput = path.Join(config.WatchDirectory, "/"+config.BuildOutput)
+	config.BuildOutput = path.Join(config.WorkDirectory, "/"+config.BuildOutput)
 	config.RunView = len(config.View) > 0
 	if len(config.IgnoredNames) == 0 {
 		config.IgnoredNames = strings.Split(DefaultIgnoredNames, ",")

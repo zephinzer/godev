@@ -14,7 +14,8 @@ DOCKER_IMAGE_NAME=godev
 # - VERSION
 # - COMMIT
 compile:
-	go build \
+	@$(MAKE) log.debug MSG="compiling godev at $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) - version: '${VERSION}' commit: '${COMMIT}'..."
+	@go build \
 		-a \
 		-o $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) \
 		-ldflags " \
@@ -22,27 +23,78 @@ compile:
 			-X main.Version=${VERSION} \
 			-X main.Commit=${COMMIT} \
 		"
+	@$(MAKE) log.info MSG="compiled godev at $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) - version: '${VERSION}' commit: '${COMMIT}'"
+start: compile
+	@$(MAKE) log.debug MSG="running godev for development..."
+	@$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) -vv --watch $(CURDIR) --dir $(CURDIR)/dev
+deps:
+	@$(MAKE) log.debug MSG="installing the dependencies..."
+	@go mod vendor
+	@$(MAKE) log.info MSG="dependency installation successful."
+generate:
+	@$(MAKE) log.debug MSG="generating a new ~/data.go..."
+	@go generate
+	@$(MAKE) log.info MSG="~/data.go generation successful."
+test: compile
+	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
+	@$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) --test
+binary:
+
 docker:
-	@mkdir -p $(CURDIR)/.docker
-	@printf -- 'if this .docker directory is here, it means "make docker" was terminated unexpectedly' > $(CURDIR)/.docker/README
-	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" > $(CURDIR)/.docker/.Commit
-	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" > $(CURDIR)/.docker/.Version
+	@$(MAKE) create.version.data FOR_OP=docker
+	@printf -- '$(DOCKER_IMAGE_REGISTRY)/$(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME)' \
+		> $(CURDIR)/.docker/.DockerImage
+	@$(MAKE) log.debug MSG="building docker image '$$(cat $(CURDIR)/.docker/.DockerImage):latest'..."
+	# build docker image
 	@docker build \
 		--build-arg VERSION=$$(cat $(CURDIR)/.docker/.Version) \
 		--build-arg COMMIT=$$(cat $(CURDIR)/.docker/.Commit) \
-		-t $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest \
+		-t $$(cat $(CURDIR)/.docker/.DockerImage):latest \
 		.
-	@docker tag $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.docker/.Version)
-	@docker run $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest go version > $(CURDIR)/.docker/.GoVersion
-	@docker tag $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME):$$(cat $(CURDIR)/.docker/.Version)
+	# tag version
+	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)'..."
+	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
+		$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)
+	# tag commit
+	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)'..."
+	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
+		$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)
+	# tag version-commit
+	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)'..."
+	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
+		$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)
+	@docker run $$(cat $(CURDIR)/.docker/.DockerImage):latest go version | sed 's|go||g' | cut -f 3 -d ' ' \
+		> $(CURDIR)/.docker/.GoVersion
+	# tag go version
+	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)'..."
+	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
+		$$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)
 	@rm -rf $(CURDIR)/.docker
 release.docker: docker
-	@docker tag 
+	@$(MAKE) create.version.data FOR_OP=release.docker
+	@printf -- '$(DOCKER_IMAGE_REGISTRY)/$(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME)' \
+		> $(CURDIR)/.release.docker/.DockerImage
+	@docker run $$(cat $(CURDIR)/.release.docker/.DockerImage):latest go version | sed 's|go||g' | cut -f 3 -d ' ' \
+		> $(CURDIR)/.release.docker/.GoVersion
+	# push everything we built in 'make docker'
+	@docker push$$(cat $(CURDIR)/.docker/.DockerImage):latest
+	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Verson)
+	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)
+	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)
+	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)
 ## generates the contributors file
 contributors:
 	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS
 	@echo "# last generated on $$(date -u)\n" >> $(CURDIR)/CONTRIBUTORS
 	@git shortlog -se | sed -e 's|@|-at-|g' -e 's|\.|-dot-|g' | cut -f 2- >> $(CURDIR)/CONTRIBUTORS
+create.version.data:
+	@$(MAKE) log.debug MSG="provisioning '$(CURDIR)/.${FOR_OP}' directory..."
+	@mkdir -p $(CURDIR)/.${FOR_OP}
+	@printf -- 'if this .${FOR_OP} directory is here, it means "make ${FOR_OP}" was terminated unexpectedly' > $(CURDIR)/.${FOR_OP}/README
+	@$(MAKE) log.debug MSG="generating git commit..."
+	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" > $(CURDIR)/.${FOR_OP}/.Commit
+	@$(MAKE) log.debug MSG="generating git tag..."
+	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" > $(CURDIR)/.${FOR_OP}/.Version
 ## retrieves the latest version we are at
 version.get:
 	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q

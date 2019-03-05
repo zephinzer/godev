@@ -142,7 +142,12 @@ Tells GoDev to keep completely quiet. Only panic level logs are printed before G
 #### Configuration
 
 ##### `--dir`
-Specifies the directory to run `godev` from.
+Specifies the directory for commands from GoDev to run from.
+
+Default: Current working directory
+
+##### `--watch`
+Specifies the directory for GoDev to watch for changes recursively in.
 
 Default: Current working directory
 
@@ -182,26 +187,92 @@ Defines the path to the built output
 Default: `bin/app`
 
 #### `--rate`
+Defines the rate at which file system change events are batched. Modifying this would be useful if you find that commands being run in your execution groups take longer than 2 seconds and modify files resulting in a never-ending file system change trigger loop.
 
-
-#### Meta-data
+Default: `2s`
 
 ##### `--version`
-
-
-
-### JavaScript Project
+Prints the version of GoDev.
 
 - - -
 
 ## Contributing
-- Cloning
-- Dependency Installation
-- Static file generation
-- Development
-- Testing
-- Versioning
-- Compilation
+
+### Repository Cloning
+Run the following to clone this repository:
+
+```sh
+git clone git@github.com:zephinzer/godev.git
+```
+
+### Dependency Installation
+Dependencies are stored in the `./vendor` directory. Run the following to populate the dependencies:
+
+```sh
+make deps
+```
+
+### Static file generation
+For static files that GoDev can initialise, a Go generator is used. The files can be found at `./data/generate` and the code to generate the file at `./data.go` can be found at `./data/generate.go`. The `./data.go` is generated with every build, but if you want to generate it manually, run:
+
+```sh
+make generate
+```
+
+### Development
+Development is done in the `./dev` directory. Unfortunately, since this is a live-reload tool, there is no live-reload for the live-reload, so we have to re-run the application every time we make changes for them to be visible. The command to re-compile and re-run GoDev while working with `./dev` is:
+
+```sh
+make start
+```
+
+### Testing
+To run the tests in watch mode:
+
+```sh
+make test
+```
+
+### Versioning
+We try to follow [semver versioning]((https://semver.org/)) as far as possible. This means:
+
+- Patch version bumps for bug fixes
+- Minor version bumps for new flags/behaviours
+- Major version bumps for deprecation of flags/behaviours
+
+To get the current version:
+
+```sh
+make version.get
+```
+
+To bump the version:
+
+```sh
+# bump the patch version
+make version.bump
+
+# bump the minor version
+make version.bump VERSION=minor
+
+# bump the major version
+make version.bump VERSION=major
+```
+
+### Compilation to Binary
+To compile GoDev, run:
+
+```sh
+make compile
+```
+
+### Building the Docker Image
+To build the GoDev image, run:
+
+```sh
+make docker
+```
+
 - Releasing to DockerHub
 - Releasing to Brew
 - Releasing to Chocolatey
@@ -212,32 +283,50 @@ Default: `bin/app`
 
 ## Architecture Notes
 
-### Watcher
+### Components
+#### Watcher
 - Watches the file system recursively at a directory level, watches new directories as they are created, sends notifications through a channel to the main process
 - Batches file system changes and notifies the main process through a channel
-### Runner
+
+#### Runner
 - Handles the (re-)execution/termination of defined execution groups and commands
 - Triggered through a function call that will terminate existing pipelines and restart them
-### Main Process
+
+#### Main Process
 - Coordinates the batched file system changes from Watcher and triggers the Runner to start executing a pipeline
-### Concept: Pipeline
+
+### Concepts
+#### Pipeline
 - Set of execution groups that run in sequence
 - One pipeline per instantantiation of godev
-### Concept: Execution Groups
+
+#### Execution Groups
 - Group of commands to run in parallel
 - Execution groups run in sequence themselves
-### Concept: Command
+
+#### Command
 - Atomic execution unit that runs a command using the user’s shell
 
 - - -
 
 ## Support
-- Weekends only - feel free to raise a PR
-- Patreon Link
+
+### Work Hours
+This is a side-project of mine meant to support my own development needs. I have a day job, so unless I have an urgent need while using this in my professional work, most of my code-level work on this repository will be done during weekends. Pull requests are however supported throughout the week!(:
+
+Thanks for understanding!
+
+### If You Really Like This
+If you really like my work and would like to support me, you can find my Patreon at:
+
+
 
 - - -
 
-## Licensing
-- MIT
+# Licensing
+The binary and source code is licensed under the permissive MIT license. See [the LICENSE file](./LICENSE) for the full text.
 
-# Cheers
+- - -
+
+# Cheers 😎
+Leave me a 🌟 or watch this repository to indicate your interest in my sustained development on this. It'll help me decide whether or not I should deprecate this once my own use case for this is over.

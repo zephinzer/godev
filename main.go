@@ -81,7 +81,7 @@ func (godev *GoDev) startWatching() {
 					InitCommand(&CommandConfig{
 						Application: sections[0],
 						Arguments:   sections[1:],
-						Directory:   config.WatchDirectory,
+						Directory:   config.WorkDirectory,
 						LogLevel:    config.LogLevel,
 					}),
 				)
@@ -104,7 +104,8 @@ func (godev *GoDev) startWatching() {
 		return true
 	})
 
-	logger.Infof("started watcher at %s", config.WatchDirectory)
+	logger.Infof("working dir : '%s'", config.WorkDirectory)
+	logger.Infof("watching dir: '%s'", config.WatchDirectory)
 
 	runner.Trigger()
 	wg.Wait()
@@ -117,6 +118,7 @@ func (godev *GoDev) logUniversalConfigurations() {
 	logger.Debugf("flag - test       : %v", config.RunTest)
 	logger.Debugf("flag - view       : %v", config.RunView)
 	logger.Debugf("watch directory   : %s", config.WatchDirectory)
+	logger.Debugf("work directory   : %s", config.WorkDirectory)
 	logger.Debugf("build output      : %s", config.BuildOutput)
 }
 
