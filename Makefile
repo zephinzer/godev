@@ -1,29 +1,37 @@
-# relative path to the binary directory - remove any directory separators
-# from the start and end of the variable before use
-BINARY_PATH=bin
-# name of the binary filename
-BINARY_FILENAME=godev
-# THIS/zephinzer/godev:latest
-DOCKER_IMAGE_REGISTRY=docker.io
-# docker.io/THIS/godev:latest
-DOCKER_IMAGE_NAMESPACE=zephinzer
-# docker.io/zephinzer/THIS:latest
-DOCKER_IMAGE_NAME=godev
+include Makefile.properties
+
+x:
+	docker build \
+		--target=build \
 
 ##
 # - VERSION
 # - COMMIT
 compile:
-	@$(MAKE) log.debug MSG="compiling godev at $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) - version: '${VERSION}' commit: '${COMMIT}'..."
-	@go build \
+	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.linux
+	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.macos
+	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.windows
+compile.linux:
+	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=linux GOARCH=amd64 .compile
+compile.macos:
+	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=darwin GOARCH=amd64 .compile
+compile.windows:
+	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=windows GOARCH=386 BINARY_EXT=.exe .compile
+.compile:
+	@$(MAKE) log.debug MSG="compiling godev at ./$(BINARY_PATH)/$(BINARY_FILENAME)-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'..."
+	@CGO_ENABLED=0 \
+		GO111MODULES=on \
+		GOOS=${GOOS} \
+		GOARCH=${GOARCH} \
+		go build \
 		-a \
-		-o $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) \
+		-o $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME)-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} \
 		-ldflags " \
 			-extldflags -static \
 			-X main.Version=${VERSION} \
 			-X main.Commit=${COMMIT} \
 		"
-	@$(MAKE) log.info MSG="compiled godev at $(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) - version: '${VERSION}' commit: '${COMMIT}'"
+	@$(MAKE) log.info MSG="compiled godev at ./$(BINARY_PATH)/$(BINARY_FILENAME)-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'"
 start: compile
 	@$(MAKE) log.debug MSG="running godev for development..."
 	@$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) -vv --watch $(CURDIR) --dir $(CURDIR)/dev
@@ -39,7 +47,12 @@ test: compile
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
 	@$(CURDIR)/$(BINARY_PATH)/$(BINARY_FILENAME) --test
 binary:
-
+	@$(MAKE) create.version.data FOR_OP=binary
+	@$(MAKE) \
+		VERSION=$$(cat $(CURDIR)/.binary/.Version) \
+		COMMIT=$$(cat $(CURDIR)/.binary/.Commit) \
+		compile
+	@rm -rf $(CURDIR)/.binary
 docker:
 	@$(MAKE) create.version.data FOR_OP=docker
 	@printf -- '$(DOCKER_IMAGE_REGISTRY)/$(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME)' \
@@ -76,25 +89,49 @@ release.docker: docker
 		> $(CURDIR)/.release.docker/.DockerImage
 	@docker run $$(cat $(CURDIR)/.release.docker/.DockerImage):latest go version | sed 's|go||g' | cut -f 3 -d ' ' \
 		> $(CURDIR)/.release.docker/.GoVersion
-	# push everything we built in 'make docker'
-	@docker push$$(cat $(CURDIR)/.docker/.DockerImage):latest
+	# push latest
+	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):latest'..."
+	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):latest
+	# push version
+	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Verson)'..."
 	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Verson)
+	# push commit
+	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)'..."
 	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)
+	# push version-commit
+	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)'..."
 	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)
+	# push go version
+	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)'..."
 	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)
+	@rm -rf $(CURDIR)/.release.docker
+release.github:
+	@if [ "${GITHUB_REPOSITORY_URL}" = "" ]; then exit 1; fi;
+	@git remote set-url origin $(GITHUB_REPOSITORY_URL)
+	@git checkout --f master
+	@git fetch
+	@$(MAKE) version.get
+	@$(MAKE) version.bump VERSION=${BUMP}
+	@$(MAKE) version.get
+	@git push --tags
 ## generates the contributors file
 contributors:
 	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS
 	@echo "# last generated on $$(date -u)\n" >> $(CURDIR)/CONTRIBUTORS
 	@git shortlog -se | sed -e 's|@|-at-|g' -e 's|\.|-dot-|g' | cut -f 2- >> $(CURDIR)/CONTRIBUTORS
+
+## creates versioning data for use when releasing
 create.version.data:
 	@$(MAKE) log.debug MSG="provisioning '$(CURDIR)/.${FOR_OP}' directory..."
 	@mkdir -p $(CURDIR)/.${FOR_OP}
 	@printf -- 'if this .${FOR_OP} directory is here, it means "make ${FOR_OP}" was terminated unexpectedly' > $(CURDIR)/.${FOR_OP}/README
 	@$(MAKE) log.debug MSG="generating git commit..."
-	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" > $(CURDIR)/.${FOR_OP}/.Commit
+	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" \
+		> $(CURDIR)/.${FOR_OP}/.Commit
 	@$(MAKE) log.debug MSG="generating git tag..."
-	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" > $(CURDIR)/.${FOR_OP}/.Version
+	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" \
+		> $(CURDIR)/.${FOR_OP}/.Version
+
 ## retrieves the latest version we are at
 version.get:
 	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q

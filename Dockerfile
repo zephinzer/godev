@@ -9,8 +9,6 @@ RUN apk add git make bash curl jq g++ ca-certificates
 RUN update-ca-certificates
 
 FROM base AS build
-ARG GOARCH=amd64
-ARG GOOS=linux
 ARG VERSION=0.0.0
 ENV VERSION=${VERSION}
 ARG COMMIT=0000000
@@ -18,6 +16,11 @@ ENV COMMIT=${COMMIT}
 WORKDIR /go/build
 COPY . /go/build
 RUN make compile
+RUN chmod +x /go/build/bin/*
+RUN ln -s /go/build/bin/godev-${VERISON}-linux-amd /bin/godev
+RUN chmod +x /bin/godev
 
 FROM base AS production
-COPY --from=build /go/build/bin/godev /bin/godev
+ARG VERSION=0.0.0
+ENV VERSION=${VERSION}
+COPY --from=build /go/build/bin/godev-${VERSION}-linux-amd /bin/godev

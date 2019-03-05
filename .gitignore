@@ -1,3 +1,6 @@
+# ci tooling
+Makefile.properties
+
 # dev artifacts
 .compile
 .docker
