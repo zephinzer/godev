@@ -198,11 +198,17 @@ Prints the version of GoDev.
 
 ## Contributing
 
-### Repository Cloning
+### Repository Setup
 Run the following to clone this repository:
 
 ```sh
-git clone git@github.com:zephinzer/godev.git
+git clone git@github.com:zephinzer/godev.git;
+```
+
+Then copy the `sample.properties` into `Makefile.properties`:
+
+```sh
+cp sample.properties Makefile.properties;
 ```
 
 ### Dependency Installation
@@ -273,6 +279,24 @@ To build the GoDev image, run:
 make docker
 ```
 
+### Configuring the CI Pipeline
+A Travis pipeline is included.
+
+The following are variables that need to be defined for your pipeline:
+
+| Environment Variable | Description |
+| --- | --- |
+| `DOCKER_IMAGE_REGISTRY` | Hostname of the Docker registry we are pushing to |
+| `DOCKER_IMAGE_NAMESPACE` | Namespace of the Docker image (docker.io/THIS/image:tag) |
+| `DOCKER_IMAGE_NAME` | Name of the Docker image (docker.io/namespace/THIS:tag |
+| `DOCKER_REGISTRY_USERNAME` | Username for the Docker registry (when not specified, does not release to DockerHub) |
+| `DOCKER_REGISTRY_PASSWORD` | Password for the Docker registry (when not specified, does not release to DockerHub) |
+| `GITHUB_REPOSITORY_URL` | Clone URL of the GitHub repository (when not specified, does not release to GitHub) |
+| `GITHUB_SSH_DEPLOY_KEY` | Base64 encoded private key that matches a public key listed in your Deploy Keys for the project. Run `make ssh.keys` to generate this. |
+
+You will also need to go to your GitHub repository's **Settings > Deploy keys** and add the public key generated from `make ssh.keys` (the public key should be at `./bin/id_rsa.pub`, use the `./bin/id_rsa_b64` contents for the `GITHUB_SSH_DEPLOY_KEY` variable).
+
+### TODOS
 - Releasing to DockerHub
 - Releasing to Brew
 - Releasing to Chocolatey

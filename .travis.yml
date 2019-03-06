@@ -19,8 +19,6 @@ deploy:
     branch: master
     tags: true
 before_script:
-- echo "BINARY_PATH=${BINARY_PATH}" > Makefile.properties
-- echo "BINARY_FILENAME=${BINARY_FILENAME}" > Makefile.properties
 - echo "DOCKER_IMAGE_REGISTRY=${DOCKER_IMAGE_REGISTRY}" >> Makefile.properties
 - echo "DOCKER_IMAGE_NAMESPACE=${DOCKER_IMAGE_NAMESPACE}" >> Makefile.properties
 - echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> Makefile.properties
