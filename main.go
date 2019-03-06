@@ -12,12 +12,6 @@ import (
 	shellquote "github.com/kballard/go-shellquote"
 )
 
-// Version should be populated with -ldflags on build with the semver version
-var Version string
-
-// Commit should be populated with -ldflags on build with the current git commit
-var Commit string
-
 func main() {
 	config := InitConfig()
 	godev := InitGoDev(config)
@@ -44,12 +38,11 @@ func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")
 	if godev.config.RunVersion {
-		fmt.Printf("godev %s-%s\n", Version, Commit)
+		fmt.Printf("%s-%s\n", Version, Commit)
 	} else if godev.config.RunView {
 		godev.viewFile()
 	} else if godev.config.RunInit {
 		godev.initialiseDirectory()
-
 	} else {
 		godev.startWatching()
 	}
