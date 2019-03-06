@@ -42,12 +42,12 @@ jobs:
     if: branch != master AND (type IN (push)) AND (tag IS blank)
     script:
     - make test.ci
-    - make binary
     - make docker
   - stage: build_test_release
     if: branch = master AND (type IN (push)) AND (tag IS blank)
     script:
     - make test.ci
+    - make docker
     - make binary
     - |
       if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then

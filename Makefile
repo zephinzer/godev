@@ -63,7 +63,7 @@ test: compile
 	@$(CURDIR)/bin/godev --test
 
 ## runs tests for ci
-test.ci: deps compile
+test.ci: deps
 	@$(MAKE) log.debug MSG="running tests in single run mode..."
 	@go test ./... -coverprofile c.out
 
