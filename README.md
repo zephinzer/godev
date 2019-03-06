@@ -291,6 +291,7 @@ The following are variables that need to be defined for your pipeline:
 | `DOCKER_IMAGE_NAME` | Name of the Docker image (docker.io/namespace/THIS:tag |
 | `DOCKER_REGISTRY_USERNAME` | Username for the Docker registry (when not specified, does not release to DockerHub) |
 | `DOCKER_REGISTRY_PASSWORD` | Password for the Docker registry (when not specified, does not release to DockerHub) |
+| `GITHUB_OAUTH_TOKEN` | GitHub personal access token for deploying binaries to the release page |
 | `GITHUB_REPOSITORY_URL` | Clone URL of the GitHub repository (when not specified, does not release to GitHub) |
 | `GITHUB_SSH_DEPLOY_KEY` | Base64 encoded private key that matches a public key listed in your Deploy Keys for the project. Run `make ssh.keys` to generate this. |
 

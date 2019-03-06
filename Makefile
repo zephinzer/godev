@@ -50,7 +50,7 @@ start: compile
 ## installs the dependencies
 deps:
 	@$(MAKE) log.debug MSG="installing the dependencies..."
-	@go mod vendor
+	@GO111MODULE=on go mod vendor
 	@$(MAKE) log.info MSG="dependency installation successful."
 
 ## generates the static files
