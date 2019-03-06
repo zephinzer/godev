@@ -43,7 +43,8 @@ jobs:
     script:
     - make test.ci
     - make binary
-  - stage: build_test_release_publish
+    - make docker
+  - stage: build_test_release
     if: branch = master AND (type IN (push)) AND (tag IS blank)
     script:
     - make test.ci
@@ -52,13 +53,13 @@ jobs:
       if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
         make release.github BUMP=${VERSION_BUMP};
       fi;
+  - stage: publish
+    if: branch = master AND (tag IS NOT blank)
+    script:
+    - make binary
     - |
       if [ "${DOCKER_REGISTRY_USERNAME}" != "" ] && [ "${DOCKER_REGISTRY_PASSWORD}" != "" ]; then
         docker login ${DOCKER_IMAGE_REGISTRY} -u ${DOCKER_REGISTRY_USERNAME} -p ${DOCKER_REGISTRY_PASSWORD};
         make release.docker;
         docker logout;
       fi;
-  - stage: deploy
-    if: branch = master AND (tag IS NOT blank)
-    script:
-    - make binary
