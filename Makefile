@@ -24,7 +24,7 @@ compile.macos:
 compile.windows:
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=windows GOARCH=386 BINARY_EXT=.exe .compile
 ## generic compilation recipe for ensuring consistency of above recipes
-.compile:
+.compile: deps
 	@$(MAKE) log.debug MSG="compiling godev at ./bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'..."
 	@CGO_ENABLED=0 \
 		GO111MODULES=on \
