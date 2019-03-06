@@ -16,11 +16,11 @@ ENV COMMIT=${COMMIT}
 WORKDIR /go/build
 COPY . /go/build
 RUN make compile
-RUN chmod +x /go/build/bin/*
-RUN ln -s /go/build/bin/godev-${VERISON}-linux-amd /bin/godev
+RUN chmod +x -R /go/build/bin/*
+RUN ln -s /go/build/bin/godev-${VERSION}-linux-amd64 /bin/godev
 RUN chmod +x /bin/godev
 
 FROM base AS production
 ARG VERSION=0.0.0
 ENV VERSION=${VERSION}
-COPY --from=build /go/build/bin/godev-${VERSION}-linux-amd /bin/godev
+COPY --from=build /go/build/bin/godev-${VERSION}-linux-amd64 /bin/godev

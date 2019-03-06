@@ -35,8 +35,6 @@ compile.windows:
 		-o $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} \
 		-ldflags " \
 			-extldflags -static \
-			-X main.Version=${VERSION} \
-			-X main.Commit=${COMMIT} \
 		"
 	@$(MAKE) log.info MSG="compiled godev at ./bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'"
 
