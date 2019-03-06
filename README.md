@@ -19,20 +19,15 @@ You will also require **Go > 1.11.x** for GoDev to work out of the box.
 ### Installation
 All releases will also include binaries for all three supported packages with source code so you can build it yourself. See [the section on Compilation](#compilation) for details.
 
+#### Via `go get`
+For all platforms, simply run:
 
+```sh
+go get github.com/zephinzer/godev
+```
 
-#### Linux
-Coming soon...
-
-
-
-#### MacOS
-Coming soon...
-
-
-
-#### Windows
-Coming soon...
+#### Via Package Managers
+Coming soon!
 
 
 
@@ -158,16 +153,6 @@ Specifies a single execution group. Commands specified in an execution group run
 
 Use multiple of these to define multiple execution groups. The execution groups run in sequence themselves.
 
-Default (without `--test`):
-1. `go mod vendor`
-2. `go build -o ${BUILD_OUTPUT}` (*see `--output`*)
-3. `${BUILD_OUTPUT}` (*see `--output`*)
-
-Default (with `--test`):
-1. `go mod vendor`
-2. `go build -o ${BUILD_OUTPUT}`  (*see `--output`*)
-3. `go test ./... -coverprofile c.out`
-
 ##### `--exec-delim`
 Specifies the delimiter used in the `--exec` flag for separating commands. This flag finds its use if the command you wish to run contains a command as an argument.
 
@@ -200,6 +185,8 @@ Prints the version of GoDev.
 
 ## Contributing
 
+
+
 ### Repository Setup
 Run the following to clone this repository:
 
@@ -213,12 +200,16 @@ Then copy the `sample.properties` into `Makefile.properties`:
 cp sample.properties Makefile.properties;
 ```
 
+
+
 ### Dependency Installation
 Dependencies are stored in the `./vendor` directory. Run the following to populate the dependencies:
 
 ```sh
 make deps
 ```
+
+
 
 ### Static file generation
 For static files that GoDev can initialise, a Go generator is used. The files can be found at `./data/generate` and the code to generate the file at `./data.go` can be found at `./data/generate.go`. The `./data.go` is generated with every build, but if you want to generate it manually, run:
@@ -227,6 +218,8 @@ For static files that GoDev can initialise, a Go generator is used. The files ca
 make generate
 ```
 
+
+
 ### Development
 Development is done in the `./dev` directory. Unfortunately, since this is a live-reload tool, there is no live-reload for the live-reload, so we have to re-run the application every time we make changes for them to be visible. The command to re-compile and re-run GoDev while working with `./dev` is:
 
@@ -234,12 +227,16 @@ Development is done in the `./dev` directory. Unfortunately, since this is a liv
 make start
 ```
 
+
+
 ### Testing
 To run the tests in watch mode:
 
 ```sh
 make test
 ```
+
+
 
 ### Versioning
 We try to follow [semver versioning]((https://semver.org/)) as far as possible. This means:
@@ -267,6 +264,8 @@ make version.bump VERSION=minor
 make version.bump VERSION=major
 ```
 
+
+
 ### Compilation to Binary
 To compile GoDev, run:
 
@@ -274,12 +273,16 @@ To compile GoDev, run:
 make compile
 ```
 
+
+
 ### Building the Docker Image
 To build the GoDev image, run:
 
 ```sh
 make docker
 ```
+
+
 
 ### Configuring the CI Pipeline
 A Travis pipeline is included.
@@ -299,18 +302,14 @@ The following are variables that need to be defined for your pipeline:
 
 You will also need to go to your GitHub repository's **Settings > Deploy keys** and add the public key generated from `make ssh.keys` (the public key should be at `./bin/id_rsa.pub`, use the `./bin/id_rsa_b64` contents for the `GITHUB_SSH_DEPLOY_KEY` variable).
 
-### TODOS
-- Releasing to DockerHub
-- Releasing to Brew
-- Releasing to Chocolatey
-- Releasing to GitHub
-- Releasing to GitLab
-
 - - -
 
 ## Architecture Notes
 
+
+
 ### Components
+
 #### Watcher
 - Watches the file system recursively at a directory level, watches new directories as they are created, sends notifications through a channel to the main process
 - Batches file system changes and notifies the main process through a channel
@@ -322,7 +321,10 @@ You will also need to go to your GitHub repository's **Settings > Deploy keys** 
 #### Main Process
 - Coordinates the batched file system changes from Watcher and triggers the Runner to start executing a pipeline
 
+
+
 ### Concepts
+
 #### Pipeline
 - Set of execution groups that run in sequence
 - One pipeline per instantantiation of godev
@@ -338,10 +340,14 @@ You will also need to go to your GitHub repository's **Settings > Deploy keys** 
 
 ## Support
 
+
+
 ### Work Hours
 This is a side-project of mine meant to support my own development needs. I have a day job, so unless I have an urgent need while using this in my professional work, most of my code-level work on this repository will be done during weekends. Pull requests are however supported throughout the week!(:
 
 Thanks for understanding!
+
+
 
 ### If You Really Like This
 If you really like my work and would like to support me, you can find my Patreon at:
