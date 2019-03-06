@@ -41,13 +41,13 @@ jobs:
   - stage: build_test
     if: branch != master AND (type IN (push)) AND (tag IS blank)
     script:
-    - make binary
     - make test.ci
+    - make binary
   - stage: build_test_release_publish
     if: branch = master AND (type IN (push)) AND (tag IS blank)
     script:
-    - make binary
     - make test.ci
+    - make binary
     - |
       if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
         make release.github BUMP=${VERSION_BUMP};
