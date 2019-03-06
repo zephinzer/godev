@@ -1,5 +1,7 @@
 sudo: required
-language: golang
+language: go
+go:
+  - "1.11.x"
 services:
 - docker
 stages:
@@ -19,7 +21,7 @@ deploy:
     branch: master
     tags: true
 before_script:
-- echo "DOCKER_IMAGE_REGISTRY=${DOCKER_IMAGE_REGISTRY}" >> Makefile.properties
+- echo "DOCKER_IMAGE_REGISTRY=${DOCKER_IMAGE_REGISTRY}" > Makefile.properties
 - echo "DOCKER_IMAGE_NAMESPACE=${DOCKER_IMAGE_NAMESPACE}" >> Makefile.properties
 - echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> Makefile.properties
 - echo "DOCKER_REGISTRY_USERNAME=${DOCKER_REGISTRY_USERNAME}" >> Makefile.properties
