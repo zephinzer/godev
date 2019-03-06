@@ -64,6 +64,10 @@ test: compile
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
 	@$(CURDIR)/bin/godev --test
 
+## runs tests for ci
+test.ci: deps compile
+	go test ./... -coverprofile c.out
+
 ## generates the contributors file
 contributors:
 	@echo "# generate with 'make contributors'\n#" > $(CURDIR)/CONTRIBUTORS
