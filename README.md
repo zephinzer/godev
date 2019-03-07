@@ -10,7 +10,7 @@ GoDev is a live-reload development tool with first class support for Golang deve
 - - -
 
 ## Getting Started
-The following systems are somewhat supported:
+The following operating systems are supported:
 
 - Linux
 - MacOS
@@ -21,7 +21,11 @@ You will also require **Go > 1.11.x** for GoDev to work out of the box.
 
 
 ### Installation
+
+
+#### Via Binary Download
 All releases will also include binaries for all three supported packages with source code so you can build it yourself. See [the section on Compilation](#compilation) for details.
+
 
 #### Via `go get`
 For all platforms, simply run:
@@ -29,6 +33,7 @@ For all platforms, simply run:
 ```sh
 go get github.com/zephinzer/godev
 ```
+
 
 #### Via Package Managers
 Coming soon!
@@ -101,6 +106,7 @@ While GoDev was written focused on Golang development happiness, it can also be 
 
 ### Flags
 
+
 #### Run Modes
 By default, GoDev will run for live-reload in development. This results in the default execution groups of:
 
@@ -108,12 +114,14 @@ By default, GoDev will run for live-reload in development. This results in the d
 1. `go build -o ${BUILD_OUTPUT}` (*see `--output`*)
 1. `${BUILD_OUTPUT}`
 
+
 ##### `--test`
 Tells GoDev to run in test mode. This changes the default execution groups so that the following are run instead:
 
 1. `go mod vendor`
 1. `go build -o ${BUILD_OUTPUT}`  (*see `--output`*)
 1. `go test ./... -coverprofile c.out`
+
 
 ##### `--init`
 Specifying this flag triggers a directory initialisation flow which asks if you would like to initialise some files/directories if they are not found. These are:
@@ -126,61 +134,76 @@ Specifying this flag triggers a directory initialisation flow which asks if you 
 1. .dockerignore
 1. Makefile 
 
+
 ##### `--view`
 Specifying this flag with the name of a file prints the file to your terminal. For example, `godev --view main.go` will print the `main.go` file which `--init` will seed for you if you say yes.
 
+
 #### Logs Verbosity
+
 
 ##### `--vv`
 Defines verbose logs (debug level). Useful for debugging or if you'd like some insights into what triggered your job and to debug the pipeline for your specified execution groups.
 
+
 ##### `--vvv`
 Defines super verbose logs (trace level). More useful if you're developing GoDev itself to trace the flow of events.
+
 
 ##### `--silent`
 Tells GoDev to keep completely quiet. Only panic level logs are printed before GoDev exits with a non-zero status code.
 
+
 #### Configuration
+
 
 ##### `--dir`
 Specifies the directory for commands from GoDev to run from.
 
 Default: Current working directory
 
+
 ##### `--watch`
 Specifies the directory for GoDev to watch for changes recursively in.
 
 Default: Current working directory
+
 
 ##### `--exec`
 Specifies a single execution group. Commands specified in an execution group run in parallel.
 
 Use multiple of these to define multiple execution groups. The execution groups run in sequence themselves.
 
+
 ##### `--exec-delim`
 Specifies the delimiter used in the `--exec` flag for separating commands. This flag finds its use if the command you wish to run contains a command as an argument.
 
 Default: `,`
+
 
 ##### `--exts`
 Defines a comma separated list of extensions (without the dot) to trigger a file system change event.
 
 Default: `go,Makefile`
 
+
 ##### `--ignore`
 Defines names of files/directories to ignore.
 
 Default: `bin,vendor`
+
 
 ##### `--output`
 Defines the path to the built output
 
 Default: `bin/app`
 
+
 #### `--rate`
 Defines the rate at which file system change events are batched. Modifying this would be useful if you find that commands being run in your execution groups take longer than 2 seconds and modify files resulting in a never-ending file system change trigger loop.
 
 Default: `2s`
+
 
 ##### `--version`
 Prints the version of GoDev.
