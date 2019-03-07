@@ -1,31 +1,52 @@
 include Makefile.properties
 
-## creates the godev binary for all platforms
-binary:
-	@$(MAKE) create.version.data FOR_OP=binary
-	@$(MAKE) \
-		VERSION=$$(cat $(CURDIR)/.binary/.Version) \
-		COMMIT=$$(cat $(CURDIR)/.binary/.Commit) \
-		compile
-	@rm -rf $(CURDIR)/.binary
-## compiles the binary for all platforms
-## - driver for the `binary` recipe
+## compiles the godev binary for all platforms using Docker
+## - call this when running on host
+godev:
+	@$(MAKE) create.version.data FOR_OP=godev
+	@docker build \
+		--target=build \
+		--build-arg VERSION=$$(cat ./.godev/.Version) \
+		--build-arg COMMIT=$$(cat ./.godev/.Commit) \
+		-t $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit):latest \
+		.
+	@$(MAKE) log.debug MSG="terminating any existing instances of '$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)'..."
+	-@docker stop $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)
+	-@docker rm $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)
+	@$(MAKE) log.debug MSG="starting an instance of '$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)'..."
+	@docker run -d \
+		--entrypoint=sleep \
+		--name=$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit) \
+		$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit):latest \
+		1000
+	@$(MAKE) log.debug MSG="copying out binaries from '$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)' to '$(CURDIR)/bin'..."
+	@docker exec $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit) ls -1 /go/build/bin | xargs -I @ docker cp $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit):/go/build/bin/@ $(CURDIR)/bin/@
+	@$(MAKE) log.debug MSG="terminating '$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)'..."
+	@docker stop $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)
+	@docker rm $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)
+	@rm -rf ./.godev
+## compiles the godev binary for all platforms on the host
+## - call this directly when running for docker build
 compile:
+	@$(MAKE) log.debug MSG="compiling godev..."
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.linux
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.macos
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.windows
 ## compiles the binary for linux
 compile.linux:
+	@$(MAKE) log.debug MSG="compiling godev for linux..."
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=linux GOARCH=amd64 .compile
 ## compiles the binary for macos
 compile.macos:
+	@$(MAKE) log.debug MSG="compiling godev for macos..."
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=darwin GOARCH=amd64 .compile
 ## compiles the binary for windows
 compile.windows:
+	@$(MAKE) log.debug MSG="compiling godev for windows..."
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=windows GOARCH=386 BINARY_EXT=.exe .compile
 ## generic compilation recipe for ensuring consistency of above recipes
 .compile: deps
-	@$(MAKE) log.debug MSG="compiling godev at ./bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'..."
+	@$(MAKE) log.debug MSG="compiling godev at $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'..."
 	@CGO_ENABLED=0 \
 		GO111MODULES=on \
 		GOOS=${GOOS} \
@@ -77,58 +98,40 @@ contributors:
 ## builds the docker image
 docker:
 	@$(MAKE) create.version.data FOR_OP=docker
-	@printf -- '$(DOCKER_IMAGE_REGISTRY)/$(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME)' \
-		> $(CURDIR)/.docker/.DockerImage
-	@$(MAKE) log.debug MSG="building docker image '$$(cat $(CURDIR)/.docker/.DockerImage):latest'..."
+	@$(MAKE) log.debug MSG="building docker image '$(DOCKER_IMAGE_NAME):latest'..."
 	# build docker image
 	@docker build \
-		--build-arg VERSION=$$(cat $(CURDIR)/.docker/.Version) \
-		--build-arg COMMIT=$$(cat $(CURDIR)/.docker/.Commit) \
-		-t $$(cat $(CURDIR)/.docker/.DockerImage):latest \
+		--build-arg VERSION=$$(cat ./.docker/.Version) \
+		--build-arg COMMIT=$$(cat ./.docker/.Commit) \
+		-t $(DOCKER_IMAGE_NAME):latest \
 		.
-	# tag version
-	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)'..."
-	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
-		$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)
-	# tag commit
-	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)'..."
-	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
-		$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)
-	# tag version-commit
-	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)'..."
-	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
-		$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)
-	@docker run $$(cat $(CURDIR)/.docker/.DockerImage):latest go version | sed 's|go||g' | cut -f 3 -d ' ' \
-		> $(CURDIR)/.docker/.GoVersion
-	# tag go version
-	@$(MAKE) log.debug MSG="tagging docker image '$$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)'..."
-	@docker tag $$(cat $(CURDIR)/.docker/.DockerImage):latest \
-		$$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)
-	@rm -rf $(CURDIR)/.docker
+	# retrieve Go version
+	@docker run $(DOCKER_IMAGE_NAME):latest go version | sed 's|go||g' | cut -f 3 -d ' ' \
+		> ./.docker/.GoVersion
+	@$(MAKE) _docker.tag TAG="latest"
+	@$(MAKE) _docker.tag TAG="$$(cat ./.docker/.Version)"
+	@$(MAKE) _docker.tag TAG="$$(cat ./.docker/.Commit)"
+	@$(MAKE) _docker.tag TAG="$$(cat ./.docker/.Version)-$$(cat ./.docker/.Commit)"
+	@$(MAKE) _docker.tag TAG="go-$$(cat ./.docker/.GoVersion)"
+	@rm -rf ./.docker
+_docker.tag:
+	@$(MAKE) log.debug MSG="tagging docker image '$$(cat ./.docker/.DockerImage):${TAG}'..."
+	@docker tag $(DOCKER_IMAGE_NAME):latest $$(cat ./.docker/.DockerImage):${TAG}
 
 ## releases the docker image
 release.docker: docker
 	@$(MAKE) create.version.data FOR_OP=release.docker
-	@printf -- '$(DOCKER_IMAGE_REGISTRY)/$(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME)' \
-		> $(CURDIR)/.release.docker/.DockerImage
-	@docker run $$(cat $(CURDIR)/.release.docker/.DockerImage):latest go version | sed 's|go||g' | cut -f 3 -d ' ' \
-		> $(CURDIR)/.release.docker/.GoVersion
-	# push latest
-	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):latest'..."
-	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):latest
-	# push version
-	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Verson)'..."
-	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Verson)
-	# push commit
-	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)'..."
-	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Commit)
-	# push version-commit
-	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)'..."
-	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):$$(cat $(CURDIR)/.docker/.Version)-$$(cat $(CURDIR)/.docker/.Commit)
-	# push go version
-	@$(MAKE) logs.debug MSG="pushing '$$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)'..."
-	@docker push $$(cat $(CURDIR)/.docker/.DockerImage):go-$$(cat $(CURDIR)/.docker/.GoVersion)
-	@rm -rf $(CURDIR)/.release.docker
+	@docker run $$(cat ./.release.docker/.DockerImage):latest go version | sed 's|go||g' | cut -f 3 -d ' ' \
+		> ./.release.docker/.GoVersion
+	@$(MAKE) _release.docker.push TAG="latest"
+	@$(MAKE) _release.docker.push TAG="$$(cat ./.release.docker/.Version)"
+	@$(MAKE) _release.docker.push TAG="$$(cat ./.release.docker/.Commit)"
+	@$(MAKE) _release.docker.push TAG="$$(cat ./.release.docker/.Version)-$$(cat ./.release.docker/.Commit)"
+	@$(MAKE) _release.docker.push TAG="go-$$(cat ./.release.docker/.GoVersion)"
+	@rm -rf ./.release.docker
+_release.docker.push:
+	@$(MAKE) logs.debug MSG="pushing '$$(cat ./.release.docker/.DockerImage):${TAG}'..."
+	@docker push $$(cat ./.release.docker/.DockerImage):${TAG}
 
 ## releases tags to github
 release.github:
@@ -144,19 +147,22 @@ release.github:
 ## creates versioning data for use when releasing
 create.version.data:
 	@$(MAKE) log.debug MSG="provisioning '$(CURDIR)/.${FOR_OP}' directory..."
-	@mkdir -p $(CURDIR)/.${FOR_OP}
-	@printf -- 'if this .${FOR_OP} directory is here, it means "make ${FOR_OP}" was terminated unexpectedly' > $(CURDIR)/.${FOR_OP}/README
+	@mkdir -p ./.${FOR_OP}
+	@printf -- 'if this .${FOR_OP} directory is here, it means "make ${FOR_OP}" was terminated unexpectedly' > ./.${FOR_OP}/README
 	@$(MAKE) log.debug MSG="generating git commit..."
 	@printf -- "$$(git rev-list -1 HEAD | head -c 7)" \
-		> $(CURDIR)/.${FOR_OP}/.Commit
+		> ./.${FOR_OP}/.Commit
 	@$(MAKE) log.debug MSG="generating git tag..."
 	@printf -- "$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')" \
-		> $(CURDIR)/.${FOR_OP}/.Version
+		> ./.${FOR_OP}/.Version
+	@$(MAKE) log.debug MSG="generating docker image name..."
+	@printf -- '$(DOCKER_IMAGE_REGISTRY)/$(DOCKER_IMAGE_NAMESPACE)/$(DOCKER_IMAGE_NAME)' \
+		> ./.${FOR_OP}/.DockerImage
 
 ## creates a set of keys you can use for deploy keys
 ssh.keys: # PREFIX= - defaults to nothing if not specified
-	@ssh-keygen -t rsa -b 8192 -f $(CURDIR)/bin/${PREFIX}_id_rsa -q -N ''
-	@cat $(CURDIR)/bin/${PREFIX}_id_rsa | base64 -w 0 > $(CURDIR)/bin/${PREFIX}_id_rsa_b64
+	@ssh-keygen -t rsa -b 8192 -f ./bin/${PREFIX}_id_rsa -q -N ''
+	@cat ./bin/${PREFIX}_id_rsa | base64 -w 0 > ./bin/${PREFIX}_id_rsa_b64
 
 ## retrieves the latest version we are at
 version.get:

@@ -3,7 +3,9 @@ Makefile.properties
 
 # dev artifacts
 .compile
+.godev
 .docker
+.release.docker
 bin/*
 c.out
 godev

@@ -48,7 +48,7 @@ jobs:
     script:
     - make test.ci
     - make docker
-    - make binary
+    - make godev
     - |
       if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
         make release.github BUMP=${VERSION_BUMP};
@@ -56,7 +56,7 @@ jobs:
   - stage: publish
     if: (tag IS NOT blank)
     script:
-    - make binary
+    - make godev
     - |
       if [ "${DOCKER_REGISTRY_USERNAME}" != "" ] && [ "${DOCKER_REGISTRY_PASSWORD}" != "" ]; then
         docker login ${DOCKER_IMAGE_REGISTRY} -u ${DOCKER_REGISTRY_USERNAME} -p ${DOCKER_REGISTRY_PASSWORD};

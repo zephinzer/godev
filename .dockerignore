@@ -1,8 +1,10 @@
 # Makefile artifacts
+.godev
 .docker
-.cache
+.release.docker
 
 # development tooling
+.cache
 .vscode
 dev
 docs
@@ -10,6 +12,7 @@ scripts
 
 # repository tooling
 CNAME
+CONTRIBUTORS
 
 # dependencies/binaries
 bin
