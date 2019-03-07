@@ -4,6 +4,12 @@
 
 # development tooling
 .vscode
+dev
+docs
+scripts
+
+# repository tooling
+CNAME
 
 # dependencies/binaries
 bin

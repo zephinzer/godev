@@ -36,6 +36,7 @@ compile.windows:
 		-ldflags " \
 			-extldflags -static \
 		"
+	@sha256sum $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} | cut -d ' ' -f 1 > $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT}.sha256
 	@$(MAKE) log.info MSG="compiled godev at ./bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'"
 
 ## starts the application for development
