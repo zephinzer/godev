@@ -1,6 +1,7 @@
 # `GoDev`
 GoDev is a live-reload development tool with first class support for Golang development.
 
+[![Latest Version](https://badge.fury.io/gh/zephinzer%2Fgodev.svg)](https://github.com/zephinzer/godev/releases)
 [![Build Status](https://travis-ci.org/zephinzer/godev.svg?branch=master)](https://travis-ci.org/zephinzer/godev)
 [![Maintainability](https://api.codeclimate.com/v1/badges/44ee76eddcb4e8c1fb5f/maintainability)](https://codeclimate.com/github/zephinzer/godev/maintainability)
 
