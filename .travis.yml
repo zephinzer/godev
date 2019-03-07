@@ -54,7 +54,7 @@ jobs:
         make release.github BUMP=${VERSION_BUMP};
       fi;
   - stage: publish
-    if: branch = master AND (tag IS NOT blank)
+    if: (tag IS NOT blank)
     script:
     - make binary
     - |
