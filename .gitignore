@@ -1,7 +1,12 @@
-# IDE stuff
-.vscode
+# ci tooling
+Makefile.properties
 
-# testing/development artifacts
+# dev artifacts
+.compile
+.docker
+bin/*
+c.out
+godev
+
+# golang dependencies
 vendor
-app
-*.version

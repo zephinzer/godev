@@ -1,0 +1,65 @@
+sudo: required
+language: go
+go:
+  - "1.11.x"
+services:
+- docker
+stages:
+- build_test
+- build_test_release_publish
+- deploy
+git:
+  submodules: false
+  quiet: false
+deploy:
+  provider: releases
+  api_key: ${GITHUB_OAUTH_TOKEN}
+  file_glob: true
+  file: bin/${BINARY_FILENAME}-*
+  skip_cleanup: true
+  on:
+    branch: master
+    tags: true
+before_script:
+- echo "DOCKER_IMAGE_REGISTRY=${DOCKER_IMAGE_REGISTRY}" > Makefile.properties
+- echo "DOCKER_IMAGE_NAMESPACE=${DOCKER_IMAGE_NAMESPACE}" >> Makefile.properties
+- echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> Makefile.properties
+- echo "DOCKER_REGISTRY_USERNAME=${DOCKER_REGISTRY_USERNAME}" >> Makefile.properties
+- echo "DOCKER_REGISTRY_PASSWORD=${DOCKER_REGISTRY_PASSWORD}" >> Makefile.properties
+- echo "GITHUB_REPOSITORY_URL=${GITHUB_REPOSITORY_URL}" >> Makefile.properties
+- touch ~/.ssh/id_rsa
+- |
+  if [ "${GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
+    printf -- "${GITHUB_SSH_DEPLOY_KEY}" | base64 -d >> ~/.ssh/id_rsa;
+    chmod 600 ~/.ssh/id_rsa;
+    ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts;
+  fi;
+after_script:
+- rm -rf Makefile.properties ~/.ssh/id_rsa
+jobs:
+  include:
+  - stage: build_test
+    if: branch != master AND (type IN (push)) AND (tag IS blank)
+    script:
+    - make test.ci
+    - make docker
+  - stage: build_test_release
+    if: branch = master AND (type IN (push)) AND (tag IS blank)
+    script:
+    - make test.ci
+    - make docker
+    - make binary
+    - |
+      if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
+        make release.github BUMP=${VERSION_BUMP};
+      fi;
+  - stage: publish
+    if: branch = master AND (tag IS NOT blank)
+    script:
+    - make binary
+    - |
+      if [ "${DOCKER_REGISTRY_USERNAME}" != "" ] && [ "${DOCKER_REGISTRY_PASSWORD}" != "" ]; then
+        docker login ${DOCKER_IMAGE_REGISTRY} -u ${DOCKER_REGISTRY_USERNAME} -p ${DOCKER_REGISTRY_PASSWORD};
+        make release.docker;
+        docker logout;
+      fi;

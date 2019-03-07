@@ -1,263 +1,367 @@
-# Go Develop 🤓
-A set of scripts/tools packaged in a Docker image to quickly get up-and-writing with Golang.
+# `GoDev`
+GoDev is a live-reload development tool with first class support for Golang development.
 
-# Scope of Work
-- ✅ Use Docker to provision an environment for a Golang 1.x application
-- ✅ Live-reload of application using `go build`
-- ✅ Live-updating of application's dependenices (`go mod` used here)
-- ✅ Live-reload of tests using `go test`
-- ✅ Statically link production binary using `go build`
-- ✅ Docker image building using the `scratch` image
-- ✅ Still be able to run things like `go (mod|build|run|test)` on the host system
+[![Build Status](https://travis-ci.org/zephinzer/godev.svg?branch=master)](https://travis-ci.org/zephinzer/godev)
 
-# System Requirements
-- [Make](https://www.gnu.org/software/make/)
-- Docker ([RHEL](https://docs.docker.com/install/linux/docker-ce/centos/) [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/) [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/) [OS X](https://docs.docker.com/docker-for-mac/install/) [Windows](https://docs.docker.com/docker-for-windows/install/))
-- [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
+> Looking for the old Makefile version? [You can find it here](./scripts)
 
-> For Windows auto-update does not work out of the box (because of [#56](https://github.com/docker/for-win/issues/56)). Use [docker-windows-volume-watcher](https://github.com/merofeev/docker-windows-volume-watcher) to activate it.
+- - -
 
-> You don't need Go installed or a `GOPATH` for this 🥂
+## Getting Started
+The following systems are somewhat supported:
 
-# Usage
+- Linux
+- MacOS
+- Windows (*requires more testing, feel free to raise issues*)
+
+You will also require **Go > 1.11.x** for GoDev to work out of the box.
 
 
 
-## TL;DR
-The quickest way to try this out is to copy the following into a Makefile in your target directory and run `make init`:
+### Installation
+All releases will also include binaries for all three supported packages with source code so you can build it yourself. See [the section on Compilation](#compilation) for details.
 
-```makefile
-GOLANG_DEV_VERSION=latest
-
-# initialises this directory - use once only
-init:
-	@$(MAKE) _dev ARG="init"
-# builds the application - outputs an `app` binary
-build:
-	@$(MAKE) _dev ARG="build"
-# runs tests in watch-mode
-test: build
-	@$(MAKE) _dev ARG="test"
-# runs tests once
-test.once: build
-	@$(MAKE) _dev ARG="test -coverprofile c.out"
-# runs the application on the host network
-start: build
-	@$(MAKE) _dev ARG="start"
-# creates a shell in a fresh container generated from the image, usable for development on non-linux machines
-shell:
-	$(MAKE) _dev ARG="shell"
-# retrieves the latest version we are at
-version.get:
-	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest get-latest -q
-# bumps the version by 1: specify VERSION as "patch", "minor", or "major", to be specific about things
-version.bump:
-	@docker run -v "$(CURDIR):/app" zephinzer/vtscripts:latest iterate ${VERSION} -i
-# base command to run other scripts (do not use alone)
-_dev:
-	@docker run \
-    -it \
-    --network host \
-    -u $$(id -u) \
-    -v "$(CURDIR)/.cache/pkg:/go/pkg" \
-    -v "$(CURDIR):/go/src/app" \
-    zephinzer/golang-dev:$(GOLANG_DEV_VERSION) ${ARG}
-```
-
-Check out [the documentation below on how to bundle your application into a `scratch` Docker image](#building-into-a-docker-image).
-
-
-
-## Getting Started With Just The `golang-dev` Image
-If you already have a Makefile/don't want a Makefile (but why?), running the following in any directory should get you up and running:
+#### Via `go get`
+For all platforms, simply run:
 
 ```sh
+go get github.com/zephinzer/godev
+```
+
+#### Via Package Managers
+Coming soon!
+
+
+
+### Usage: Develop with live-reload
+Running `godev` without flags is the easiest way to get started with live-reload-enabled development:
+
+```sh
+godev
+```
+
+> GoDev runs `go mod vendor` to install dependencies, `go build -o bin/app` to build your application, and lastly it runs your app through `bin/app`. You might have to run `chmod +x bin/app` on the first build.
+
+
+
+### Usage: Test with live-reload
+To run the tests, simply specify the `--test` flag.
+
+```sh
+godev --test
+```
+
+To view verbose logs, append the `--vv` flag.
+
+```sh
+godev --test --vv
+```
+
+
+
+### Usage: Initialise a directory for Go development
+To initialise a directory for development in the Golang language with Go Modules for package management, use the `--init` flag.
+
+```sh
+godev --init
+```
+
+> If you'd like to preview files before you install them, you can use the `--view` flag to check out the file first.
+
+
+
+### Usage: Via Docker container
+GoDev is also available as a Docker image at `zephinzer/godev:latest`. To get started using the Docker image, run:
+
+```sh
+# create the cache directory because volume definitions
+# will cause a directory to be created as `root` which
+# you will have trouble deleting on the host
+mkdir -p ./.cache/pkg;
+
+# instantiate the docker image into a container
 docker run -it \
-  -u ${UID} \
-  -v "$(pwd)/.cache/pkg:/go/pkg" \
+  -u $(id -u) \
   -v "$(pwd):/go/src/app" \
-  zephinzer/golang-dev:latest init;
+  -v "$(pwd)/.cache/pkg:/go/pkg" \
+  zephinzer/godev:latest \
+  godev
+# ^ add any other flags you want after godev
+
 ```
 
-The script should ask a series of questions which if you agree to all, will create a Git repository, add an appropriate .gitignore file, initialise `go mod`, and provision a Dockerfile you can use to build your own image.
+- - -
 
-Notes:
-- The `-u` parameter sets the guest user to use your host user ID so that new files aren't created as `root`, causing problems on your host machine when you attempt to delete them.
-- The mapping of the `.cache` directory allows for faster subsequent dependency processing by `go mod`.
-
+## Advanced Usage
+While GoDev was written focused on Golang development happiness, it can also be used for projects in other languages. Use the configuration flags to adjust it to your needs
 
 
-## Live-Reload, Live-Dependency-Update, Live-Testing Development
-Assuming you've completed the above step, create a `main.go` if there isn't already one, and run the following to start development:
+
+### Flags
+
+#### Run Modes
+By default, GoDev will run for live-reload in development. This results in the default execution groups of:
+
+1. `go mod vendor`
+1. `go build -o ${BUILD_OUTPUT}` (*see `--output`*)
+1. `${BUILD_OUTPUT}`
+
+##### `--test`
+Tells GoDev to run in test mode. This changes the default execution groups so that the following are run instead:
+
+1. `go mod vendor`
+1. `go build -o ${BUILD_OUTPUT}`  (*see `--output`*)
+1. `go test ./... -coverprofile c.out`
+
+##### `--init`
+Specifying this flag triggers a directory initialisation flow which asks if you would like to initialise some files/directories if they are not found. These are:
+
+1. Git repository (.git)
+1. .gitignore
+1. go.mod
+1. main.go
+1. Dockerfile
+1. .dockerignore
+1. Makefile 
+
+##### `--view`
+Specifying this flag with the name of a file prints the file to your terminal. For example, `godev --view main.go` will print the `main.go` file which `--init` will seed for you if you say yes.
+
+#### Logs Verbosity
+
+##### `--vv`
+Defines verbose logs (debug level). Useful for debugging or if you'd like some insights into what triggered your job and to debug the pipeline for your specified execution groups.
+
+##### `--vvv`
+Defines super verbose logs (trace level). More useful if you're developing GoDev itself to trace the flow of events.
+
+##### `--silent`
+Tells GoDev to keep completely quiet. Only panic level logs are printed before GoDev exits with a non-zero status code.
+
+#### Configuration
+
+##### `--dir`
+Specifies the directory for commands from GoDev to run from.
+
+Default: Current working directory
+
+##### `--watch`
+Specifies the directory for GoDev to watch for changes recursively in.
+
+Default: Current working directory
+
+##### `--exec`
+Specifies a single execution group. Commands specified in an execution group run in parallel.
+
+Use multiple of these to define multiple execution groups. The execution groups run in sequence themselves.
+
+##### `--exec-delim`
+Specifies the delimiter used in the `--exec` flag for separating commands. This flag finds its use if the command you wish to run contains a command as an argument.
+
+Default: `,`
+
+##### `--exts`
+Defines a comma separated list of extensions (without the dot) to trigger a file system change event.
+
+Default: `go,Makefile`
+
+##### `--ignore`
+Defines names of files/directories to ignore.
+
+Default: `bin,vendor`
+
+##### `--output`
+Defines the path to the built output
+
+Default: `bin/app`
+
+#### `--rate`
+Defines the rate at which file system change events are batched. Modifying this would be useful if you find that commands being run in your execution groups take longer than 2 seconds and modify files resulting in a never-ending file system change trigger loop.
+
+Default: `2s`
+
+##### `--version`
+Prints the version of GoDev.
+
+- - -
+
+## Contributing
+
+
+
+### Repository Setup
+Run the following to clone this repository:
 
 ```sh
-docker run -it \
-  -u ${UID} \
-  --network host \
-  -v "$(pwd)/.cache/pkg:/go/pkg" \
-  -v "$(pwd):/go/src/app" \
-  zephinzer/golang-dev:latest start;
+git clone git@github.com:zephinzer/godev.git;
 ```
 
-To start the tests, create a new terminal in the same directory and run:
+Then copy the `sample.properties` into `Makefile.properties`:
 
 ```sh
-docker run -it \
-  -u ${UID} \
-  --network host \
-  -v "$(pwd)/.cache/pkg:/go/pkg" \
-  -v "$(pwd):/go/src/app" \
-  zephinzer/golang-dev:latest test;
+cp sample.properties Makefile.properties;
 ```
 
-**Notes**
-- Making changes to `*.go` will result in a live-reload
-- Add a new `import` will cause the script to start downloading the new dependency
-- Removing that `import` will simply cause the dependency to be removed - simple stuff
-- If you need a port open without using `--network host`, specify the flag `-p "HOSTPORT":"CONTAINERPORT"` in the `docker run` command
-- If a new file is created, you'll need to send an interrupt to the process and start it again to begin watching it. I have no idea how to automatically watch new files but if you do, please submit a pull request. Thanks in advance!
 
 
-
-## Building a Binary
-Assuming you have a `main.go`, building a binary is as simple as running:
+### Dependency Installation
+Dependencies are stored in the `./vendor` directory. Run the following to populate the dependencies:
 
 ```sh
-docker run -it \
-  -u ${UID} \
-  -v "$(pwd)/.cache/pkg:/go/pkg" \
-  -v "$(pwd):/go/src/app" \
-  zephinzer/golang-dev:latest build;
+make deps
 ```
 
-The binary will appear in your current directory and be named `app.$GOOS.$GOARCH`. It will be postfixd with a `.exe` if `$GOOS` specifies a Windows build.
-
-**Notes**:
-- The build is run with `CGO_ENABLED=0`, `GOOS=linux`, and `GOARCH=amd64`. To change this, specify your environment variables as part of the `docker` command. [Documentation can be found here under the `--env` or `--env-file` flag](https://docs.docker.com/engine/reference/commandline/run/#options).
 
 
-
-## Building Into a Docker Image
-If you denied the `init` script from creating a Dockerfile, you can run it again to get it. Otherwise, the Dockerfile script should be:
-
-```Dockerfile
-FROM zephinzer/golang-dev:latest as development
-COPY . /go/src/app
-ENTRYPOINT [ "start" ]
-FROM development as build
-RUN build
-ENTRYPOINT [ "/go/src/app/app" ]
-FROM scratch as production
-COPY --from=build /go/src/app/app /
-ENTRYPOINT [ "/app" ]
-```
-
-Copy the above and paste it in a file named Dockerfile in your root directory. After that, you can build your image by running:
+### Static file generation
+For static files that GoDev can initialise, a Go generator is used. The files can be found at `./data/generate` and the code to generate the file at `./data.go` can be found at `./data/generate.go`. The `./data.go` is generated with every build, but if you want to generate it manually, run:
 
 ```sh
-docker build -t yourname/yourimage:yourtag .;
+make generate
 ```
 
 
 
-# Advanced Usage
+### Development
+Development is done in the `./dev` directory. Unfortunately, since this is a live-reload tool, there is no live-reload for the live-reload, so we have to re-run the application every time we make changes for them to be visible. The command to re-compile and re-run GoDev while working with `./dev` is:
 
-
-
-## Usage in a `docker-compose.yml`
-Add the following in your Docker Compose to use this as part of a Docker provisioned environment:
-
-```yaml
-version: "3.5" # or anything you're using
-services:
-  # ...
-  app:
-    image: zephinzer/golang-dev:latest
-    environment: # if needed
-      PORT: "3000"
-    ports: # if needed
-      - "3000:3000"
-    user: "${USER_ID}"
-    entrypoint: ["start"]
-    volumes:
-      - "./:/go/src/app" # for mapping source files
-      - "./.cache/pkg:/go/pkg" # for mapping go cache
-    # ...
-  # ...
+```sh
+make start
 ```
 
 
 
-# Technical Footnotes
+### Testing
+To run the tests in watch mode:
+
+```sh
+make test
+```
 
 
 
-## Why `golang-dev` Came About
-- **Golang requirements**. Go's infamous `$GOPATH` is a pain-in-the-filesystem. Developing via a Docker environment abstracts this away. Also, you no longer have to have Go installed on your system since managing different Go versions is another pain-in-the-filesystem.
-- **Live-reload tooling**. [Realize](https://github.com/oxequa/realize) works for applications but does not run tests. Same for [Gin](https://github.com/codegangsta/gin) which seems . Only [GoConvey](https://github.com/smartystreets/goconvey) does it well, but it uses a browser interface instead of a CLI. Go Convey also only outputs a PASS or FAIL. I wanted to see error logs on FAIL which it didn't provide me.
-- **Auto-download dependencies**. None of Realize, Gin and GoConvey automatically downloads dependencies either. While this is super useful, it also requires context of which package manager to use. This project enforces the use of `go mod` which accomodates previous package managers such as `glide` and `go dep`.
+### Versioning
+We try to follow [semver versioning]((https://semver.org/)) as far as possible. This means:
+
+- Patch version bumps for bug fixes
+- Minor version bumps for new flags/behaviours
+- Major version bumps for deprecation of flags/behaviours
+
+To get the current version:
+
+```sh
+make version.get
+```
+
+To bump the version:
+
+```sh
+# bump the patch version
+make version.bump
+
+# bump the minor version
+make version.bump VERSION=minor
+
+# bump the major version
+make version.bump VERSION=major
+```
 
 
 
-## Where `golang-dev` Fits In
-I use this for development of information-systems type of software - basically, CRUD services. It might work for your own development, it might not. Drop me a pull request if there's something you can and are willing to fix/add, drop me an issue otherwise and I'll see if I can get it done!
+### Compilation to Binary
+To compile GoDev, run:
+
+```sh
+make compile
+```
+
+
+
+### Building the Docker Image
+To build the GoDev image, run:
+
+```sh
+make docker
+```
+
+
+
+### Configuring the CI Pipeline
+A Travis pipeline is included.
+
+The following are variables that need to be defined for your pipeline:
+
+| Environment Variable | Description |
+| --- | --- |
+| `DOCKER_IMAGE_REGISTRY` | Hostname of the Docker registry we are pushing to |
+| `DOCKER_IMAGE_NAMESPACE` | Namespace of the Docker image (docker.io/THIS/image:tag) |
+| `DOCKER_IMAGE_NAME` | Name of the Docker image (docker.io/namespace/THIS:tag |
+| `DOCKER_REGISTRY_USERNAME` | Username for the Docker registry (when not specified, does not release to DockerHub) |
+| `DOCKER_REGISTRY_PASSWORD` | Password for the Docker registry (when not specified, does not release to DockerHub) |
+| `GITHUB_OAUTH_TOKEN` | GitHub personal access token for deploying binaries to the release page |
+| `GITHUB_REPOSITORY_URL` | Clone URL of the GitHub repository (when not specified, does not release to GitHub) |
+| `GITHUB_SSH_DEPLOY_KEY` | Base64 encoded private key that matches a public key listed in your Deploy Keys for the project. Run `make ssh.keys` to generate this. |
+
+You will also need to go to your GitHub repository's **Settings > Deploy keys** and add the public key generated from `make ssh.keys` (the public key should be at `./bin/id_rsa.pub`, use the `./bin/id_rsa_b64` contents for the `GITHUB_SSH_DEPLOY_KEY` variable).
+
+- - -
+
+## Architecture Notes
+
+
+
+### Components
+
+#### Watcher
+- Watches the file system recursively at a directory level, watches new directories as they are created, sends notifications through a channel to the main process
+- Batches file system changes and notifies the main process through a channel
+
+#### Runner
+- Handles the (re-)execution/termination of defined execution groups and commands
+- Triggered through a function call that will terminate existing pipelines and restart them
+
+#### Main Process
+- Coordinates the batched file system changes from Watcher and triggers the Runner to start executing a pipeline
+
+
+
+### Concepts
+
+#### Pipeline
+- Set of execution groups that run in sequence
+- One pipeline per instantantiation of godev
+
+#### Execution Groups
+- Group of commands to run in parallel
+- Execution groups run in sequence themselves
+
+#### Command
+- Atomic execution unit that runs a command using the user’s shell
+
+- - -
+
+## Support
+
+
+
+### Work Hours
+This is a side-project of mine meant to support my own development needs. I have a day job, so unless I have an urgent need while using this in my professional work, most of my code-level work on this repository will be done during weekends. Pull requests are however supported throughout the week!(:
+
+Thanks for understanding!
+
+
+
+### If You Really Like This
+If you really like my work and would like to support me, you can find my Patreon at:
 
 
 
 - - -
 
+# Licensing
+The binary and source code is licensed under the permissive MIT license. See [the LICENSE file](./LICENSE) for the full text.
 
+- - -
 
-# Development/Hacking
-If you're interested in working on this, read on!
-
-The contribution mechanism is roughly the same as other open-source projects:
-
-1. Fork this repository
-1. Make your changes on `master`
-1. Make a pull request
-
-## Code
-The main logic of how this works is written as shell scripts [in the `/scripts` directory](./scripts).
-
-The `Dockerfile` simply copies [the `/scripts`](./scripts) in and adds it to the `$PATH`.
-
-## Testing
-Tests are contained [in the `./test` directory](./test) but you can run it from the root using `make test`.
-
-## Building
-To build the Docker image, run `make build`.
-
-## Versioning
-To bump a patch version, run `make version.bump`.
-
-To bump a minor versoin, run `make version.bump VERSION=minor`.
-
-To bump a major versoin, run `make version.bump VERSION=major`.
-
-## Publishing
-To publish the Docker image, run `make publish`.
-
-This publishes two images - one with the version as recorded by the Git tags, another with the version of Golang, and a last one with the `latest` tag.
-
-
-
-# Other Things
-
-## Licensing
-This project is licensed under the MIT license. See [the LICENSE file](./LICENSE) for the full text.
-
-## All Relevant Links
-- [GitHub Repository](https://github.com/zephinzer/golang-dev)
-- [DockerHub Repository](https://hub.docker.com/r/zephinzer/golang-dev)
-
-## Support/Work Hours
-This is a side-project of mine meant to support my own development needs. I have a day job, so unless I have an urgent need while using this in my professional work, most of my code-level work on this repository will be done during weekends. Pull requests are supported throughout the week!(:
-
-Thanks for understanding!
-
-## Projects Using This
-- [usvc/accounts](https://github.com/usvc/accounts)
-
-## Cheers 😎
+# Cheers 😎
 Leave me a 🌟 or watch this repository to indicate your interest in my sustained development on this. It'll help me decide whether or not I should deprecate this once my own use case for this is over.

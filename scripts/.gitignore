@@ -1,0 +1,7 @@
+# IDE stuff
+.vscode
+
+# testing/development artifacts
+vendor
+*/**/app
+*.version

@@ -1,0 +1,15 @@
+{
+  "go.useLanguageServer": true,
+  "go.inferGopath": false,
+  "go.autocompleteUnimportedPackages": true,
+  "go.enableCodeLens": {
+    "references": false,
+    "runtest": false
+  },
+  "go.formatTool": "goimports",
+  "go.docsTool": "guru",
+  "go.liveErrors": {
+    "enabled": true,
+    "delay": 500
+  }
+}
