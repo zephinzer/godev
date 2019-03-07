@@ -20,6 +20,7 @@ godev:
 		$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit):latest \
 		1000
 	@$(MAKE) log.debug MSG="copying out binaries from '$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)' to '$(CURDIR)/bin'..."
+	@mkdir -p $(CURDIR)/bin
 	@docker exec $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit) ls -1 /go/build/bin | xargs -I @ docker cp $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit):/go/build/bin/@ $(CURDIR)/bin/@
 	@$(MAKE) log.debug MSG="terminating '$(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)'..."
 	@docker stop $(DOCKER_IMAGE_NAME)_$$(cat ./.godev/.Commit)
