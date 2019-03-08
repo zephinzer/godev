@@ -4,6 +4,7 @@ GoDev is a live-reload development tool with first class support for Golang deve
 [![Latest Version](https://badge.fury.io/gh/zephinzer%2Fgodev.svg)](https://github.com/zephinzer/godev/releases)
 [![Build Status](https://travis-ci.org/zephinzer/godev.svg?branch=master)](https://travis-ci.org/zephinzer/godev)
 [![Maintainability](https://api.codeclimate.com/v1/badges/44ee76eddcb4e8c1fb5f/maintainability)](https://codeclimate.com/github/zephinzer/godev/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/44ee76eddcb4e8c1fb5f/test_coverage)](https://codeclimate.com/github/zephinzer/godev/test_coverage)
 
 > Looking for the old Makefile version? [You can find it here](./scripts)
 
