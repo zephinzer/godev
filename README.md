@@ -98,6 +98,26 @@ While GoDev was written focused on Golang development happiness, it can also be 
 
 ### Flags
 
+#### Summary
+##### Run Modes
+- [`--test`](#--test): run tests with live-build/reload
+- [`--init`](#--init): initialise a directory
+- [`--view`](#--view): preview files from `--init`
+- [`--verison`](#--verison): display the version
+##### Logs Verbosity
+- [`--silent`](#--silent): no logs
+- [`--vv`](#--vv): verbose logs
+- [`--vvv`](#--vvv): very verbose logs
+##### Configuration
+- [`--dir`](#--dir): change the working directory
+- [`--watch`](#--watch): change the directory being watched
+- [`--exec`](#--exec): define a list of comma-separated commands for an execution group
+- [`--exec-delim`](#--exec-delim): define command delimiters in execution groups and override the comma delimiter
+- [`--exts`](#--exts): comma-separated list of file extensions to trigger a watch event
+- [`--ignore`](#--ignore): comma-separated list of file/directory names to ignore
+- [`--output`](#--output): defines the path relative to the working directory where your binary is built
+- [`--rate`](#--rate): defines the refresh rate of the file system watcher
+
 
 #### Run Modes
 By default, GoDev will run for live-reload in development. This results in the default execution groups of:
@@ -105,13 +125,6 @@ By default, GoDev will run for live-reload in development. This results in the d
 1. `go mod vendor`
 1. `go build -o ${BUILD_OUTPUT}` (*see `--output`*)
 1. `${BUILD_OUTPUT}`
-
-The following tags modify the run modes which GoDev executes in:
-
-- [`--test`](#--test): run tests with live-build/reload
-- [`--init`](#--init): initialise a directory
-- [`--view`](#--view): preview files from `--init`
-- [`--verison`](#--verison): display the version
 
 ##### `--test`
 Tells GoDev to run in test mode. This changes the default execution groups so that the following are run instead:
@@ -139,11 +152,6 @@ Prints the version of GoDev.
 
 
 #### Logs Verbosity
-Three levels of logging are defined:
-
-- [`--silent`](#--silent): no logs
-- [`--vv`](#--vv): verbose logs
-- [`--vvv`](#--vvv): very verbose logs
 
 ##### `--vv`
 Defines verbose logs (debug level). Useful for debugging or if you'd like some insights into what triggered your job and to debug the pipeline for your specified execution groups.
