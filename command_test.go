@@ -93,7 +93,7 @@ func (s *CommandTestSuite) TestIsValid_FromAbsolutePath_NoPermissions() {
 	s.command.handleInitialisation()
 	err := s.command.IsValid()
 	assert.NotNil(s.T(), err)
-	assert.Contains(s.T(), err.Error(), "you don't have permissions to execute")
+	assert.Contains(s.T(), err.Error(), "permission denied")
 }
 
 func (s *CommandTestSuite) TestIsValid_FromAbsolutePath_WithPermissions() {

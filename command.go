@@ -104,19 +104,17 @@ func (command *Command) IsValid() error {
 	application := command.config.Application
 	if len(application) == 0 {
 		return errors.New("no application was specified")
-	} else if path.IsAbs(application) {
-		_, err := os.Lstat(application)
-		if err != nil && os.IsNotExist(err) {
-			return fmt.Errorf("application at '%s' could not be found", application)
-		} else if err != nil {
+	}
+	if path.IsAbs(application) {
+		if _, err := os.Lstat(application); err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("application at '%s' could not be found", application)
+			}
 			return err
 		}
 	}
 	if _, err := exec.LookPath(application); err != nil {
-		if strings.Contains(err.Error(), "permission denied") {
-			return fmt.Errorf("looks like you don't have permissions to execute '%s',\n  * run 'chmod +x %s' and try again", path.Base(application), application)
-		}
-		return fmt.Errorf("unexpected error occurred while running application '%s': %v", application, err)
+		return err
 	}
 	return nil
 }
