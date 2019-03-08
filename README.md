@@ -257,7 +257,14 @@ make start
 To run the tests in watch mode:
 
 ```sh
+# for linux
 make test
+
+# for macos
+make test.mac
+
+# for windows
+make test.win
 ```
 
 For running the tests one-off (CI mode):

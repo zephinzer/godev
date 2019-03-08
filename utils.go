@@ -45,7 +45,7 @@ const ConfirmationFalseCanonical = "n"
 
 var ConfirmationFalse = []string{ConfirmationFalseCanonical, "no", "nope", "nah", "neh", "stop", "dont"}
 
-func confirm(question string, byDefault bool, retryText ...string) bool {
+func confirm(reader *bufio.Reader, question string, byDefault bool, retryText ...string) bool {
 	var options string
 	if byDefault {
 		options = fmt.Sprintf("%s/%s", strings.ToUpper(ConfirmationTrueCanonical), ConfirmationFalseCanonical)
@@ -53,7 +53,6 @@ func confirm(question string, byDefault bool, retryText ...string) bool {
 		options = fmt.Sprintf("%s/%s", ConfirmationTrueCanonical, strings.ToUpper(ConfirmationFalseCanonical))
 	}
 	fmt.Printf("%s [%s]: ", question, options)
-	reader := bufio.NewReader(os.Stdin)
 	userInput, err := reader.ReadString('\n')
 	if err != nil {
 		panic(err)
@@ -69,7 +68,7 @@ func confirm(question string, byDefault bool, retryText ...string) bool {
 			confirmation = false
 		} else if len(retryText) > 0 {
 			fmt.Println(retryText[0])
-			confirmation = confirm(question, byDefault, retryText...)
+			confirmation = confirm(reader, question, byDefault, retryText...)
 		}
 		return confirmation
 	}

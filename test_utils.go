@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,4 +67,25 @@ func removeFile(t *testing.T, pathToFile string) {
 		pathToFile,
 		err,
 	)
+}
+
+func removeDir(t *testing.T, pathToDirectory string) error {
+	directoryListing, err := ioutil.ReadDir(pathToDirectory)
+	assert.Nil(t, err)
+	for i := 0; i < len(directoryListing); i++ {
+		listing := directoryListing[i]
+		fullPath := path.Join(pathToDirectory, listing.Name())
+		listingInfo, err := os.Lstat(fullPath)
+		assert.Nil(t, err)
+		if listingInfo.IsDir() {
+			fmt.Printf("removing dir %s\n", fullPath)
+			err = removeDir(t, fullPath)
+		} else {
+			err = os.Remove(fullPath)
+			assert.Nil(t, err)
+			fmt.Printf("removed file %s\n", fullPath)
+		}
+	}
+	err = os.RemoveAll(pathToDirectory)
+	return err
 }

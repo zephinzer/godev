@@ -81,14 +81,22 @@ generate:
 	@$(MAKE) log.info MSG="~/data.go generation successful."
 
 ## runs tests in watch mode
-test: compile
+test: compile.linux
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
-	@$(CURDIR)/bin/godev --test
+	@$(CURDIR)/bin/godev--linux-amd64 --test --vv
+
+test.mac: compile.macos	
+	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
+	@$(CURDIR)/bin/godev--darwin-amd64 --test --vv
+
+test.win: compile.windows
+	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
+	@$(CURDIR)/bin/godev--windows-386 --test --vv
 
 ## runs tests for ci
 test.ci: deps
 	@$(MAKE) log.debug MSG="running tests in single run mode..."
-	@go test ./... -coverprofile c.out
+	@go test -v ./... -coverprofile c.out
 
 ## generates the contributors file
 contributors:
