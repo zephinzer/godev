@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 	"testing"
@@ -27,6 +28,11 @@ func TestGitInitialiserTestSuite(t *testing.T) {
 func (s *GitInitialiserTestSuite) SetupTest() {
 	t := s.T()
 	s.pathWithGit = path.Join(getCurrentWorkingDirectory(), "/data/test-initialiser/git/exists")
+	if !directoryExists(path.Join(s.pathWithGit, "/.git")) {
+		if err := os.MkdirAll(path.Join(s.pathWithGit, "/.git"), os.ModePerm); err != nil {
+			panic(err)
+		}
+	}
 	s.pathWithoutGit = path.Join(getCurrentWorkingDirectory(), "/data/test-initialiser/git/non-existent")
 	if directoryExists(path.Join(s.pathWithoutGit, "/.git")) {
 		if err := removeDir(t, path.Join(s.pathWithoutGit, "/.git")); err != nil {
@@ -35,6 +41,20 @@ func (s *GitInitialiserTestSuite) SetupTest() {
 	}
 	s.gitInitialiser = InitGitInitialiser(&GitInitialiserConfig{})
 	s.gitInitialiser.logger.SetOutput(&s.logs)
+}
+
+func (s *GitInitialiserTestSuite) TearDownTest() {
+	t := s.T()
+	if directoryExists(path.Join(s.pathWithGit, "/.git")) {
+		if err := removeDir(t, path.Join(s.pathWithGit, "/.git")); err != nil {
+			panic(err)
+		}
+	}
+	if directoryExists(path.Join(s.pathWithoutGit, "/.git")) {
+		if err := removeDir(t, path.Join(s.pathWithoutGit, "/.git")); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (s *GitInitialiserTestSuite) TestCheck() {
@@ -70,7 +90,5 @@ func (s *GitInitialiserTestSuite) TestHandle_initialiseGit() {
 	t := s.T()
 	s.gitInitialiser.Path = s.pathWithoutGit
 	err := s.gitInitialiser.Handle()
-	assert.Nil(t, err)
-	err = removeDir(t, path.Join(s.pathWithoutGit, "/.git"))
 	assert.Nil(t, err)
 }
