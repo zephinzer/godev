@@ -164,16 +164,6 @@ Tells GoDev to keep completely quiet. Only panic level logs are printed before G
 
 
 #### Configuration
-Here are some other ways of configuring GoDev:
-
-- [`--dir`](#--dir): change the working directory
-- [`--watch`](#--watch): change the directory being watched
-- [`--exec`](#--exec): define a list of comma-separated commands for an execution group
-- [`--exec-delim`](#--exec-delim): define command delimiters in execution groups and override the comma delimiter
-- [`--exts`](#--exts): comma-separated list of file extensions to trigger a watch event
-- [`--ignore`](#--ignore): comma-separated list of file/directory names to ignore
-- [`--output`](#--output): defines the path relative to the working directory where your binary is built
-- [`--rate`](#--rate): defines the refresh rate of the file system watcher
 
 ##### `--dir`
 Specifies the directory for commands from GoDev to run from.
@@ -210,8 +200,7 @@ Defines the path to the built output
 
 Default: `bin/app`
 
-
-#### `--rate`
+##### `--rate`
 Defines the rate at which file system change events are batched. Modifying this would be useful if you find that commands being run in your execution groups take longer than 2 seconds and modify files resulting in a never-ending file system change trigger loop.
 
 Default: `2s`
