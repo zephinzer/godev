@@ -18,6 +18,20 @@ func main() {
 	godev.Start()
 }
 
+type InitFile struct {
+	Filename string
+	Data     string
+}
+
+var InitFileMap = map[string]*InitFile{
+	"dockerfile":    &InitFile{"Dockerfile", DataDockerfile},
+	"makefile":      &InitFile{"Makefile", DataMakefile},
+	".dockerignore": &InitFile{".dockerignore", DataDotDockerignore},
+	".gitignore":    &InitFile{".gitignore", DataDotGitignore},
+	"main.go":       &InitFile{"main.go", DataMainDotgo},
+	"go.mod":        &InitFile{"go.mod", DataGoDotMod},
+}
+
 func InitGoDev(config *Config) *GoDev {
 	return &GoDev{
 		config: config,
@@ -30,8 +44,10 @@ func InitGoDev(config *Config) *GoDev {
 }
 
 type GoDev struct {
-	config *Config
-	logger *Logger
+	config  *Config
+	logger  *Logger
+	watcher *Watcher
+	runner  *Runner
 }
 
 func (godev *GoDev) Start() {
@@ -49,12 +65,11 @@ func (godev *GoDev) Start() {
 }
 
 func (godev *GoDev) createPipeline() []*ExecutionGroup {
-	config := godev.config
 	var pipeline []*ExecutionGroup
-	for _, execGroup := range config.ExecGroups {
+	for _, execGroup := range godev.config.ExecGroups {
 		executionGroup := &ExecutionGroup{}
 		var executionCommands []*Command
-		commands := strings.Split(execGroup, config.CommandsDelimiter)
+		commands := strings.Split(execGroup, godev.config.CommandsDelimiter)
 		for _, command := range commands {
 			if sections, err := shellquote.Split(command); err != nil {
 				panic(err)
@@ -64,8 +79,8 @@ func (godev *GoDev) createPipeline() []*ExecutionGroup {
 					InitCommand(&CommandConfig{
 						Application: sections[0],
 						Arguments:   sections[1:],
-						Directory:   config.WorkDirectory,
-						LogLevel:    config.LogLevel,
+						Directory:   godev.config.WorkDirectory,
+						LogLevel:    godev.config.LogLevel,
 					}),
 				)
 			}
@@ -76,49 +91,35 @@ func (godev *GoDev) createPipeline() []*ExecutionGroup {
 	return pipeline
 }
 
+func (godev *GoDev) eventHandler(events *[]WatcherEvent) bool {
+	for _, e := range *events {
+		godev.logger.Trace(e)
+	}
+	godev.runner.Trigger()
+	return true
+}
+
 func (godev *GoDev) startWatching() {
-	config := godev.config
-	logger := godev.logger
 	godev.logUniversalConfigurations()
 	godev.logWatchModeConfigurations()
-	watcher := InitWatcher(&WatcherConfig{
-		FileExtensions: config.FileExtensions,
-		IgnoredNames:   config.IgnoredNames,
-		RefreshRate:    config.Rate,
-		LogLevel:       config.LogLevel,
-	})
-	watcher.RecursivelyWatch(config.WatchDirectory)
-	pipeline := godev.createPipeline()
-	runner := InitRunner(&RunnerConfig{
-		Pipeline: pipeline,
-		LogLevel: config.LogLevel,
-	})
+	godev.initialiseWatcher()
+	godev.initialiseRunner()
 
 	var wg sync.WaitGroup
-	watcher.BeginWatch(&wg, func(events *[]WatcherEvent) bool {
-		for _, e := range *events {
-			logger.Trace(e)
-		}
-		runner.Trigger()
-		return true
-	})
-
-	logger.Infof("working dir : '%s'", config.WorkDirectory)
-	logger.Infof("watching dir: '%s'", config.WatchDirectory)
-
-	runner.Trigger()
+	godev.watcher.BeginWatch(&wg, godev.eventHandler)
+	godev.logger.Infof("working dir : '%s'", godev.config.WorkDirectory)
+	godev.logger.Infof("watching dir: '%s'", godev.config.WatchDirectory)
+	godev.runner.Trigger()
 	wg.Wait()
 }
 
 func (godev *GoDev) logUniversalConfigurations() {
-	config := godev.config
-	logger := godev.logger
-	logger.Debugf("flag - init       : %v", config.RunInit)
-	logger.Debugf("flag - test       : %v", config.RunTest)
-	logger.Debugf("flag - view       : %v", config.RunView)
-	logger.Debugf("watch directory   : %s", config.WatchDirectory)
-	logger.Debugf("work directory   : %s", config.WorkDirectory)
-	logger.Debugf("build output      : %s", config.BuildOutput)
+	godev.logger.Debugf("flag - init       : %v", godev.config.RunInit)
+	godev.logger.Debugf("flag - test       : %v", godev.config.RunTest)
+	godev.logger.Debugf("flag - view       : %v", godev.config.RunView)
+	godev.logger.Debugf("watch directory   : %s", godev.config.WatchDirectory)
+	godev.logger.Debugf("work directory    : %s", godev.config.WorkDirectory)
+	godev.logger.Debugf("build output      : %s", godev.config.BuildOutput)
 }
 
 func (godev *GoDev) logWatchModeConfigurations() {
@@ -204,33 +205,33 @@ func (godev *GoDev) initialiseDirectory() {
 	}
 }
 
+func (godev *GoDev) initialiseRunner() {
+	godev.runner = InitRunner(&RunnerConfig{
+		Pipeline: godev.createPipeline(),
+		LogLevel: godev.config.LogLevel,
+	})
+}
+
+func (godev *GoDev) initialiseWatcher() {
+	godev.watcher = InitWatcher(&WatcherConfig{
+		FileExtensions: godev.config.FileExtensions,
+		IgnoredNames:   godev.config.IgnoredNames,
+		RefreshRate:    godev.config.Rate,
+		LogLevel:       godev.config.LogLevel,
+	})
+	godev.watcher.RecursivelyWatch(godev.config.WatchDirectory)
+}
+
 func (godev *GoDev) viewFile() {
 	config := godev.config
 	logger := godev.logger
-	switch strings.ToLower(config.View) {
-	case "dockerfile":
-		logger.Info("previewing contents of Dockerfile")
-		fmt.Println(DataDockerfile)
-		logger.Info("end of preview for contents of Dockerfile")
-	case "makefile":
-		logger.Info("previewing contents of Makefile")
-		fmt.Println(DataMakefile)
-		logger.Info("end of preview for contents of Makefile")
-	case ".dockerignore":
-		logger.Info("previewing contents of .dockerignore")
-		fmt.Println(DataDotDockerignore)
-		logger.Info("end of preview for contents of .dockerignore")
-	case ".gitignore":
-		logger.Info("previewing contents of .gitignore")
-		fmt.Println(DataDotGitignore)
-		logger.Info("end of preview for contents of .gitignore")
-	case "main.go":
-		logger.Info("previewing contents of main.go")
-		fmt.Println(DataMainDotgo)
-		logger.Info("end of preview for contents of main.go")
-	case "go.mod":
-		logger.Info("previewing contents of go.mod")
-		fmt.Println(DataGoDotMod)
-		logger.Info("end of preview for contents of go.mod")
+	fileKey := strings.ToLower(config.View)
+	if InitFileMap[fileKey] != nil {
+		initFile := InitFileMap[fileKey]
+		logger.Infof("previewing contents of %s", initFile.Filename)
+		fmt.Println(initFile.Filename)
+		logger.Infof("end of preview for contents of %s", initFile.Filename)
+	} else {
+		logger.Panicf("the requested file '%s' does not seem to exist :/", fileKey)
 	}
 }
