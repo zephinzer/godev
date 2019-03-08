@@ -48,46 +48,6 @@ func (s *RunnerTestSuite) SetupTest() {
 	s.runner.logger.SetOutput(&s.logs)
 }
 
-func (s *RunnerTestSuite) TestTrigger() {
-	commandOfInterest := s.runner.config.Pipeline[0].commands[0]
-	commandOfInterest.started = true
-	commandOfInterest.stopped = false
-	commandOfInterest = s.runner.config.Pipeline[0].commands[1]
-	commandOfInterest.started = false
-	commandOfInterest.stopped = false
-	commandOfInterest = s.runner.config.Pipeline[1].commands[0]
-	commandOfInterest.started = false
-	commandOfInterest.stopped = false
-	commandOfInterest = s.runner.config.Pipeline[0].commands[0]
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		select {
-		case signal := <-commandOfInterest.signal:
-			assert.Equal(s.T(), syscall.SIGINT, signal)
-			wg.Done()
-			return
-		}
-	}()
-	go func() {
-		for {
-			if s.runner.stopped {
-				wg.Done()
-				return
-			}
-		}
-	}()
-	s.runner.Trigger()
-	wg.Wait()
-	assert.Contains(s.T(), s.logs.String(), "terminating pipeline")
-	assert.Contains(s.T(), s.logs.String(), "sending SIGINT to command")
-	assert.Contains(s.T(), s.logs.String(), "SIGINT received by command")
-	assert.Contains(s.T(), s.logs.String(), "SIGINT sent to command")
-	assert.Contains(s.T(), s.logs.String(), "terminated pipeline")
-	assert.Contains(s.T(), s.logs.String(), "starting pipeline")
-	assert.Contains(s.T(), s.logs.String(), "completed pipeline")
-}
-
 func (s *RunnerTestSuite) Test_startPipeline() {
 	s.runner.startPipeline()
 	assert.Contains(s.T(), s.logs.String(), "starting pipeline")

@@ -2,9 +2,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 	"sync"
@@ -48,18 +48,8 @@ func (godev *GoDev) Start() {
 	}
 }
 
-func (godev *GoDev) startWatching() {
+func (godev *GoDev) createPipeline() []*ExecutionGroup {
 	config := godev.config
-	logger := godev.logger
-	godev.logUniversalConfigurations()
-	godev.logWatchModeConfigurations()
-	watcher := InitWatcher(&WatcherConfig{
-		FileExtensions: config.FileExtensions,
-		IgnoredNames:   config.IgnoredNames,
-		RefreshRate:    config.Rate,
-		LogLevel:       config.LogLevel,
-	})
-	watcher.RecursivelyWatch(config.WatchDirectory)
 	var pipeline []*ExecutionGroup
 	for _, execGroup := range config.ExecGroups {
 		executionGroup := &ExecutionGroup{}
@@ -83,6 +73,22 @@ func (godev *GoDev) startWatching() {
 		executionGroup.commands = executionCommands
 		pipeline = append(pipeline, executionGroup)
 	}
+	return pipeline
+}
+
+func (godev *GoDev) startWatching() {
+	config := godev.config
+	logger := godev.logger
+	godev.logUniversalConfigurations()
+	godev.logWatchModeConfigurations()
+	watcher := InitWatcher(&WatcherConfig{
+		FileExtensions: config.FileExtensions,
+		IgnoredNames:   config.IgnoredNames,
+		RefreshRate:    config.Rate,
+		LogLevel:       config.LogLevel,
+	})
+	watcher.RecursivelyWatch(config.WatchDirectory)
+	pipeline := godev.createPipeline()
 	runner := InitRunner(&RunnerConfig{
 		Pipeline: pipeline,
 		LogLevel: config.LogLevel,
@@ -138,75 +144,46 @@ func (godev *GoDev) logWatchModeConfigurations() {
 	}
 }
 
+// initialiseDirectory assists in initialising the working directory
 func (godev *GoDev) initialiseDirectory() {
-	if !directoryExists(godev.config.WatchDirectory) {
-		godev.logger.Errorf("the directory at '%s' does not exist - create it first with:\n  mkdir -p %s", godev.config.WatchDirectory, godev.config.WatchDirectory)
+	if !directoryExists(godev.config.WorkDirectory) {
+		godev.logger.Errorf("the directory at '%s' does not exist - create it first with:\n  mkdir -p %s", godev.config.WorkDirectory, godev.config.WorkDirectory)
 		os.Exit(1)
 	}
 	initialisers := []Initialiser{
-		DirInitialiser{
-			Path: path.Join(godev.config.WatchDirectory, "/.git"),
-			Initialiser: func() error {
-				_, err := exec.LookPath("git")
-				if err != nil {
-					return nil
-				}
-				cmd := exec.Command("git", "init")
-				cmd.Dir = godev.config.WatchDirectory
-				done := make(chan error, 0)
-				var wait sync.WaitGroup
-				go func() {
-					wait.Add(1)
-					done <- cmd.Run()
-				}()
-				go func() {
-					for {
-						select {
-						case d := <-done:
-							if d != nil {
-								fmt.Println(d)
-							}
-							wait.Done()
-							return
-						}
-					}
-				}()
-				wait.Wait()
-				return nil
-			},
-			Question: "initialise git repository?",
-			Skip:     "git repository found",
-		},
-		FileInitialiser{
-			Path:     path.Join(godev.config.WatchDirectory, "/.gitignore"),
+		InitGitInitialiser(&GitInitialiserConfig{
+			Path: path.Join(godev.config.WorkDirectory),
+		}),
+		InitFileInitialiser(&FileInitialiserConfig{
+			Path:     path.Join(godev.config.WorkDirectory, "/.gitignore"),
 			Data:     []byte(DataDotGitignore),
 			Question: "seed a .gitignore?",
-		},
-		FileInitialiser{
-			Path:     path.Join(godev.config.WatchDirectory, "/go.mod"),
+		}),
+		InitFileInitialiser(&FileInitialiserConfig{
+			Path:     path.Join(godev.config.WorkDirectory, "/go.mod"),
 			Data:     []byte(DataGoDotMod),
 			Question: "seed a go.mod?",
-		},
-		FileInitialiser{
-			Path:     path.Join(godev.config.WatchDirectory, "/main.go"),
+		}),
+		InitFileInitialiser(&FileInitialiserConfig{
+			Path:     path.Join(godev.config.WorkDirectory, "/main.go"),
 			Data:     []byte(DataMainDotgo),
 			Question: "seed a main.go?",
-		},
-		FileInitialiser{
-			Path:     path.Join(godev.config.WatchDirectory, "/Dockerfile"),
+		}),
+		InitFileInitialiser(&FileInitialiserConfig{
+			Path:     path.Join(godev.config.WorkDirectory, "/Dockerfile"),
 			Data:     []byte(DataDockerfile),
 			Question: "seed a Dockerfile?",
-		},
-		FileInitialiser{
-			Path:     path.Join(godev.config.WatchDirectory, "/.dockerignore"),
+		}),
+		InitFileInitialiser(&FileInitialiserConfig{
+			Path:     path.Join(godev.config.WorkDirectory, "/.dockerignore"),
 			Data:     []byte(DataDotDockerignore),
 			Question: "seed a .dockerignore?",
-		},
-		FileInitialiser{
-			Path:     path.Join(godev.config.WatchDirectory, "/Makefile"),
+		}),
+		InitFileInitialiser(&FileInitialiserConfig{
+			Path:     path.Join(godev.config.WorkDirectory, "/Makefile"),
 			Data:     []byte(DataMakefile),
 			Question: "seed a Makefile?",
-		},
+		}),
 	}
 	for i := 0; i < len(initialisers); i++ {
 		initialiser := initialisers[i]
@@ -216,7 +193,8 @@ func (godev *GoDev) initialiseDirectory() {
 				fmt.Println(Color("red", err.Error()))
 			}
 		} else {
-			if initialiser.Confirm() {
+			reader := bufio.NewReader(os.Stdin)
+			if initialiser.Confirm(reader) {
 				fmt.Println(Color("green", "godev> sure thing"))
 				initialiser.Handle()
 			} else {

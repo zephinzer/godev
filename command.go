@@ -15,8 +15,12 @@ import (
 // functions
 const CommandDelimiter = "───────────────────────────────────────────"
 
+// CommandProcessStartSymbol is the fancy symbol we use to denote
+// the start of a command
 const CommandProcessStartSymbol = "►"
 
+// CommandProcessStopSymbol is the fancy symbol we use to denote
+// the end of a command
 const CommandProcessStopSymbol = "■"
 
 // ICommand is the interface for the Command class
@@ -76,10 +80,14 @@ type Command struct {
 	stopped    bool
 }
 
+// GetID returns the command's ID, used for the execution group
+// to report the running command
 func (command *Command) GetID() string {
 	return command.id
 }
 
+// GetStatus returns the command's status channel for the execution
+// group to know when the command has terminated
 func (command *Command) GetStatus() *chan error {
 	return &command.status
 }

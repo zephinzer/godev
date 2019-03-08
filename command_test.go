@@ -19,7 +19,7 @@ type CommandTestSuite struct {
 	suite.Suite
 	command    *Command
 	logs       bytes.Buffer
-	expectedId string
+	expectedID string
 }
 
 func TestCommandTestSuite(t *testing.T) {
@@ -27,7 +27,7 @@ func TestCommandTestSuite(t *testing.T) {
 }
 
 func (s *CommandTestSuite) SetupTest() {
-	s.expectedId = "CommandTestSuiteCommandID"
+	s.expectedID = "CommandTestSuiteCommandID"
 	logger := InitLogger(&LoggerConfig{
 		Name:   "CommandTestSuite",
 		Format: "production",
@@ -39,7 +39,7 @@ func (s *CommandTestSuite) SetupTest() {
 		Arguments:   []string{"version"},
 	}
 	s.command = &Command{
-		id:     s.expectedId,
+		id:     s.expectedID,
 		config: config,
 		logger: logger,
 	}
@@ -47,7 +47,7 @@ func (s *CommandTestSuite) SetupTest() {
 }
 
 func (s *CommandTestSuite) TestGetID() {
-	assert.Equal(s.T(), s.command.GetID(), s.expectedId)
+	assert.Equal(s.T(), s.command.GetID(), s.expectedID)
 }
 
 func (s *CommandTestSuite) TestGetStatus() {

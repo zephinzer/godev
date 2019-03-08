@@ -4,6 +4,9 @@ import (
 	"sync"
 )
 
+// ExecutionGroupCount keeps track of the execution group count for
+// display in the verbose logs - helps to differentiate between
+// the different execution groups
 var ExecutionGroupCount = 0
 
 // ExecutionGroup runs all commands in parallel
@@ -13,6 +16,8 @@ type ExecutionGroup struct {
 	logger    *Logger
 }
 
+// IsRunning is for the Runner to check if the execution group
+// is still running
 func (executionGroup *ExecutionGroup) IsRunning() bool {
 	for _, command := range executionGroup.commands {
 		if command.IsRunning() {
@@ -51,6 +56,8 @@ func (executionGroup *ExecutionGroup) Run() {
 	executionGroup.waitGroup.Wait()
 }
 
+// Terminate terminates this instance of the execution group, used when
+// the Runner receives a signal to start a new pipeline
 func (executionGroup *ExecutionGroup) Terminate() {
 	for _, command := range executionGroup.commands {
 		if command.IsRunning() {
