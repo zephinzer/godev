@@ -92,8 +92,8 @@ docker run -it \
   -v "$(pwd):/go/src/app" \
   -v "$(pwd)/.cache/pkg:/go/pkg" \
   zephinzer/godev:latest \
-  godev
-# ^ add any other flags you want after godev
+  godev ...
+#       ^ add any other flags you want after godev
 
 ```
 
@@ -114,6 +114,12 @@ By default, GoDev will run for live-reload in development. This results in the d
 1. `go build -o ${BUILD_OUTPUT}` (*see `--output`*)
 1. `${BUILD_OUTPUT}`
 
+The following tags modify the run modes which GoDev executes in:
+
+- [`--test`](#--test): run tests with live-build/reload
+- [`--init`](#--init): initialise a directory
+- [`--view`](#--view): preview files from `--init`
+- [`--verison`](#--verison): display the version
 
 ##### `--test`
 Tells GoDev to run in test mode. This changes the default execution groups so that the following are run instead:
@@ -121,7 +127,6 @@ Tells GoDev to run in test mode. This changes the default execution groups so th
 1. `go mod vendor`
 1. `go build -o ${BUILD_OUTPUT}`  (*see `--output`*)
 1. `go test ./... -coverprofile c.out`
-
 
 ##### `--init`
 Specifying this flag triggers a directory initialisation flow which asks if you would like to initialise some files/directories if they are not found. These are:
@@ -134,64 +139,71 @@ Specifying this flag triggers a directory initialisation flow which asks if you 
 1. .dockerignore
 1. Makefile 
 
-
 ##### `--view`
 Specifying this flag with the name of a file prints the file to your terminal. For example, `godev --view main.go` will print the `main.go` file which `--init` will seed for you if you say yes.
 
+##### `--version`
+Prints the version of GoDev.
+
 
 #### Logs Verbosity
+Three levels of logging are defined:
 
+- [`--silent`](#--silent): no logs
+- [`--vv`](#--vv): verbose logs
+- [`--vvv`](#--vvv): very verbose logs
 
 ##### `--vv`
 Defines verbose logs (debug level). Useful for debugging or if you'd like some insights into what triggered your job and to debug the pipeline for your specified execution groups.
 
-
 ##### `--vvv`
-Defines super verbose logs (trace level). More useful if you're developing GoDev itself to trace the flow of events.
-
+Defines very verbose logs (trace level). More useful if you're developing GoDev itself to trace the flow of events.
 
 ##### `--silent`
 Tells GoDev to keep completely quiet. Only panic level logs are printed before GoDev exits with a non-zero status code.
 
 
 #### Configuration
+Here are some other ways of configuring GoDev:
 
+- [`--dir`](#--dir): change the working directory
+- [`--watch`](#--watch): change the directory being watched
+- [`--exec`](#--exec): define a list of comma-separated commands for an execution group
+- [`--exec-delim`](#--exec-delim): define command delimiters in execution groups and override the comma delimiter
+- [`--exts`](#--exts): comma-separated list of file extensions to trigger a watch event
+- [`--ignore`](#--ignore): comma-separated list of file/directory names to ignore
+- [`--output`](#--output): defines the path relative to the working directory where your binary is built
+- [`--rate`](#--rate): defines the refresh rate of the file system watcher
 
 ##### `--dir`
 Specifies the directory for commands from GoDev to run from.
 
 Default: Current working directory
 
-
 ##### `--watch`
 Specifies the directory for GoDev to watch for changes recursively in.
 
 Default: Current working directory
-
 
 ##### `--exec`
 Specifies a single execution group. Commands specified in an execution group run in parallel.
 
 Use multiple of these to define multiple execution groups. The execution groups run in sequence themselves.
 
-
 ##### `--exec-delim`
 Specifies the delimiter used in the `--exec` flag for separating commands. This flag finds its use if the command you wish to run contains a command as an argument.
 
 Default: `,`
-
 
 ##### `--exts`
 Defines a comma separated list of extensions (without the dot) to trigger a file system change event.
 
 Default: `go,Makefile`
 
-
 ##### `--ignore`
 Defines names of files/directories to ignore.
 
 Default: `bin,vendor`
-
 
 ##### `--output`
 Defines the path to the built output
@@ -203,10 +215,6 @@ Default: `bin/app`
 Defines the rate at which file system change events are batched. Modifying this would be useful if you find that commands being run in your execution groups take longer than 2 seconds and modify files resulting in a never-ending file system change trigger loop.
 
 Default: `2s`
-
-
-##### `--version`
-Prints the version of GoDev.
 
 - - -
 
@@ -263,6 +271,12 @@ To run the tests in watch mode:
 make test
 ```
 
+For running the tests one-off (CI mode):
+
+```sh
+make test.ci
+```
+
 
 
 ### Versioning
@@ -294,10 +308,13 @@ make version.bump VERSION=major
 
 
 ### Compilation to Binary
-To compile GoDev, run:
+To compile GoDev simply run `make`:
 
 ```sh
-make compile
+make
+
+# or if you'd like to be specific:
+make godev
 ```
 
 
@@ -312,20 +329,25 @@ make docker
 
 
 ### Configuring the CI Pipeline
-A Travis pipeline is included.
+We use two tools for continuous integration: Travis (the CI pipeline runner), and CodeClimate (static code analysis).
+
+The pipeline primarily does the following:
+- Run tests
+- Build the binaries
+- Bump the semver version in the Git tags and push to GitHub
+- Release the binaries to the commit if it's tagged
 
 The following are variables that need to be defined for your pipeline:
 
-| Environment Variable | Description |
-| --- | --- |
-| `DOCKER_IMAGE_REGISTRY` | Hostname of the Docker registry we are pushing to |
-| `DOCKER_IMAGE_NAMESPACE` | Namespace of the Docker image (docker.io/THIS/image:tag) |
-| `DOCKER_IMAGE_NAME` | Name of the Docker image (docker.io/namespace/THIS:tag |
-| `DOCKER_REGISTRY_USERNAME` | Username for the Docker registry (when not specified, does not release to DockerHub) |
-| `DOCKER_REGISTRY_PASSWORD` | Password for the Docker registry (when not specified, does not release to DockerHub) |
-| `GITHUB_OAUTH_TOKEN` | GitHub personal access token for deploying binaries to the release page |
-| `GITHUB_REPOSITORY_URL` | Clone URL of the GitHub repository (when not specified, does not release to GitHub) |
-| `GITHUB_SSH_DEPLOY_KEY` | Base64 encoded private key that matches a public key listed in your Deploy Keys for the project. Run `make ssh.keys` to generate this. |
+- `CC_TEST_REPORTER_ID`: Code Climate
+- `DOCKER_IMAGE_REGISTRY`: Hostname of the Docker registry we are pushing to
+- `DOCKER_IMAGE_NAMESPACE`: Namespace of the Docker image (docker.io/THIS/image:tag)
+- `DOCKER_IMAGE_NAME`: Name of the Docker image (docker.io/namespace/THIS:tag
+- `DOCKER_REGISTRY_USERNAME`: Username for the Docker registry (when not specified, does not release to DockerHub)
+- `DOCKER_REGISTRY_PASSWORD`: Password for the Docker registry (when not specified, does not release to DockerHub)
+- `GITHUB_OAUTH_TOKEN`: GitHub personal access token for deploying binaries to the release page
+- `GITHUB_REPOSITORY_URL`: Clone URL of the GitHub repository (when not specified, does not release to GitHub)
+- `GITHUB_SSH_DEPLOY_KEY`: Base64 encoded private key that matches a public key listed in your Deploy Keys for the project. Run `make ssh.keys` to generate this.
 
 You will also need to go to your GitHub repository's **Settings > Deploy keys** and add the public key generated from `make ssh.keys` (the public key should be at `./bin/id_rsa.pub`, use the `./bin/id_rsa_b64` contents for the `GITHUB_SSH_DEPLOY_KEY` variable).
 
