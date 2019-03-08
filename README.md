@@ -10,33 +10,25 @@ GoDev is a live-reload development tool with first class support for Golang deve
 - - -
 
 ## Getting Started
-The following operating systems are supported:
 
-- Linux
-- MacOS
-- Windows (*requires more testing, feel free to raise issues*)
 
+
+### System Requirements
 You will also require **Go > 1.11.x** for GoDev to work out of the box.
 
 
 
 ### Installation
 
-
-#### Via Binary Download
 All releases will also include binaries for all three supported packages with source code so you can build it yourself. See [the section on Compilation](#compilation) for details.
 
-
-#### Via `go get`
-For all platforms, simply run:
+For all platforms, simply run the following to install GoDev:
 
 ```sh
 go get github.com/zephinzer/godev
 ```
 
-
-#### Via Package Managers
-Coming soon!
+Installation via platform-specific package managers coming soon!
 
 
 
