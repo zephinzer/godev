@@ -38,7 +38,6 @@ before_script:
 - chmod +x ./cc-test-reporter
 - ./cc-test-reporter before-build
 after_script:
-- ./cc-test-reporter after-build
 - rm -rf Makefile.properties ~/.ssh/id_rsa
 jobs:
   include:
@@ -57,6 +56,9 @@ jobs:
       if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
         make release.github BUMP=${VERSION_BUMP};
       fi;
+    after_script:
+      - ./cc-test-reporter after-build
+      - rm -rf Makefile.properties ~/.ssh/id_rsa
   - stage: publish
     if: (tag IS NOT blank)
     script:
