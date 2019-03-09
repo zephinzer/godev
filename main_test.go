@@ -28,41 +28,43 @@ func (s *MainTestSuite) SetupTest() {
 			"echo 1,echo 2 3",
 			"echo ''",
 		},
-		LogLevel:      "debug",
+		LogLevel:      "trace",
 		WorkDirectory: "/work/directory",
 	})
 	s.godev.logger.SetOutput(&s.logs)
 }
 
 func (s *MainTestSuite) Test_createPipeline_separatesCommandsCorrectly() {
+	t := s.T()
 	pipeline := s.godev.createPipeline()
-	assert.Len(s.T(), pipeline[0].commands, 3)
-	assert.Len(s.T(), pipeline[1].commands, 2)
-	assert.Len(s.T(), pipeline[2].commands, 1)
+	assert.Len(t, pipeline[0].commands, 3)
+	assert.Len(t, pipeline[1].commands, 2)
+	assert.Len(t, pipeline[2].commands, 1)
 }
 
 func (s *MainTestSuite) Test_createPipeline_separatesCommandArgsCorrectly() {
+	t := s.T()
 	pipeline := s.godev.createPipeline()
 	// echo 'a b' c
-	assert.Len(s.T(), pipeline[0].commands[0].config.Arguments, 2)
-	assert.Equal(s.T(), "a b", pipeline[0].commands[0].config.Arguments[0])
-	assert.Equal(s.T(), "c", pipeline[0].commands[0].config.Arguments[1])
+	assert.Len(t, pipeline[0].commands[0].config.Arguments, 2)
+	assert.Equal(t, "a b", pipeline[0].commands[0].config.Arguments[0])
+	assert.Equal(t, "c", pipeline[0].commands[0].config.Arguments[1])
 	// echo 'd e'
-	assert.Len(s.T(), pipeline[0].commands[1].config.Arguments, 1)
-	assert.Equal(s.T(), "d e", pipeline[0].commands[1].config.Arguments[0])
+	assert.Len(t, pipeline[0].commands[1].config.Arguments, 1)
+	assert.Equal(t, "d e", pipeline[0].commands[1].config.Arguments[0])
 	// echo f
-	assert.Len(s.T(), pipeline[0].commands[2].config.Arguments, 1)
-	assert.Equal(s.T(), "f", pipeline[0].commands[2].config.Arguments[0])
+	assert.Len(t, pipeline[0].commands[2].config.Arguments, 1)
+	assert.Equal(t, "f", pipeline[0].commands[2].config.Arguments[0])
 	// echo 1
-	assert.Len(s.T(), pipeline[1].commands[0].config.Arguments, 1)
-	assert.Equal(s.T(), "1", pipeline[1].commands[0].config.Arguments[0])
+	assert.Len(t, pipeline[1].commands[0].config.Arguments, 1)
+	assert.Equal(t, "1", pipeline[1].commands[0].config.Arguments[0])
 	// echo 2 3
-	assert.Len(s.T(), pipeline[1].commands[1].config.Arguments, 2)
-	assert.Equal(s.T(), "2", pipeline[1].commands[1].config.Arguments[0])
-	assert.Equal(s.T(), "3", pipeline[1].commands[1].config.Arguments[1])
+	assert.Len(t, pipeline[1].commands[1].config.Arguments, 2)
+	assert.Equal(t, "2", pipeline[1].commands[1].config.Arguments[0])
+	assert.Equal(t, "3", pipeline[1].commands[1].config.Arguments[1])
 	// echo ''
-	assert.Len(s.T(), pipeline[2].commands[0].config.Arguments, 1)
-	assert.Equal(s.T(), "", pipeline[2].commands[0].config.Arguments[0])
+	assert.Len(t, pipeline[2].commands[0].config.Arguments, 1)
+	assert.Equal(t, "", pipeline[2].commands[0].config.Arguments[0])
 }
 
 func (s *MainTestSuite) Test_initialiseRunner() {
@@ -73,7 +75,7 @@ func (s *MainTestSuite) Test_initialiseRunner() {
 
 func (s *MainTestSuite) Test_initialiseWatcher() {
 	s.godev.config.FileExtensions = []string{"a", "b", "c"}
-	s.godev.config.IgnoredNames = []string{"d", "e", "f"}
+	s.godev.config.IgnoredNames = []string{".cache", ".git", "bin", "vendor"}
 	s.godev.config.Rate = time.Second * 2
 	s.godev.config.WatchDirectory = getCurrentWorkingDirectory()
 	assert.Nil(s.T(), s.godev.watcher)
