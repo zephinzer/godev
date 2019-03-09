@@ -139,7 +139,7 @@ release.docker: docker
 	@$(MAKE) _release.docker.push TAG="go-$$(cat ./.release.docker/.GoVersion)"
 	@rm -rf ./.release.docker
 _release.docker.push:
-	@$(MAKE) logs.debug MSG="pushing '$$(cat ./.release.docker/.DockerImage):${TAG}'..."
+	@$(MAKE) log.debug MSG="pushing '$$(cat ./.release.docker/.DockerImage):${TAG}'..."
 	@docker push $$(cat ./.release.docker/.DockerImage):${TAG}
 
 ## releases tags to github
