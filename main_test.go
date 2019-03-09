@@ -28,7 +28,7 @@ func (s *MainTestSuite) SetupTest() {
 			"echo 1,echo 2 3",
 			"echo ''",
 		},
-		LogLevel:      "trace",
+		LogLevel:      "debug",
 		WorkDirectory: "/work/directory",
 	})
 	s.godev.logger.SetOutput(&s.logs)
