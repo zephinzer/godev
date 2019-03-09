@@ -7,6 +7,7 @@ import (
 type Initialiser interface {
 	Check() bool
 	Confirm(*bufio.Reader) bool
+	GetKey() string
 	Handle(...bool) error
 }
 

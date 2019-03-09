@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"path"
 	"testing"
 	"time"
@@ -67,6 +68,22 @@ func (s *MainTestSuite) Test_createPipeline_separatesCommandArgsCorrectly() {
 	assert.Equal(t, "", pipeline[2].commands[0].config.Arguments[0])
 }
 
+func (s *MainTestSuite) Test_initialiseInitialisers() {
+	initialisers := s.godev.initialiseInitialisers()
+	assert.Len(s.T(), initialisers, 7)
+	var keys []string
+	for _, initialiser := range initialisers {
+		keys = append(keys, initialiser.GetKey())
+	}
+	assert.Contains(s.T(), keys, ".git")
+	assert.Contains(s.T(), keys, ".gitignore")
+	assert.Contains(s.T(), keys, ".dockerignore")
+	assert.Contains(s.T(), keys, "dockerfile")
+	assert.Contains(s.T(), keys, "makefile")
+	assert.Contains(s.T(), keys, "main.go")
+	assert.Contains(s.T(), keys, "go.mod")
+}
+
 func (s *MainTestSuite) Test_initialiseRunner() {
 	assert.Nil(s.T(), s.godev.runner)
 	s.godev.initialiseRunner()
@@ -113,4 +130,20 @@ func (s *MainTestSuite) Test_logUniversalConfiguration() {
 	assert.Contains(s.T(), logs, "watch directory")
 	assert.Contains(s.T(), logs, "work directory")
 	assert.Contains(s.T(), logs, "build output")
+}
+
+func (s *MainTestSuite) Test_viewFile_thatExists() {
+	s.godev.config.View = "main.go"
+	s.godev.viewFile()
+	assert.Contains(s.T(), s.logs.String(), "previewing contents of main.go")
+}
+
+func (s *MainTestSuite) Test_viewFile_thatDoesntExist() {
+	defer func() {
+		r := recover()
+		err := fmt.Sprintf("%s", r)
+		assert.Contains(s.T(), err, "file 'nonexistent.file' does not seem to exist")
+	}()
+	s.godev.config.View = "nonexistent.file"
+	s.godev.viewFile()
 }
