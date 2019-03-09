@@ -57,7 +57,7 @@ jobs:
         make release.github BUMP=${VERSION_BUMP};
       fi;
     after_script:
-      - ./cc-test-reporter after-build
+      - ./cc-test-reporter after-build -d -t gocov --exit-code $TRAVIS_TEST_RESULT
       - rm -rf Makefile.properties ~/.ssh/id_rsa
   - stage: publish
     if: (tag IS NOT blank)
