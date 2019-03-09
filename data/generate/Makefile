@@ -12,7 +12,7 @@ DOCKER_IMAGE_NAMESPACE=godev
 ## specifies docker.io/namespace/THIS:tag - align with $(BIN_NAME) for less confusion
 DOCKER_IMAGE_NAME=example
 ## specifies the absolute path to the directory containing the .git directory
-GIT_ROOT=$(CURDIR)/../../..
+GIT_ROOT=$(CURDIR)
 ## enable following line to draw variables from a file named Makefile.properties
 # include Makefile.properties
 

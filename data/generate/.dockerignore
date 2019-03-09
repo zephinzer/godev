@@ -1,3 +1,6 @@
 .dockerignore
 .gitignore
 Dockerfile
+bin
+vendor
+Makefile

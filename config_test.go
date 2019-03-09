@@ -1,7 +1,10 @@
 package main
 
 import (
+	"path"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -13,6 +16,31 @@ type ConfigTestSuite struct {
 
 func TestConfigTestSuite(t *testing.T) {
 	suite.Run(t, new(ConfigTestSuite))
+}
+
+func (s *ConfigTestSuite) TestInitConfig() {
+	t := s.T()
+	config := InitConfig()
+	assert.Equal(t, path.Join(getCurrentWorkingDirectory(), DefaultBuildOutput), config.BuildOutput)
+	assert.Equal(t, DefaultCommandsDelimiter, config.CommandsDelimiter)
+	assert.Len(t, config.ExecGroups, 3)
+	assert.Contains(t, config.ExecGroups[0], "go mod")
+	assert.Contains(t, config.ExecGroups[1], "go build")
+	assert.Contains(t, config.ExecGroups[2], DefaultBuildOutput)
+	assert.Equal(t, strings.Split(DefaultFileExtensions, ","), []string(config.FileExtensions))
+	assert.Equal(t, strings.Split(DefaultIgnoredNames, ","), []string(config.IgnoredNames))
+	assert.Equal(t, false, config.LogSilent)
+	assert.Equal(t, false, config.LogVerbose)
+	assert.Equal(t, false, config.LogSuperVerbose)
+	assert.Equal(t, 2*time.Second, config.Rate)
+	assert.Equal(t, false, config.RunInit)
+	assert.Equal(t, false, config.RunTest)
+	assert.Equal(t, false, config.RunVersion)
+	assert.Equal(t, false, config.RunView)
+	assert.Equal(t, "", config.View)
+	assert.Equal(t, getCurrentWorkingDirectory(), config.WatchDirectory)
+	assert.Equal(t, getCurrentWorkingDirectory(), config.WorkDirectory)
+	assert.Equal(t, DefaultLogLevel, string(config.LogLevel))
 }
 
 func (s *ConfigTestSuite) Test_assignDefaultsRun() {

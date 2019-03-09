@@ -14,6 +14,7 @@ type GitInitialiserConfig struct {
 
 func InitGitInitialiser(config *GitInitialiserConfig) *GitInitialiser {
 	gi := &GitInitialiser{
+		Key:  ".git",
 		Path: config.Path,
 		logger: InitLogger(&LoggerConfig{
 			Format: "raw",
@@ -23,6 +24,7 @@ func InitGitInitialiser(config *GitInitialiserConfig) *GitInitialiser {
 }
 
 type GitInitialiser struct {
+	Key    string
 	Path   string
 	logger *Logger
 }
@@ -38,6 +40,10 @@ func (gi *GitInitialiser) Confirm(reader *bufio.Reader) bool {
 		false,
 		Color("bold", Color("red", InitialiserRetryText)),
 	)
+}
+
+func (gi *GitInitialiser) GetKey() string {
+	return gi.Key
 }
 
 func (gi *GitInitialiser) Handle(skip ...bool) error {

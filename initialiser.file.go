@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 )
 
 type FileInitialiserConfig struct {
@@ -15,6 +16,7 @@ type FileInitialiserConfig struct {
 
 func InitFileInitialiser(config *FileInitialiserConfig) *FileInitialiser {
 	fi := &FileInitialiser{
+		Key:      strings.ToLower(path.Base(config.Path)),
 		Data:     config.Data,
 		Path:     config.Path,
 		Question: config.Question,
@@ -29,6 +31,7 @@ func InitFileInitialiser(config *FileInitialiserConfig) *FileInitialiser {
 // exist at :Path and questioning the user if they'd like to
 // seed it
 type FileInitialiser struct {
+	Key      string
 	Data     []byte
 	Path     string
 	Question string
@@ -47,6 +50,10 @@ func (fi FileInitialiser) Confirm(reader *bufio.Reader) bool {
 		false,
 		Color("bold", Color("red", InitialiserRetryText)),
 	)
+}
+
+func (fi *FileInitialiser) GetKey() string {
+	return fi.Key
 }
 
 func (fi FileInitialiser) Handle(skip ...bool) error {

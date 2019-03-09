@@ -145,13 +145,8 @@ func (godev *GoDev) logWatchModeConfigurations() {
 	}
 }
 
-// initialiseDirectory assists in initialising the working directory
-func (godev *GoDev) initialiseDirectory() {
-	if !directoryExists(godev.config.WorkDirectory) {
-		godev.logger.Errorf("the directory at '%s' does not exist - create it first with:\n  mkdir -p %s", godev.config.WorkDirectory, godev.config.WorkDirectory)
-		os.Exit(1)
-	}
-	initialisers := []Initialiser{
+func (godev *GoDev) initialiseInitialisers() []Initialiser {
+	return []Initialiser{
 		InitGitInitialiser(&GitInitialiserConfig{
 			Path: path.Join(godev.config.WorkDirectory),
 		}),
@@ -186,6 +181,15 @@ func (godev *GoDev) initialiseDirectory() {
 			Question: "seed a Makefile?",
 		}),
 	}
+}
+
+// initialiseDirectory assists in initialising the working directory
+func (godev *GoDev) initialiseDirectory() {
+	if !directoryExists(godev.config.WorkDirectory) {
+		godev.logger.Errorf("the directory at '%s' does not exist - create it first with:\n  mkdir -p %s", godev.config.WorkDirectory, godev.config.WorkDirectory)
+		os.Exit(1)
+	}
+	initialisers := godev.initialiseInitialisers()
 	for i := 0; i < len(initialisers); i++ {
 		initialiser := initialisers[i]
 		if initialiser.Check() {
