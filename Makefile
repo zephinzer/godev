@@ -96,7 +96,7 @@ test.win: compile.windows
 ## runs tests for ci
 test.ci: deps
 	@$(MAKE) log.debug MSG="running tests in single run mode..."
-	@go test -v ./... -coverprofile c.out
+	@go test ./... -coverprofile c.out
 
 ## generates the contributors file
 contributors:
@@ -172,6 +172,11 @@ create.version.data:
 ssh.keys: # PREFIX= - defaults to nothing if not specified
 	@ssh-keygen -t rsa -b 8192 -f ./bin/${PREFIX}_id_rsa -q -N ''
 	@cat ./bin/${PREFIX}_id_rsa | base64 -w 0 > ./bin/${PREFIX}_id_rsa_b64
+
+debug.ccreporter:
+	@mkdir -p $(CURDIR)/bin
+	@curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > $(CURDIR)/bin/cc-test-reporter
+	@chmod +x $(CURDIR)/bin/cc-test-reporter
 
 ## retrieves the latest version we are at
 version.get:

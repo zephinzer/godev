@@ -5,7 +5,6 @@ exclude_patterns:
   - "dev/"
   - "scripts/"
   - "vendor/"
-  - "*_test.go"
   - "*.json"
   - "*.md"
   - "*.yml"
