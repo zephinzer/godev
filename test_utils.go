@@ -78,12 +78,12 @@ func removeDir(t *testing.T, pathToDirectory string) error {
 		listingInfo, err := os.Lstat(fullPath)
 		assert.Nil(t, err)
 		if listingInfo.IsDir() {
-			fmt.Printf("removing dir %s\n", fullPath)
+			t.Logf("removing dir %s\n", fullPath)
 			err = removeDir(t, fullPath)
 		} else {
 			err = os.Remove(fullPath)
 			assert.Nil(t, err)
-			fmt.Printf("removed file %s\n", fullPath)
+			t.Logf("removed file %s\n", fullPath)
 		}
 	}
 	err = os.RemoveAll(pathToDirectory)
