@@ -1,0 +1,16 @@
+version: "2"
+exclude_patterns:
+  - "bin/"
+  - "data/"
+  - "dev/"
+  - "scripts/"
+  - "vendor/"
+plugins:
+  fixme:
+    enabled: true
+  gofmt:
+    enabled: true
+  golint:
+    enabled: true
+  govet:
+    enabled: true
