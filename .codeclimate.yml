@@ -5,10 +5,13 @@ exclude_patterns:
   - "dev/"
   - "scripts/"
   - "vendor/"
-  - "*.json"
+  - "**/*.json"
   - "*.md"
   - "*.yml"
+  - ".dockerignore"
+  - ".gitignore"
   - "CNAME"
+  - "sample.properties"
   - "CONTRIBUTORS"
 plugins:
   fixme:

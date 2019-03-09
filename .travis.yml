@@ -21,24 +21,25 @@ deploy:
     branch: master
     tags: true
 before_script:
-- echo "DOCKER_IMAGE_REGISTRY=${DOCKER_IMAGE_REGISTRY}" > Makefile.properties
-- echo "DOCKER_IMAGE_NAMESPACE=${DOCKER_IMAGE_NAMESPACE}" >> Makefile.properties
-- echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> Makefile.properties
-- echo "DOCKER_REGISTRY_USERNAME=${DOCKER_REGISTRY_USERNAME}" >> Makefile.properties
-- echo "DOCKER_REGISTRY_PASSWORD=${DOCKER_REGISTRY_PASSWORD}" >> Makefile.properties
-- echo "GITHUB_REPOSITORY_URL=${GITHUB_REPOSITORY_URL}" >> Makefile.properties
-- touch ~/.ssh/id_rsa
-- |
-  if [ "${GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
-    printf -- "${GITHUB_SSH_DEPLOY_KEY}" | base64 -d >> ~/.ssh/id_rsa;
-    chmod 600 ~/.ssh/id_rsa;
-    ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts;
-  fi;
-- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-- chmod +x ./cc-test-reporter
-- ./cc-test-reporter before-build
+  - echo "DOCKER_IMAGE_REGISTRY=${DOCKER_IMAGE_REGISTRY}" > Makefile.properties
+  - echo "DOCKER_IMAGE_NAMESPACE=${DOCKER_IMAGE_NAMESPACE}" >> Makefile.properties
+  - echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> Makefile.properties
+  - echo "DOCKER_REGISTRY_USERNAME=${DOCKER_REGISTRY_USERNAME}" >> Makefile.properties
+  - echo "DOCKER_REGISTRY_PASSWORD=${DOCKER_REGISTRY_PASSWORD}" >> Makefile.properties
+  - echo "GITHUB_REPOSITORY_URL=${GITHUB_REPOSITORY_URL}" >> Makefile.properties
+  - touch ~/.ssh/id_rsa
+  - |
+    if [ "${GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
+      printf -- "${GITHUB_SSH_DEPLOY_KEY}" | base64 -d >> ~/.ssh/id_rsa;
+      chmod 600 ~/.ssh/id_rsa;
+      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts;
+    fi;
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 after_script:
-- rm -rf Makefile.properties ~/.ssh/id_rsa
+  - ./cc-test-reporter after-build -d -t gocov --exit-code $TRAVIS_TEST_RESULT
+  - rm -rf Makefile.properties ~/.ssh/id_rsa
 jobs:
   include:
   - stage: build_test
@@ -56,12 +57,10 @@ jobs:
       if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
         make release.github BUMP=${VERSION_BUMP};
       fi;
-    after_script:
-      - ./cc-test-reporter after-build -d -t gocov --exit-code $TRAVIS_TEST_RESULT
-      - rm -rf Makefile.properties ~/.ssh/id_rsa
   - stage: publish
     if: (tag IS NOT blank)
     script:
+    - make test.ci
     - make godev
     - |
       if [ "${DOCKER_REGISTRY_USERNAME}" != "" ] && [ "${DOCKER_REGISTRY_PASSWORD}" != "" ]; then
