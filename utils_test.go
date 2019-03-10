@@ -49,6 +49,11 @@ func (s *UtilsTestSuite) Test_confirm_withReply() {
 	assert.False(s.T(), confirm(bufio.NewReader(strings.NewReader("n\n")), "hi", true))
 }
 
+func (s *UtilsTestSuite) Test_confirm_withWindowsReply() {
+	assert.True(s.T(), confirm(bufio.NewReader(strings.NewReader("y\r\n")), "hi", true))
+	assert.False(s.T(), confirm(bufio.NewReader(strings.NewReader("n\r\n")), "hi", true))
+}
+
 func (s *UtilsTestSuite) Test_confirm_withWeirdReplyNoRetry() {
 	assert.False(s.T(), confirm(bufio.NewReader(strings.NewReader("something\n")), "hi", true))
 	assert.False(s.T(), confirm(bufio.NewReader(strings.NewReader("something\n")), "hi", true))

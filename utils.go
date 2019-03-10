@@ -60,7 +60,10 @@ func confirm(reader *bufio.Reader, question string, byDefault bool, retryText ..
 	if len(userInput) < 2 {
 		return byDefault
 	} else {
-		content := strings.Trim(strings.ToLower(userInput), " \n")
+		content := strings.Trim(
+			strings.ToLower(userInput),
+			" \r\n.,;",
+		)
 		confirmation := false
 		if sliceContainsString(ConfirmationTrue, content) {
 			confirmation = true
