@@ -1,4 +1,4 @@
-module godev
+module github.com/zephinzer/godev
 
 require (
 	github.com/fsnotify/fsnotify v1.4.7
