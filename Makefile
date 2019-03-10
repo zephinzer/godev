@@ -150,7 +150,7 @@ release.github:
 	@git fetch
 	@$(MAKE) version.get
 	@$(MAKE) version.bump VERSION=${BUMP}
-	@$(MAKE) version.get
+	@git tag "v$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')"
 	@git push --tags
 
 ## creates versioning data for use when releasing
