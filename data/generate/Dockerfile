@@ -38,9 +38,13 @@ ARG CGO_ENABLED=0
 ARG GO111MODULE=on
 ## use something GOPATH/GOROOT friendly - don't anger the gods
 WORKDIR /go/src/${BIN_NAME}
-## copy all we have so far
+## process dependencies first to take advantage of docker caching
+COPY ./Makefile ./Makefile
+COPY ./go.mod ./go.mod
+COPY ./go.sum ./go.sum
+RUN make deps
+## process everything else
 COPY . /go/src/${BIN_NAME}
-## do the build
 RUN make compile.linux
 ## generate a hash
 RUN sha256sum ${BIN_PATH}/${BIN_NAME}-${GOOS}-${GOARCH}${BIN_EXT} | cut -d " " -f 1 > ${BIN_PATH}/${BIN_NAME}-${GOOS}-${GOARCH}${BIN_EXT}.sha256
@@ -58,14 +62,6 @@ ENTRYPOINT ["/_"]
 FROM scratch AS production
 ## what should we name our binary? (default indicates "app")
 ARG BIN_NAME=app
-## any extension we would like for our binary? (default indicates nothing)
-ARG BIN_EXT
-## relative path to the binary from the working directory
-ARG BIN_PATH=bin
-## which architecture should we build for? (default indicates amd64)
-ARG GOARCH=amd64
-## which operating system should we build for? (default indicates linux)
-ARG GOOS=linux
 WORKDIR /
 ## copy everything over from the development build image
 COPY --from=base /etc/ssl/certs /etc/ssl/certs
