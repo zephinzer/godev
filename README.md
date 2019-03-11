@@ -15,7 +15,7 @@ GoDev is a live-reload development tool with first class support for Golang deve
 
 
 ### System Requirements
-You will also require **Go > 1.11.x** for GoDev to work out of the box.
+You will require **Go > 1.11.x** for GoDev to work out of the box with GoDev because of its usage of `go mod`.
 
 
 
