@@ -53,6 +53,7 @@ jobs:
     - make test.ci
     - make docker
     - make godev
+    after_success:
     - |
       if [ "${GITHUB_REPOSITORY_URL}" != "" ] && [ "{GITHUB_SSH_DEPLOY_KEY}" != "" ]; then
         make release.github BUMP=${VERSION_BUMP};
