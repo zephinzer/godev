@@ -34,19 +34,19 @@ compile:
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.macos
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} compile.windows
 ## compiles the binary for linux
-compile.linux:
+compile.linux: generate
 	@$(MAKE) log.debug MSG="compiling godev for linux..."
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=linux GOARCH=amd64 .compile
 ## compiles the binary for macos
-compile.macos:
+compile.macos: generate
 	@$(MAKE) log.debug MSG="compiling godev for macos..."
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=darwin GOARCH=amd64 .compile
 ## compiles the binary for windows
-compile.windows:
+compile.windows: generate
 	@$(MAKE) log.debug MSG="compiling godev for windows..."
 	@$(MAKE) VERSION=${VERSION} COMMIT=${COMMIT} GOOS=windows GOARCH=386 BINARY_EXT=.exe .compile
 ## generic compilation recipe for ensuring consistency of above recipes
-.compile: deps generate
+.compile: deps
 	@$(MAKE) log.debug MSG="compiling godev at $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'..."
 	@CGO_ENABLED=0 \
 		GO111MODULES=on \
