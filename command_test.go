@@ -140,14 +140,35 @@ func (s *CommandTestSuite) TestSendInterrupt() {
 }
 
 func (s *CommandTestSuite) Test_handleInitialisation() {
+	t := s.T()
+	expectedDir := "/some/directory"
+	expectedEnv := []string{
+		"A=1",
+		"B=2",
+	}
 	cmd := &Command{
 		config: &CommandConfig{
 			Application: "go",
 			Arguments:   []string{"version"},
+			Directory:   expectedDir,
+			Environment: expectedEnv,
 		},
 	}
 	cmd.handleInitialisation()
-	assert.NotNil(s.T(), s.command.signal)
+	assert.NotNil(t, cmd.signal)
+	assert.NotNil(t, cmd.status)
+	assert.NotNil(t, cmd.run)
+	assert.NotNil(t, cmd.terminated)
+	assert.NotNil(t, cmd.cmd.Stderr)
+	assert.NotNil(t, cmd.cmd.Stdout)
+	assert.Equal(t, expectedDir, cmd.cmd.Dir)
+	assert.False(t, cmd.reported)
+	assert.False(t, cmd.started)
+	assert.False(t, cmd.stopped)
+	assert.Len(t, cmd.cmd.Env, len(expectedEnv))
+	for index, env := range expectedEnv {
+		assert.Equal(t, env, cmd.cmd.Env[index])
+	}
 }
 
 func (s *CommandTestSuite) Test_handleProcessExited() {

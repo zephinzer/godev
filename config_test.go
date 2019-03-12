@@ -23,6 +23,7 @@ func (s *ConfigTestSuite) TestInitConfig() {
 	config := InitConfig()
 	assert.Equal(t, path.Join(getCurrentWorkingDirectory(), DefaultBuildOutput), config.BuildOutput)
 	assert.Equal(t, DefaultCommandsDelimiter, config.CommandsDelimiter)
+	assert.Len(t, config.EnvVars, 0)
 	assert.Len(t, config.ExecGroups, 3)
 	assert.Contains(t, config.ExecGroups[0], "go mod")
 	assert.Contains(t, config.ExecGroups[1], "go build")

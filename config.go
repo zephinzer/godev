@@ -33,6 +33,7 @@ const DefaultRefreshRate = 2 * time.Second
 type Config struct {
 	BuildOutput       string
 	CommandsDelimiter string
+	EnvVars           ConfigMultiflagString
 	ExecGroups        ConfigMultiflagString
 	FileExtensions    ConfigCommaDelimitedString
 	IgnoredNames      ConfigCommaDelimitedString
@@ -58,6 +59,8 @@ func InitConfig() *Config {
 		"specifies the path to the built binary relative to the watch directory (applicable only when --exec is not specified)")
 	flag.StringVar(&config.CommandsDelimiter, "exec-delim", DefaultCommandsDelimiter,
 		"delimiter character to use to split commands within an execution group (useful if your commands themselves contain commas)")
+	flag.Var(&config.EnvVars, "env",
+		"specify an environment variable (specify multiple --envs to define more environment variables)")
 	flag.Var(&config.ExecGroups, "exec",
 		"list of comma-separated commands to run (specify multiple --execs to define more execution groups)")
 	flag.Var(&config.FileExtensions, "exts",

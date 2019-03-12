@@ -64,9 +64,18 @@ compile.windows: generate
 ## starts the application for development
 ## - note 1: there is no watch mode, restart this for any changes made
 ## - note 2: the working directory is at ./dev which runs a server that prints 'hello world' on start
-start: compile
+## - note 3: linux is the default, use start.* if you're working from another system
+start:
+	@$(MAKE) start.linux
+start.linux: compile.linux
 	@$(MAKE) log.debug MSG="running godev for development..."
-	@$(CURDIR)/bin/godev -vv --watch $(CURDIR) --dir $(CURDIR)/dev
+	@$(CURDIR)/bin/godev--linux-amd64 -vv --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
+start.macos: compile.macos
+	@$(MAKE) log.debug MSG="running godev for development..."
+	@$(CURDIR)/bin/godev--darwin-amd64 -vv --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
+start.windows: compile.windows
+	@$(MAKE) log.debug MSG="running godev for development..."
+	@$(CURDIR)/bin/godev--windows-386.exe -vv --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
 
 ## installs the dependencies
 deps:
@@ -81,14 +90,14 @@ generate:
 	@$(MAKE) log.info MSG="~/data.go generation successful."
 
 ## runs tests in watch mode
-test: compile.linux
+test:
+	@$(MAKE) test.linux
+test.linux: compile.linux
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
 	@$(CURDIR)/bin/godev--linux-amd64 --test --vv --ignore .cache,.git,vendor,data
-
 test.mac: compile.macos	
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
 	@$(CURDIR)/bin/godev--darwin-amd64 --test --vv --ignore .cache,.git,vendor,data
-
 test.win: compile.windows
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
 	@$(CURDIR)/bin/godev--windows-386 --test --vv --ignore .cache,.git,vendor,data

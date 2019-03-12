@@ -80,6 +80,7 @@ func (godev *GoDev) createPipeline() []*ExecutionGroup {
 						Application: sections[0],
 						Arguments:   sections[1:],
 						Directory:   godev.config.WorkDirectory,
+						Environment: godev.config.EnvVars,
 						LogLevel:    godev.config.LogLevel,
 					}),
 				)

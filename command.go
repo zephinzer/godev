@@ -62,6 +62,7 @@ type CommandConfig struct {
 	Application string
 	Arguments   []string
 	Directory   string
+	Environment []string
 	LogLevel    LogLevel
 }
 
@@ -154,6 +155,7 @@ func (command *Command) handleInitialisation() {
 		command.config.Arguments...,
 	)
 	command.cmd.Dir = command.config.Directory
+	command.cmd.Env = command.config.Environment
 	command.cmd.Stderr = os.Stderr
 	command.cmd.Stdout = os.Stdout
 }

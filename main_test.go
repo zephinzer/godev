@@ -29,10 +29,21 @@ func (s *MainTestSuite) SetupTest() {
 			"echo 1,echo 2 3",
 			"echo ''",
 		},
+		EnvVars:       []string{"A=1", "B=2"},
 		LogLevel:      "trace",
 		WorkDirectory: "/work/directory",
 	})
 	s.godev.logger.SetOutput(&s.logs)
+}
+
+func (s *MainTestSuite) Test_createPipeline_assignsEnvVarsCorrectly() {
+	t := s.T()
+	pipeline := s.godev.createPipeline()
+	for _, executionGroup := range pipeline {
+		for _, command := range executionGroup.commands {
+			assert.Len(t, command.config.Environment, 2)
+		}
+	}
 }
 
 func (s *MainTestSuite) Test_createPipeline_separatesCommandsCorrectly() {
