@@ -112,7 +112,8 @@ While GoDev was written focused on Golang development happiness, it can also be 
 ##### Configuration
 - [`--dir`](#--dir): change the working directory
 - [`--watch`](#--watch): change the directory being watched
-- [`--exec`](#--exec): define a list of comma-separated commands for an execution group
+- [`--exec`](#--exec): define a list of comma-separated commands for an execution group (use multiple of these to define the multiple execution groups)
+- [`--env`](#--env): define an environment variable to be passed into all commands (use multiple of these to define multiple environment variables)
 - [`--exec-delim`](#--exec-delim): define command delimiters in execution groups and override the comma delimiter
 - [`--exts`](#--exts): comma-separated list of file extensions to trigger a watch event
 - [`--ignore`](#--ignore): comma-separated list of file/directory names to ignore
@@ -175,6 +176,13 @@ Default: Current working directory
 Specifies the directory for GoDev to watch for changes recursively in.
 
 Default: Current working directory
+
+##### `--env`
+Specifies an environment variable to be passed into commands.
+
+Use multiple of these to specify multiple environment variables.
+
+Usage: `godev --env ENV=production --env HTTP_PROXY=http://localhost:1111`
 
 ##### `--exec`
 Specifies a single execution group. Commands specified in an execution group run in parallel.
