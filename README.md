@@ -212,6 +212,18 @@ Default: `2s`
 
 
 
+### Lifecycle
+
+1. **Start a PR** - Before starting on an issue, indicate you're working on it by submitting a PR (either from your own fork, or from a branch of this repository - doesn't matter) with documentation changes. Please also write about what changes you'll be making and analyses of dependencies you're adding (if any).
+
+2. **Pass the automated checks** - There's a Travis pipeline check that is mandatory before merges will be allowed.
+
+3. **Squash and merge** - This keeps the commit history clean
+
+4. (For collaborators) - **Versioning** - On merging, if the PR is related to non-breaking functionality optimisations/additions, do nothing. If it adds something new, consider bumping the minor release if it might change some users' workflows. If it breaks something that people are using, bump the major version.
+
+
+
 ### Repository Setup
 Run the following to clone this repository:
 
