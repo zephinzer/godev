@@ -61,7 +61,6 @@ jobs:
     if: (tag IS NOT blank)
     script:
     - make deps
-    - make generate
     - make test.ci
     - make godev
     - |
