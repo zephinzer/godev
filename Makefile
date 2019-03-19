@@ -58,7 +58,13 @@ compile.windows: generate
 		-ldflags " \
 			-extldflags -static \
 		"
-	@sha256sum $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} | cut -d ' ' -f 1 > $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT}.sha256
+	@if which shasum &>/dev/null; then \
+		shasum -a 256 $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} \
+		| cut -d ' ' -f 1 > $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT}.sha256; \
+	elif which sha256sum &>/dev/null; then \
+		sha256sum $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} \
+		| cut -d ' ' -f 1 > $(CURDIR)/bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT}.sha256; \
+	fi
 	@$(MAKE) log.info MSG="compiled godev at ./bin/godev-${VERSION}-${GOOS}-${GOARCH}${BINARY_EXT} - version: '${VERSION}' commit: '${COMMIT}'"
 
 ## starts the application for development
@@ -66,7 +72,13 @@ compile.windows: generate
 ## - note 2: the working directory is at ./dev which runs a server that prints 'hello world' on start
 ## - note 3: linux is the default, use start.* if you're working from another system
 start:
-	@$(MAKE) start.linux
+	@if uname | grep Darwin; then \
+		$(MAKE) start.macos; \
+	elif uname | grep Linux; then \
+		$(MAKE) start.linux; \
+	else \
+		$(MAKE) start.win; \
+	fi
 start.linux: compile.linux
 	@$(MAKE) log.debug MSG="running godev for development..."
 	@$(CURDIR)/bin/godev--linux-amd64 -vv --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
@@ -91,11 +103,17 @@ generate:
 
 ## runs tests in watch mode
 test:
-	@$(MAKE) test.linux
+	@if uname | grep Darwin; then \
+		$(MAKE) test.macos; \
+	elif uname | grep Linux; then \
+		$(MAKE) test.linux; \
+	else \
+		$(MAKE) test.win; \
+	fi
 test.linux: compile.linux
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
 	@$(CURDIR)/bin/godev--linux-amd64 --test --vv --ignore .cache,.git,vendor,data
-test.mac: compile.macos	
+test.macos: compile.macos	
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
 	@$(CURDIR)/bin/godev--darwin-amd64 --test --vv --ignore .cache,.git,vendor,data
 test.win: compile.windows
