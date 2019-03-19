@@ -30,30 +30,16 @@ const (
 
 var watcherEventType = []string{
 	"",
-	// 1
+	// 00001
 	WatcherEventCreate,
-	// 2
+	// 00010
 	WatcherEventWrite, "",
-	// 4
+	// 00100
 	WatcherEventRemove, "", "", "",
-	// 8
+	// 01000
 	WatcherEventRename, "", "", "", "", "", "", "",
-	//  16
+	// 10000
 	WatcherEventPermission,
-}
-
-var watcherEventTypeString = []string{
-	"",
-	// 1
-	"create",
-	// 2
-	"write", "",
-	// 4
-	"remove", "", "", "",
-	// 8
-	"rename", "", "", "", "", "", "", "",
-	//  16
-	"perms",
 }
 
 // WatcherEvent provides some function candy for working with
@@ -62,12 +48,14 @@ type WatcherEvent fsnotify.Event
 
 // EventType returns a symbol denoting the type of operation recorded
 func (e *WatcherEvent) EventType() string {
-	return watcherEventType[e.Op]
-}
-
-// EventTypeString returns a string denoting the type of operation recorded
-func (e *WatcherEvent) EventTypeString() string {
-	return watcherEventTypeString[e.Op]
+	eventType := ""
+	watcherEvents := []fsnotify.Op{1, 2, 4, 8, 16}
+	for _, event := range watcherEvents {
+		if e.Op|event == event {
+			eventType += watcherEventType[event]
+		}
+	}
+	return eventType
 }
 
 // FilePath returns the absolute path of the file/dir
@@ -83,10 +71,9 @@ func (e *WatcherEvent) FileName() string {
 // FileType returns the extension of the file if its a file,
 // "dir" if its a dir, or "errored" if an error occurred
 func (e *WatcherEvent) FileType() string {
-	switch e.EventType() {
-	case WatcherEventRemove:
+	if e.Op|fsnotify.Remove == fsnotify.Remove {
 		return WatcherFileTypeDeleted
-	default:
+	} else {
 		fileType := path.Ext(e.Name)
 		if len(fileType) == 0 {
 			fileInfo, err := os.Lstat(e.Name)
