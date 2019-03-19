@@ -61,41 +61,6 @@ func (s *WatcherEventTestSuite) TestEventType_Chmod() {
 	assert.Equal(s.T(), "%", e.EventType())
 }
 
-func (s *WatcherEventTestSuite) TestEventTypeString_Create() {
-	e := WatcherEvent(fsnotify.Event{
-		Op: fsnotify.Create,
-	})
-	assert.Equal(s.T(), "create", e.EventTypeString())
-}
-
-func (s *WatcherEventTestSuite) TestEventTypeString_Write() {
-	e := WatcherEvent(fsnotify.Event{
-		Op: fsnotify.Write,
-	})
-	assert.Equal(s.T(), "write", e.EventTypeString())
-}
-
-func (s *WatcherEventTestSuite) TestEventTypeString_Rename() {
-	e := WatcherEvent(fsnotify.Event{
-		Op: fsnotify.Rename,
-	})
-	assert.Equal(s.T(), "rename", e.EventTypeString())
-}
-
-func (s *WatcherEventTestSuite) TestEventTypeString_Remove() {
-	e := WatcherEvent(fsnotify.Event{
-		Op: fsnotify.Remove,
-	})
-	assert.Equal(s.T(), "remove", e.EventTypeString())
-}
-
-func (s *WatcherEventTestSuite) TestEventTypeString_Chmod() {
-	e := WatcherEvent(fsnotify.Event{
-		Op: fsnotify.Chmod,
-	})
-	assert.Equal(s.T(), "perms", e.EventTypeString())
-}
-
 func (s *WatcherEventTestSuite) TestFilePath() {
 	e := WatcherEvent(fsnotify.Event{
 		Op:   fsnotify.Chmod,
