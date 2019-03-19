@@ -71,23 +71,23 @@ func (e *WatcherEvent) FileName() string {
 // FileType returns the extension of the file if its a file,
 // "dir" if its a dir, or "errored" if an error occurred
 func (e *WatcherEvent) FileType() string {
+	var fileType string
 	if e.Op|fsnotify.Remove == fsnotify.Remove {
-		return WatcherFileTypeDeleted
+		fileType = WatcherFileTypeDeleted
 	} else {
-		fileType := path.Ext(e.Name)
+		fileType = path.Ext(e.Name)
 		if len(fileType) == 0 {
 			fileInfo, err := os.Lstat(e.Name)
 			if err != nil {
-				return WatcherFileTypeErrored
+				fileType = WatcherFileTypeErrored
 			} else if fileInfo.IsDir() {
-				return WatcherFileTypeDir
+				fileType = WatcherFileTypeDir
 			} else {
-				return path.Base(e.Name)
+				fileType = path.Base(e.Name)
 			}
-		} else {
-			return fileType
 		}
 	}
+	return fileType
 }
 
 // IsAnyOf verifies that the file extension matches :theseTypes
