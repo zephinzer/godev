@@ -180,7 +180,7 @@ release.github:
 	@git tag "v$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')"
 	@$(MAKE) generate
 	@git add data.go
-	@git commit -m "[skip ci] release $$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')"
+	@git commit -m "[#36] released $$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*') [skip ci]"
 	@git push
 	@git push --tags
 
