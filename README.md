@@ -15,7 +15,7 @@ GoDev is a live-reload development tool with first class support for Golang deve
 
 
 ### System Requirements
-You will require **Go > 1.11.x** for GoDev to work out of the box with GoDev because of its usage of `go mod`.
+You will require **Go > 1.11.x** for GoDev to work out of the box because of its usage of `go mod`.
 
 
 
@@ -32,6 +32,18 @@ go get github.com/zephinzer/godev
 Installation via platform-specific package managers coming soon!
 
 
+### Usage: Help!
+For all the commands below on usage, you may also view them through the `help` subcommand:
+
+```sh
+godev help
+```
+
+Or to check your version for bug reports or functionalities:
+
+```sh
+godev version
+```
 
 ### Usage: Develop with live-reload
 Running `godev` without flags is the easiest way to get started with live-reload-enabled development:
@@ -45,28 +57,28 @@ godev
 
 
 ### Usage: Test with live-reload
-To run the tests, simply specify the `--test` flag.
+To run the tests, simply specify the `test` sub-command.
 
 ```sh
-godev --test
+godev test
 ```
 
 To view verbose logs, append the `--vv` flag.
 
 ```sh
-godev --test --vv
+godev test --vv
 ```
 
 
 
 ### Usage: Initialise a directory for Go development
-To initialise a directory for development in the Golang language with Go Modules for package management, use the `--init` flag.
+To initialise a directory for development in the Golang language with Go Modules for package management, use the `init` sub-command.
 
 ```sh
-godev --init
+godev init
 ```
 
-> If you'd like to preview files before you install them, you can use the `--view` flag to check out the file first.
+> If you'd like to preview files before you install them, you can use the `view` sub-command to check out the file first.
 
 
 
@@ -96,19 +108,67 @@ docker run -it \
 While GoDev was written focused on Golang development happiness, it can also be used for projects in other languages. Use the configuration flags to adjust it to your needs
 
 
+### Commands
+
+#### `godev`
+When run alone, GoDev defaults to running in development mode which means it will run the application in live-reload with automatic dependency retrievals based on your code.
+
+##### `godev` Flags
+
+| Flag | Description |
+| --- | --- |
+| `-dir` | Specifies the working directory |
+| `-env` | Specifies an environment variable |
+| `-exec` | Specifies comma-delimited commands |
+| `-exec-delim` | Changes the delimiter for the `-exec` flag |
+| `-exts` | Specifies extensions to watch |
+| `-ignore` | Specifies file/directory names to ignore |
+| `-output` | Specifies the path relative to the working directory where the binary will be put |
+| `-rate` | Specifies the batching duration for file system events |
+| `-watch` | Specifies the directory to watch |
+| `-silent` | Turns off logging |
+| `-vv` | Turns on verbose logging |
+| `-vvv` | Turns on very verbose logging |
+
+#### `test`
+The test command starts GoDev in testing mode which live-reloads your tests with coverage output as `~/c.out` relative to where you start GoDev.
+
+##### `test` Flags
+
+| Flag | Description |
+| --- | --- |
+| `-silent` | Turns off logging |
+| `-vv` | Turns on verbose logging |
+| `-vvv` | Turns on very verbose logging |
+
+
+#### `init`
+
+> TODO
+
+##### `init` Flags
+
+> TODO
+
+#### `view`
+
+> TODO
+
+##### `view` Flags
+
+> TODO
+
+#### `help`
+
+> TODO
+
+#### `version`
+
+> TODO
 
 ### Flags
 
 #### Summary
-##### Run Modes
-- [`--test`](#--test): run tests with live-build/reload
-- [`--init`](#--init): initialise a directory
-- [`--view`](#--view): preview files from `--init`
-- [`--verison`](#--verison): display the version
-##### Logs Verbosity
-- [`--silent`](#--silent): no logs
-- [`--vv`](#--vv): verbose logs
-- [`--vvv`](#--vvv): very verbose logs
 ##### Configuration
 - [`--dir`](#--dir): change the working directory
 - [`--watch`](#--watch): change the directory being watched
