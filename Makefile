@@ -178,6 +178,9 @@ release.github:
 	@$(MAKE) version.get
 	@$(MAKE) version.bump VERSION=${BUMP}
 	@git tag "v$$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')"
+	@$(MAKE) generate
+	@git add data.go
+	@git commit -m "[skip ci] release $$($(MAKE) version.get | grep '[0-9]*\.[0-9]*\.[0-9]*')"
 	@git push --tags
 
 ## creates versioning data for use when releasing

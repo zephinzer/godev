@@ -54,7 +54,7 @@ func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")
 	if godev.config.RunVersion {
-		fmt.Printf("%s-%s\n", Version, Commit)
+		fmt.Printf("godev %s-%s\n", Version, Commit)
 	} else if godev.config.RunView {
 		godev.viewFile()
 	} else if godev.config.RunInit {
