@@ -13,9 +13,11 @@ import (
 )
 
 func main() {
-	config := InitConfig()
-	godev := InitGoDev(config)
-	godev.Start()
+	app := initCLI()
+	app.Start(func(config *Config) {
+		godev := InitGoDev(config)
+		godev.Start()
+	})
 }
 
 type InitFile struct {
@@ -126,6 +128,7 @@ func (godev *GoDev) logUniversalConfigurations() {
 func (godev *GoDev) logWatchModeConfigurations() {
 	config := godev.config
 	logger := godev.logger
+	logger.Debugf("environment       : %v", config.EnvVars)
 	logger.Debugf("file extensions   : %v", config.FileExtensions)
 	logger.Debugf("ignored names     : %v", config.IgnoredNames)
 	logger.Debugf("refresh interval  : %v", config.Rate)

@@ -112,13 +112,13 @@ test:
 	fi
 test.linux: compile.linux
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
-	@$(CURDIR)/bin/godev--linux-amd64 --test --vv --ignore .cache,.git,vendor,data
+	@$(CURDIR)/bin/godev--linux-amd64 test --vv --ignore .cache,.git,vendor,data
 test.macos: compile.macos	
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
-	@$(CURDIR)/bin/godev--darwin-amd64 --test --vv --ignore .cache,.git,vendor,data
+	@$(CURDIR)/bin/godev--darwin-amd64 test --vv --ignore .cache,.git,vendor,data
 test.win: compile.windows
 	@$(MAKE) log.debug MSG="running tests in watch mode for godev..."
-	@$(CURDIR)/bin/godev--windows-386 --test --vv --ignore .cache,.git,vendor,data
+	@$(CURDIR)/bin/godev--windows-386 test --vv --ignore .cache,.git,vendor,data
 
 ## runs tests for ci
 test.ci: deps

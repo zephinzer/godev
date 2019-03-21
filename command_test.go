@@ -165,7 +165,6 @@ func (s *CommandTestSuite) Test_handleInitialisation() {
 	assert.False(t, cmd.reported)
 	assert.False(t, cmd.started)
 	assert.False(t, cmd.stopped)
-	assert.Len(t, cmd.cmd.Env, len(expectedEnv))
 	for index, env := range expectedEnv {
 		assert.Equal(t, env, cmd.cmd.Env[index])
 	}
