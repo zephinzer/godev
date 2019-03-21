@@ -15,8 +15,8 @@ import (
 func main() {
 	app := initCLI()
 	app.Start(func(config *Config) {
-		godev := InitGoDev(config)
-		godev.Start()
+		// godev := InitGoDev(config)
+		// godev.Start()
 	})
 }
 
@@ -56,9 +56,9 @@ func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")
 	if godev.config.RunVersion {
-		fmt.Printf("godev %s-%s\n", Version, Commit)
+		// do nothing
 	} else if godev.config.RunView {
-		godev.viewFile()
+		// do nothing
 	} else if godev.config.RunInit {
 		godev.initialiseDirectory()
 	} else {
@@ -228,18 +228,4 @@ func (godev *GoDev) initialiseWatcher() {
 		LogLevel:       godev.config.LogLevel,
 	})
 	godev.watcher.RecursivelyWatch(godev.config.WatchDirectory)
-}
-
-func (godev *GoDev) viewFile() {
-	config := godev.config
-	logger := godev.logger
-	fileKey := strings.ToLower(config.View)
-	if InitFileMap[fileKey] != nil {
-		initFile := InitFileMap[fileKey]
-		logger.Infof("previewing contents of %s", initFile.Filename)
-		fmt.Println(initFile.Filename)
-		logger.Infof("end of preview for contents of %s", initFile.Filename)
-	} else {
-		logger.Panicf("the requested file '%s' does not seem to exist :/", fileKey)
-	}
 }

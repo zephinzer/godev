@@ -38,6 +38,8 @@ func (app *cliApp) Start(after func(*Config)) {
 		return nil
 	}
 	if err := app.instance.Run(os.Args); err != nil {
-		app.logger.Panic(err)
+		app.logger.Error(err)
+		app.logger.Warn("exiting with status code 1")
+		os.Exit(1)
 	}
 }

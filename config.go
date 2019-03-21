@@ -42,6 +42,7 @@ type Config struct {
 	LogSuperVerbose   bool
 	LogVerbose        bool
 	Rate              time.Duration
+	RunDefault        bool
 	RunInit           bool
 	RunTest           bool
 	RunVersion        bool
