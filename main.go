@@ -14,24 +14,10 @@ import (
 
 func main() {
 	app := initCLI()
-	app.Start(func(config *Config) {
-		// godev := InitGoDev(config)
-		// godev.Start()
+	app.Start(os.Args, func(config *Config) {
+		godev := InitGoDev(config)
+		godev.Start()
 	})
-}
-
-type InitFile struct {
-	Filename string
-	Data     string
-}
-
-var InitFileMap = map[string]*InitFile{
-	"dockerfile":    &InitFile{"Dockerfile", DataDockerfile},
-	"makefile":      &InitFile{"Makefile", DataMakefile},
-	".dockerignore": &InitFile{".dockerignore", DataDotDockerignore},
-	".gitignore":    &InitFile{".gitignore", DataDotGitignore},
-	"main.go":       &InitFile{"main.go", DataMainDotgo},
-	"go.mod":        &InitFile{"go.mod", DataGoDotMod},
 }
 
 func InitGoDev(config *Config) *GoDev {
@@ -55,9 +41,7 @@ type GoDev struct {
 func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")
-	if godev.config.RunVersion {
-		// do nothing
-	} else if godev.config.RunView {
+	if godev.config.RunVersion || godev.config.RunView {
 		// do nothing
 	} else if godev.config.RunInit {
 		godev.initialiseDirectory()
