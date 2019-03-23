@@ -27,6 +27,8 @@ func createFile(t *testing.T, pathToFile string) {
 	defer testFileCreation.Close()
 }
 
+// MockCommand holds a mock command that can be used in place of the
+// actual Command struct for testing execution group calls
 type MockCommand struct {
 	Command
 }
@@ -36,12 +38,14 @@ func ensureFlag(t *testing.T, flag cli.Flag, hasType interface{}, hasName string
 	assert.Regexp(t, regexp.MustCompile(hasName), flag.GetName())
 }
 
-func ensureCLICommand(t *testing.T, command cli.Command, expectedName string, expectedAlias string, expectedFlags []cli.Flag) {
+func ensureCLICommand(t *testing.T, command cli.Command, expectedNames []string, expectedFlags []cli.Flag) {
 	assert.NotNil(t, command.Action)
-	assert.Contains(t, command.Aliases, expectedAlias)
 	assert.NotNil(t, command.Description)
 	assert.Equal(t, expectedFlags, command.Flags)
-	assert.Equal(t, expectedName, command.Name)
+	assert.Equal(t, expectedNames[0], command.Name)
+	for _, alias := range expectedNames[1:] {
+		assert.Contains(t, command.Aliases, alias)
+	}
 	assert.NotNil(t, command.Usage)
 }
 

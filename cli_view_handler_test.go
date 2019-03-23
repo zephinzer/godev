@@ -27,7 +27,7 @@ func (s *CLIViewHandlerTestSuite) Test_getViewCommand() {
 	config := Config{}
 	logger := InitLogger(&LoggerConfig{Name: "getViewCommand", Format: "raw", Level: "trace"})
 	command := getViewCommand(&config, logger)
-	ensureCLICommand(s.T(), command, "view", "V", []cli.Flag(nil))
+	ensureCLICommand(s.T(), command, []string{"view", "V"}, []cli.Flag(nil))
 }
 
 func (s *CLIViewHandlerTestSuite) Test_getViewAction() {

@@ -27,7 +27,7 @@ func (s *CLIInitHandlerTestSuite) SetupTest() {
 func (s *CLIInitHandlerTestSuite) Test_getInitCommand() {
 	config := Config{}
 	command := getInitCommand(&config)
-	ensureCLICommand(s.T(), command, "init", "i", getInitFlags())
+	ensureCLICommand(s.T(), command, []string{"init", "i"}, getInitFlags())
 }
 
 func (s *CLIDefaultHandlerTestSuite) Test_getInitFlags() {

@@ -20,6 +20,8 @@ func main() {
 	})
 }
 
+// InitGoDev initialises the application using a configuration
+// struct and creating a logger
 func InitGoDev(config *Config) *GoDev {
 	return &GoDev{
 		config: config,
@@ -31,6 +33,7 @@ func InitGoDev(config *Config) *GoDev {
 	}
 }
 
+// GoDev holds the logic and values needed for GoDev to run
 type GoDev struct {
 	config  *Config
 	logger  *Logger
@@ -38,6 +41,8 @@ type GoDev struct {
 	runner  *Runner
 }
 
+// Start should only be called once and triggers the pipeline
+// and watcher
 func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")

@@ -29,7 +29,7 @@ func (s *CLITestHandlerTestSuite) SetupTest() {
 func (s *CLITestHandlerTestSuite) Test_getTestCommand() {
 	config := Config{}
 	command := getTestCommand(&config)
-	ensureCLICommand(s.T(), command, "test", "t", getTestFlags())
+	ensureCLICommand(s.T(), command, []string{"test", "t"}, getTestFlags())
 }
 
 func (s *CLITestHandlerTestSuite) Test_getTestFlags() {

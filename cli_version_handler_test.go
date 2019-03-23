@@ -28,7 +28,7 @@ func (s *CLIVersionHandlerTestSuite) Test_getVersionCommand() {
 	config := Config{}
 	logger := InitLogger(&LoggerConfig{Name: "getVersionCommand", Format: "raw", Level: "trace"})
 	command := getVersionCommand(&config, logger)
-	ensureCLICommand(s.T(), command, "version", "v", getVersionFlags())
+	ensureCLICommand(s.T(), command, []string{"version", "v"}, getVersionFlags())
 }
 
 func (s *CLIVersionHandlerTestSuite) Test_getVersionFlags() {
