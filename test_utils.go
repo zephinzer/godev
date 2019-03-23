@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -27,6 +28,30 @@ func createFile(t *testing.T, pathToFile string) {
 
 type MockCommand struct {
 	Command
+}
+
+func ensureBoolFlag(t *testing.T, flag cli.Flag, matches string) {
+	assert.IsType(t, cli.BoolFlag{}, flag)
+	boolFlag := cli.BoolFlag(flag.(cli.BoolFlag))
+	assert.Regexp(t, regexp.MustCompile(matches), boolFlag.Name)
+}
+
+func ensureDurationFlag(t *testing.T, flag cli.Flag, matches string) {
+	assert.IsType(t, cli.DurationFlag{}, flag)
+	durationFlag := cli.DurationFlag(flag.(cli.DurationFlag))
+	assert.Regexp(t, regexp.MustCompile(matches), durationFlag.Name)
+}
+
+func ensureStringFlag(t *testing.T, flag cli.Flag, matches string) {
+	assert.IsType(t, cli.StringFlag{}, flag)
+	stringFlag := cli.StringFlag(flag.(cli.StringFlag))
+	assert.Regexp(t, regexp.MustCompile(matches), stringFlag.Name)
+}
+
+func ensureStringSliceFlag(t *testing.T, flag cli.Flag, matches string) {
+	assert.IsType(t, cli.StringSliceFlag{}, flag)
+	stringSliceFlag := cli.StringSliceFlag(flag.(cli.StringSliceFlag))
+	assert.Regexp(t, regexp.MustCompile(matches), stringSliceFlag.Name)
 }
 
 func ensureCLICommand(t *testing.T, command cli.Command, expectedName string, expectedAlias string, expectedFlags []cli.Flag) {
