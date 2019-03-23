@@ -7,7 +7,7 @@ import (
 func getVersionCommand(config *Config, logger *Logger) cli.Command {
 	return cli.Command{
 		Action:      getVersionAction(config, logger),
-		Aliases:     []string{"v", "ver"},
+		Aliases:     []string{"v"},
 		Description: "print the version",
 		Flags:       getVersionFlags(),
 		Name:        "version",

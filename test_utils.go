@@ -6,9 +6,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli"
 )
 
 func createFile(t *testing.T, pathToFile string) {
@@ -25,6 +27,29 @@ func createFile(t *testing.T, pathToFile string) {
 
 type MockCommand struct {
 	Command
+}
+
+func ensureCLICommand(t *testing.T, command cli.Command, expectedName string, expectedAlias string, expectedFlags []cli.Flag) {
+	assert.NotNil(t, command.Action)
+	assert.Contains(t, command.Aliases, expectedAlias)
+	assert.NotNil(t, command.Description)
+	assert.Equal(t, expectedFlags, command.Flags)
+	assert.Equal(t, expectedName, command.Name)
+	assert.NotNil(t, command.Usage)
+}
+
+func ensureCLIFlags(t *testing.T, expectedFlags []string, actualFlags []cli.Flag) {
+	matchedFlagsCount := 0
+	for _, flag := range actualFlags {
+		for _, expected := range expectedFlags {
+			if strings.Contains(flag.GetName(), expected) {
+				matchedFlagsCount++
+				break
+			}
+		}
+	}
+	assert.Equal(t, matchedFlagsCount, len(expectedFlags))
+
 }
 
 func mockCommand(application string, arguments []string, logOutput *bytes.Buffer) *Command {

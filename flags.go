@@ -4,6 +4,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// getFlagBuildOutput provisions --output
 func getFlagBuildOutput() cli.Flag {
 	return cli.StringFlag{
 		Name:  "output, o",
@@ -12,6 +13,7 @@ func getFlagBuildOutput() cli.Flag {
 	}
 }
 
+// getFlagCommandsDelimiter provisions --exec-delim
 func getFlagCommandsDelimiter() cli.Flag {
 	return cli.StringFlag{
 		Name:  "exec-delim",
@@ -20,6 +22,7 @@ func getFlagCommandsDelimiter() cli.Flag {
 	}
 }
 
+// getFlagEnvVars provisions --env
 func getFlagEnvVars() cli.Flag {
 	return cli.StringSliceFlag{
 		Name:  "env, e",
@@ -27,6 +30,7 @@ func getFlagEnvVars() cli.Flag {
 	}
 }
 
+// getFlagExecGroups provisions --exec
 func getFlagExecGroups() cli.Flag {
 	return cli.StringSliceFlag{
 		Name:  "exec",
@@ -34,6 +38,7 @@ func getFlagExecGroups() cli.Flag {
 	}
 }
 
+// getFlagFileExtensions provisions --ext
 func getFlagFileExtensions() cli.Flag {
 	return cli.StringFlag{
 		Name:  "exts",
@@ -42,6 +47,7 @@ func getFlagFileExtensions() cli.Flag {
 	}
 }
 
+// getFlagIgnoredNames provisions --ignore
 func getFlagIgnoredNames() cli.Flag {
 	return cli.StringFlag{
 		Name:  "ignore",
@@ -50,6 +56,7 @@ func getFlagIgnoredNames() cli.Flag {
 	}
 }
 
+// getFlagRate provisions --rate
 func getFlagRate() cli.Flag {
 	return cli.DurationFlag{
 		Name:  "rate",
@@ -58,6 +65,7 @@ func getFlagRate() cli.Flag {
 	}
 }
 
+// etFlagWatchDirectory provisions --watch
 func getFlagWatchDirectory() cli.Flag {
 	return cli.StringFlag{
 		EnvVar: "watch",
@@ -67,6 +75,7 @@ func getFlagWatchDirectory() cli.Flag {
 	}
 }
 
+// getFlagWorkDirectory provisions --dir
 func getFlagWorkDirectory() cli.Flag {
 	return cli.StringFlag{
 		EnvVar: "DIR",
@@ -76,6 +85,7 @@ func getFlagWorkDirectory() cli.Flag {
 	}
 }
 
+// getFlagCommit provisions --commit
 func getFlagCommit() cli.Flag {
 	return cli.BoolFlag{
 		EnvVar: "COMMIT",
@@ -84,6 +94,7 @@ func getFlagCommit() cli.Flag {
 	}
 }
 
+// getFlagSemver provisions --semver
 func getFlagSemver() cli.Flag {
 	return cli.BoolFlag{
 		EnvVar: "SEMVER",
@@ -92,6 +103,7 @@ func getFlagSemver() cli.Flag {
 	}
 }
 
+// getFlagSilent provisions --silent
 func getFlagSilent() cli.Flag {
 	return cli.BoolFlag{
 		EnvVar: "SILENT",
@@ -100,6 +112,7 @@ func getFlagSilent() cli.Flag {
 	}
 }
 
+// getFlagVerboseLogs provisions --verbose
 func getFlagVerboseLogs() cli.Flag {
 	return cli.BoolFlag{
 		EnvVar: "VERBOSE",
@@ -108,6 +121,7 @@ func getFlagVerboseLogs() cli.Flag {
 	}
 }
 
+// getFlagSuperVerboseLogs provisions --vverbose
 func getFlagSuperVerboseLogs() cli.Flag {
 	return cli.BoolFlag{
 		EnvVar: "VVERBOSE",
