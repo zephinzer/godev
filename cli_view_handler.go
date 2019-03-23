@@ -7,11 +7,15 @@ import (
 	"github.com/urfave/cli"
 )
 
+// View holds the data for the various types of files that can
+// be bootstrapped
 type View struct {
 	Filename string
 	Data     string
 }
 
+// ViewMap holds the data for the application to use to display
+// the file
 var ViewMap = map[string]*View{
 	"dockerfile":    &View{"Dockerfile", DataDockerfile},
 	"makefile":      &View{"Makefile", DataMakefile},

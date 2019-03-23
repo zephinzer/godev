@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/urfave/cli"
 )
 
 type FlagsTestSuite struct {
@@ -15,57 +16,57 @@ func TestFlags(t *testing.T) {
 }
 
 func (s *FlagsTestSuite) Test_getFlagBuildOutput() {
-	ensureStringFlag(s.T(), getFlagBuildOutput(), `^output.*`)
+	ensureFlag(s.T(), getFlagBuildOutput(), cli.StringFlag{}, `^output.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagCommandsDelimiter() {
-	ensureStringFlag(s.T(), getFlagCommandsDelimiter(), `^exec-delim.*`)
+	ensureFlag(s.T(), getFlagCommandsDelimiter(), cli.StringFlag{}, `^exec-delim.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagEnvVars() {
-	ensureStringSliceFlag(s.T(), getFlagEnvVars(), `^env.*`)
+	ensureFlag(s.T(), getFlagEnvVars(), cli.StringSliceFlag{}, `^env.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagExecGroups() {
-	ensureStringSliceFlag(s.T(), getFlagExecGroups(), `^exec.*`)
+	ensureFlag(s.T(), getFlagExecGroups(), cli.StringSliceFlag{}, `^exec.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagFileExtensions() {
-	ensureStringFlag(s.T(), getFlagFileExtensions(), `^exts.*`)
+	ensureFlag(s.T(), getFlagFileExtensions(), cli.StringFlag{}, `^exts.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagIgnoredNames() {
-	ensureStringFlag(s.T(), getFlagIgnoredNames(), `^ignore.*`)
+	ensureFlag(s.T(), getFlagIgnoredNames(), cli.StringFlag{}, `^ignore.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagRate() {
-	ensureDurationFlag(s.T(), getFlagRate(), `^rate.*`)
+	ensureFlag(s.T(), getFlagRate(), cli.DurationFlag{}, `^rate.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagWatchDirectory() {
-	ensureStringFlag(s.T(), getFlagWatchDirectory(), `^watch.*`)
+	ensureFlag(s.T(), getFlagWatchDirectory(), cli.StringFlag{}, `^watch.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagWorkDirectory() {
-	ensureStringFlag(s.T(), getFlagWorkDirectory(), `^dir.*`)
+	ensureFlag(s.T(), getFlagWorkDirectory(), cli.StringFlag{}, `^dir.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagCommit() {
-	ensureBoolFlag(s.T(), getFlagCommit(), `^commit.*`)
+	ensureFlag(s.T(), getFlagCommit(), cli.BoolFlag{}, `^commit.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagSemver() {
-	ensureBoolFlag(s.T(), getFlagSemver(), `^semver.*`)
+	ensureFlag(s.T(), getFlagSemver(), cli.BoolFlag{}, `^semver.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagSilent() {
-	ensureBoolFlag(s.T(), getFlagSilent(), `^silent.*`)
+	ensureFlag(s.T(), getFlagSilent(), cli.BoolFlag{}, `^silent.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagVerboseLogs() {
-	ensureBoolFlag(s.T(), getFlagVerboseLogs(), `^verbose.*`)
+	ensureFlag(s.T(), getFlagVerboseLogs(), cli.BoolFlag{}, `^verbose.*`)
 }
 
 func (s *FlagsTestSuite) Test_getFlagSuperVerboseLogs() {
-	ensureBoolFlag(s.T(), getFlagSuperVerboseLogs(), `^vverbose.*`)
+	ensureFlag(s.T(), getFlagSuperVerboseLogs(), cli.BoolFlag{}, `^vverbose.*`)
 }

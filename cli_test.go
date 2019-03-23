@@ -11,6 +11,7 @@ import (
 
 type CLITestSuite struct {
 	suite.Suite
+	verifyStart func(*testing.T, *bool)
 }
 
 func TestCLI(t *testing.T) {
@@ -28,52 +29,32 @@ func (s *CLITestSuite) Test_initCLI() {
 }
 
 func (s *CLITestSuite) TestStart_provisionsDefault() {
-	cli := initCLI()
-	cli.Start([]string{"godev"}, func(config *Config) {
-		assert.NotNil(s.T(), config)
-		assert.Equal(s.T(), true, config.RunDefault)
-	})
+	ensureCLIStartSetsRunFlag(s.T(), []string{"godev"}, "RunDefault")
 }
 
 func (s *CLITestSuite) TestStart_provisionsInit() {
-	cli := initCLI()
-	cli.Start([]string{"godev", "init"}, func(config *Config) {
-		assert.NotNil(s.T(), config)
-		assert.Equal(s.T(), true, config.RunInit)
-	})
+	ensureCLIStartSetsRunFlag(s.T(), []string{"godev", "init"}, "RunInit")
 }
 
 func (s *CLITestSuite) TestStart_provisionsTest() {
-	cli := initCLI()
-	cli.Start([]string{"godev", "test"}, func(config *Config) {
-		assert.NotNil(s.T(), config)
-		assert.Equal(s.T(), true, config.RunTest)
-	})
+	ensureCLIStartSetsRunFlag(s.T(), []string{"godev", "test"}, "RunTest")
 }
 
 func (s *CLITestSuite) TestStart_provisionsVersion() {
-	cli := initCLI()
-	var logs bytes.Buffer
-	cli.rawLogger.SetOutput(&logs)
-	cli.Start([]string{"godev", "version"}, func(config *Config) {
-		assert.NotNil(s.T(), config)
-		assert.Equal(s.T(), true, config.RunVersion)
-		assert.Regexp(s.T(), regexp.MustCompile(`^godev [\d]*\.[\d]*\.[\d]*\-[a-f0-9]{7}`), logs.String())
+	ensureCLIStartSetsRunFlag(s.T(), []string{"godev", "version"}, "RunVersion", func(logs bytes.Buffer) {
+		assert.Regexp(
+			s.T(),
+			regexp.MustCompile(`^godev [\d]*\.[\d]*\.[\d]*\-[a-f0-9]{7}`),
+			logs.String(),
+		)
 	})
 }
 
 func (s *CLITestSuite) TestStart_provisionsView() {
-	cli := initCLI()
-	var logs bytes.Buffer
-	cli.rawLogger.SetOutput(&logs)
-	cli.Start([]string{"godev", "view", "dockerfile"}, func(config *Config) {
-		assert.NotNil(s.T(), config)
-		assert.Equal(s.T(), true, config.RunView)
+	ensureCLIStartSetsRunFlag(s.T(), []string{"godev", "view", "dockerfile"}, "RunView", func(logs bytes.Buffer) {
 		assert.Contains(s.T(), logs.String(), DataDockerfile)
 	})
-	cli.Start([]string{"godev", "view", "makefile"}, func(config *Config) {
-		assert.NotNil(s.T(), config)
-		assert.Equal(s.T(), true, config.RunView)
+	ensureCLIStartSetsRunFlag(s.T(), []string{"godev", "view", "makefile"}, "RunView", func(logs bytes.Buffer) {
 		assert.Contains(s.T(), logs.String(), DataMakefile)
 	})
 }

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -30,28 +31,9 @@ type MockCommand struct {
 	Command
 }
 
-func ensureBoolFlag(t *testing.T, flag cli.Flag, matches string) {
-	assert.IsType(t, cli.BoolFlag{}, flag)
-	boolFlag := cli.BoolFlag(flag.(cli.BoolFlag))
-	assert.Regexp(t, regexp.MustCompile(matches), boolFlag.Name)
-}
-
-func ensureDurationFlag(t *testing.T, flag cli.Flag, matches string) {
-	assert.IsType(t, cli.DurationFlag{}, flag)
-	durationFlag := cli.DurationFlag(flag.(cli.DurationFlag))
-	assert.Regexp(t, regexp.MustCompile(matches), durationFlag.Name)
-}
-
-func ensureStringFlag(t *testing.T, flag cli.Flag, matches string) {
-	assert.IsType(t, cli.StringFlag{}, flag)
-	stringFlag := cli.StringFlag(flag.(cli.StringFlag))
-	assert.Regexp(t, regexp.MustCompile(matches), stringFlag.Name)
-}
-
-func ensureStringSliceFlag(t *testing.T, flag cli.Flag, matches string) {
-	assert.IsType(t, cli.StringSliceFlag{}, flag)
-	stringSliceFlag := cli.StringSliceFlag(flag.(cli.StringSliceFlag))
-	assert.Regexp(t, regexp.MustCompile(matches), stringSliceFlag.Name)
+func ensureFlag(t *testing.T, flag cli.Flag, hasType interface{}, hasName string) {
+	assert.IsType(t, hasType, flag)
+	assert.Regexp(t, regexp.MustCompile(hasName), flag.GetName())
 }
 
 func ensureCLICommand(t *testing.T, command cli.Command, expectedName string, expectedAlias string, expectedFlags []cli.Flag) {
@@ -74,7 +56,21 @@ func ensureCLIFlags(t *testing.T, expectedFlags []string, actualFlags []cli.Flag
 		}
 	}
 	assert.Equal(t, matchedFlagsCount, len(expectedFlags))
+}
 
+func ensureCLIStartSetsRunFlag(t *testing.T, withArgs []string, runFlagName string, and ...func(bytes.Buffer)) {
+	cli := initCLI()
+	var logs bytes.Buffer
+	cli.rawLogger.SetOutput(&logs)
+	cli.Start(withArgs, func(config *Config) {
+		assert.NotNil(t, config)
+		configInstance := reflect.ValueOf(config)
+		flagValue := reflect.Indirect(configInstance).FieldByName(runFlagName)
+		assert.Equal(t, true, flagValue.Bool())
+		if len(and) > 0 {
+			and[0](logs)
+		}
+	})
 }
 
 func mockCommand(application string, arguments []string, logOutput *bytes.Buffer) *Command {

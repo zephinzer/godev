@@ -36,6 +36,8 @@ func initCLI() *CLI {
 	return app
 }
 
+// CLI is for handling the commands that GoDev takes in and
+// sets the correct configuration flags
 type CLI struct {
 	config    *Config
 	instance  *cli.App
@@ -43,6 +45,8 @@ type CLI struct {
 	rawLogger *Logger
 }
 
+// Start triggers the CLI manager to parse the inputs and set
+// the configuration flags correctly
 func (app *CLI) Start(args []string, after func(*Config)) {
 	app.instance.After = func(c *cli.Context) error {
 		after(app.config)
