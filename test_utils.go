@@ -6,9 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"reflect"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli"
 )
 
 func createFile(t *testing.T, pathToFile string) {
@@ -23,8 +27,54 @@ func createFile(t *testing.T, pathToFile string) {
 	defer testFileCreation.Close()
 }
 
+// MockCommand holds a mock command that can be used in place of the
+// actual Command struct for testing execution group calls
 type MockCommand struct {
 	Command
+}
+
+func ensureFlag(t *testing.T, flag cli.Flag, hasType interface{}, hasName string) {
+	assert.IsType(t, hasType, flag)
+	assert.Regexp(t, regexp.MustCompile(hasName), flag.GetName())
+}
+
+func ensureCLICommand(t *testing.T, command cli.Command, expectedNames []string, expectedFlags []cli.Flag) {
+	assert.NotNil(t, command.Action)
+	assert.NotNil(t, command.Description)
+	assert.Equal(t, expectedFlags, command.Flags)
+	assert.Equal(t, expectedNames[0], command.Name)
+	for _, alias := range expectedNames[1:] {
+		assert.Contains(t, command.Aliases, alias)
+	}
+	assert.NotNil(t, command.Usage)
+}
+
+func ensureCLIFlags(t *testing.T, expectedFlags []string, actualFlags []cli.Flag) {
+	matchedFlagsCount := 0
+	for _, flag := range actualFlags {
+		for _, expected := range expectedFlags {
+			if strings.Contains(flag.GetName(), expected) {
+				matchedFlagsCount++
+				break
+			}
+		}
+	}
+	assert.Equal(t, matchedFlagsCount, len(expectedFlags))
+}
+
+func ensureCLIStartSetsRunFlag(t *testing.T, withArgs []string, runFlagName string, and ...func(bytes.Buffer)) {
+	cli := initCLI()
+	var logs bytes.Buffer
+	cli.rawLogger.SetOutput(&logs)
+	cli.Start(withArgs, func(config *Config) {
+		assert.NotNil(t, config)
+		configInstance := reflect.ValueOf(config)
+		flagValue := reflect.Indirect(configInstance).FieldByName(runFlagName)
+		assert.Equal(t, true, flagValue.Bool())
+		if len(and) > 0 {
+			and[0](logs)
+		}
+	})
 }
 
 func mockCommand(application string, arguments []string, logOutput *bytes.Buffer) *Command {

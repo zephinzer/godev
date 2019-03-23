@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"path"
 	"strings"
@@ -42,6 +41,7 @@ type Config struct {
 	LogSuperVerbose   bool
 	LogVerbose        bool
 	Rate              time.Duration
+	RunDefault        bool
 	RunInit           bool
 	RunTest           bool
 	RunVersion        bool
@@ -51,48 +51,6 @@ type Config struct {
 	WorkDirectory     string
 }
 
-// InitConfig creates a configuration from environment variables and flags
-func InitConfig() *Config {
-	currentWorkingDirectory := getCurrentWorkingDirectory()
-	config := &Config{}
-	flag.StringVar(&config.BuildOutput, "output", DefaultBuildOutput,
-		"specifies the path to the built binary relative to the watch directory (applicable only when --exec is not specified)")
-	flag.StringVar(&config.CommandsDelimiter, "exec-delim", DefaultCommandsDelimiter,
-		"delimiter character to use to split commands within an execution group (useful if your commands themselves contain commas)")
-	flag.Var(&config.EnvVars, "env",
-		"specify an environment variable (specify multiple --envs to define more environment variables)")
-	flag.Var(&config.ExecGroups, "exec",
-		"list of comma-separated commands to run (specify multiple --execs to define more execution groups)")
-	flag.Var(&config.FileExtensions, "exts",
-		fmt.Sprintf("comma separated list of file extensions to watch (defaults to: %s)", DefaultFileExtensions))
-	flag.Var(&config.IgnoredNames, "ignore",
-		fmt.Sprintf("comma separated list of names to ignore (defaults to: %s)", DefaultIgnoredNames))
-	flag.BoolVar(&config.LogSilent, "silent", false,
-		"it is better to remain silent at the risk of being thought a fool, than to talk and remove all doubt of it")
-	flag.BoolVar(&config.LogSuperVerbose, "vvv", false,
-		"show me everything that has been logged")
-	flag.BoolVar(&config.LogVerbose, "vv", false,
-		"show sensibly verbose logs")
-	flag.DurationVar(&config.Rate, "rate", DefaultRefreshRate,
-		"specifies the duration between two bathced file system event triggers (increase this to the duration which commands that modify files take to complete)")
-	flag.BoolVar(&config.RunInit, "init", false,
-		"when this flag is specified, godev runs an initialisation procedure in the current directory or the directory specified by --dir")
-	flag.BoolVar(&config.RunTest, "test", false,
-		"when this flag is specified, godev runs the tests with coverage")
-	flag.BoolVar(&config.RunVersion, "version", false,
-		"display the version number")
-	flag.StringVar(&config.View, "view", "",
-		"check out the original content of a file that godev provisions when --init is specified")
-	flag.StringVar(&config.WatchDirectory, "watch", currentWorkingDirectory,
-		"specifies the directory to watch")
-	flag.StringVar(&config.WorkDirectory, "dir", currentWorkingDirectory,
-		"specifies the directory to operate in")
-	flag.Parse()
-	config.assignDefaults()
-	config.interpretLogLevel()
-	return config
-}
-
 func (config *Config) interpretLogLevel() {
 	if config.LogVerbose {
 		config.LogLevel = "debug"
@@ -100,7 +58,7 @@ func (config *Config) interpretLogLevel() {
 	if config.LogSuperVerbose {
 		config.LogLevel = "trace"
 	}
-	if config.LogSilent || config.RunVersion {
+	if config.LogSilent || config.RunVersion || config.RunView {
 		config.LogLevel = "panic"
 	}
 }

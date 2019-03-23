@@ -58,6 +58,7 @@ func (runner *Runner) startPipeline() {
 	runner.stopped = true
 }
 
+// Trigger triggers the pipeline
 func (runner *Runner) Trigger() {
 	runner.started = false
 	runner.stopped = false

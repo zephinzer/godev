@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"path"
 	"testing"
 	"time"
@@ -141,20 +140,4 @@ func (s *MainTestSuite) Test_logUniversalConfiguration() {
 	assert.Contains(s.T(), logs, "watch directory")
 	assert.Contains(s.T(), logs, "work directory")
 	assert.Contains(s.T(), logs, "build output")
-}
-
-func (s *MainTestSuite) Test_viewFile_thatExists() {
-	s.godev.config.View = "main.go"
-	s.godev.viewFile()
-	assert.Contains(s.T(), s.logs.String(), "previewing contents of main.go")
-}
-
-func (s *MainTestSuite) Test_viewFile_thatDoesntExist() {
-	defer func() {
-		r := recover()
-		err := fmt.Sprintf("%s", r)
-		assert.Contains(s.T(), err, "file 'nonexistent.file' does not seem to exist")
-	}()
-	s.godev.config.View = "nonexistent.file"
-	s.godev.viewFile()
 }

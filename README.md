@@ -15,7 +15,7 @@ GoDev is a live-reload development tool with first class support for Golang deve
 
 
 ### System Requirements
-You will require **Go > 1.11.x** for GoDev to work out of the box with GoDev because of its usage of `go mod`.
+You will require **Go > 1.11.x** for GoDev to work out of the box because of its usage of `go mod`.
 
 
 
@@ -32,6 +32,18 @@ go get github.com/zephinzer/godev
 Installation via platform-specific package managers coming soon!
 
 
+### Usage: Help!
+For all the commands below on usage, you may also view them through the `help` subcommand:
+
+```sh
+godev help
+```
+
+Or to check your version for bug reports or functionalities:
+
+```sh
+godev version
+```
 
 ### Usage: Develop with live-reload
 Running `godev` without flags is the easiest way to get started with live-reload-enabled development:
@@ -45,28 +57,28 @@ godev
 
 
 ### Usage: Test with live-reload
-To run the tests, simply specify the `--test` flag.
+To run the tests, simply specify the `test` sub-command.
 
 ```sh
-godev --test
+godev test
 ```
 
 To view verbose logs, append the `--vv` flag.
 
 ```sh
-godev --test --vv
+godev test --vv
 ```
 
 
 
 ### Usage: Initialise a directory for Go development
-To initialise a directory for development in the Golang language with Go Modules for package management, use the `--init` flag.
+To initialise a directory for development in the Golang language with Go Modules for package management, use the `init` sub-command.
 
 ```sh
-godev --init
+godev init
 ```
 
-> If you'd like to preview files before you install them, you can use the `--view` flag to check out the file first.
+> If you'd like to preview files before you install them, you can use the `view` sub-command to check out the file first.
 
 
 
@@ -93,50 +105,62 @@ docker run -it \
 - - -
 
 ## Advanced Usage
-While GoDev was written focused on Golang development happiness, it can also be used for projects in other languages. Use the configuration flags to adjust it to your needs
+While GoDev was written focused on Golang development happiness, it can also be used for projects in other languages. Use the configuration flags to adjust it to your needs.
 
 
+### Commands
 
-### Flags
+#### `godev`
+When run alone, GoDev defaults to running in development mode which means it will run the application in live-reload with automatic dependency retrievals based on your code.
 
-#### Summary
-##### Run Modes
-- [`--test`](#--test): run tests with live-build/reload
-- [`--init`](#--init): initialise a directory
-- [`--view`](#--view): preview files from `--init`
-- [`--verison`](#--verison): display the version
-##### Logs Verbosity
-- [`--silent`](#--silent): no logs
-- [`--vv`](#--vv): verbose logs
-- [`--vvv`](#--vvv): very verbose logs
-##### Configuration
-- [`--dir`](#--dir): change the working directory
-- [`--watch`](#--watch): change the directory being watched
-- [`--exec`](#--exec): define a list of comma-separated commands for an execution group (use multiple of these to define the multiple execution groups)
-- [`--env`](#--env): define an environment variable to be passed into all commands (use multiple of these to define multiple environment variables)
-- [`--exec-delim`](#--exec-delim): define command delimiters in execution groups and override the comma delimiter
-- [`--exts`](#--exts): comma-separated list of file extensions to trigger a watch event
-- [`--ignore`](#--ignore): comma-separated list of file/directory names to ignore
-- [`--output`](#--output): defines the path relative to the working directory where your binary is built
-- [`--rate`](#--rate): defines the refresh rate of the file system watcher
-
-
-#### Run Modes
 By default, GoDev will run for live-reload in development. This results in the default execution groups of:
 
 1. `go mod vendor`
 1. `go build -o ${BUILD_OUTPUT}` (*see `--output`*)
 1. `${BUILD_OUTPUT}`
 
-##### `--test`
+##### `godev` Flags
+
+| Flag | Description |
+| --- | --- |
+| [`--dir`](#--dir) | Specifies the working directory |
+| [`--env`](#--env) | Specifies an environment variable |
+| [`--exec`](#--exec) | Specifies comma-delimited commands |
+| [`--exec-delim`](#--exec-delim) | Changes the delimiter for the `-exec` flag |
+| [`--exts`](#--exts) | Specifies extensions to watch |
+| [`--ignore`](#--ignore) | Specifies file/directory names to ignore |
+| [`--output`](#--output) | Specifies the path relative to the working directory where the binary will be put |
+| [`--rate`](#--rate) | Specifies the batching duration for file system events |
+| [`--silent`](#--silent) | Turns off logging |
+| [`--vv`](#--vv) | Turns on verbose logging |
+| [`--vvv`](#--vvv) | Turns on very verbose logging |
+| [`--watch`](#--watch) | Specifies the directory to watch |
+
+#### `test`
 Tells GoDev to run in test mode. This changes the default execution groups so that the following are run instead:
 
 1. `go mod vendor`
 1. `go build -o ${BUILD_OUTPUT}`  (*see `--output`*)
 1. `go test ./... -coverprofile c.out`
 
-##### `--init`
-Specifying this flag triggers a directory initialisation flow which asks if you would like to initialise some files/directories if they are not found. These are:
+##### `test` Flags
+
+| Flag | Description |
+| --- | --- |
+| [`--dir`](#--dir) | Specifies the working directory |
+| [`--env`](#--env) | Specifies an environment variable |
+| [`--exts`](#--exts) | Specifies extensions to watch |
+| [`--ignore`](#--ignore) | Specifies file/directory names to ignore |
+| [`--output`](#--output) | Specifies the path relative to the working directory where the binary will be put |
+| [`--rate`](#--rate) | Specifies the batching duration for file system events |
+| [`--silent`](#--silent) | Turns off logging |
+| [`--vv`](#--vv) | Turns on verbose logging |
+| [`--vvv`](#--vvv) | Turns on very verbose logging |
+| [`--watch`](#--watch) | Specifies the directory to watch |
+
+
+#### `init`
+Specifying this sub-command triggers a directory initialisation flow which asks if you would like to initialise some files/directories if they are not found. These are:
 
 1. Git repository (.git)
 1. .gitignore
@@ -146,12 +170,33 @@ Specifying this flag triggers a directory initialisation flow which asks if you 
 1. .dockerignore
 1. Makefile 
 
-##### `--view`
-Specifying this flag with the name of a file prints the file to your terminal. For example, `godev --view main.go` will print the `main.go` file which `--init` will seed for you if you say yes.
+##### `init` Flags
 
-##### `--version`
-Prints the version of GoDev.
+| Flag | Description |
+| --- | --- |
+| [`--dir`](#--dir) | Specifies the working directory |
 
+#### `view`
+Specifying this flag with the name of a file prints the file to your terminal. For example, `godev view main.go` will print the `main.go` file which `init` will seed for you if you say yes.
+
+##### `view` Flags
+
+None.
+
+#### `help`
+Displays the help page.
+
+#### `version`
+Displays the version of GoDev
+
+##### `version` Flags
+
+| Flag | Description |
+| --- | --- |
+| `--commit` | Indiciates to only display the commit hash |
+| `--semver` | Indiciates to only display the semver version |
+
+### Flag Details
 
 #### Logs Verbosity
 
@@ -278,14 +323,7 @@ make start
 To run the tests in watch mode:
 
 ```sh
-# for linux
 make test
-
-# for macos
-make test.mac
-
-# for windows
-make test.win
 ```
 
 For running the tests one-off (CI mode):

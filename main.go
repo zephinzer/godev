@@ -13,25 +13,15 @@ import (
 )
 
 func main() {
-	config := InitConfig()
-	godev := InitGoDev(config)
-	godev.Start()
+	app := initCLI()
+	app.Start(os.Args, func(config *Config) {
+		godev := InitGoDev(config)
+		godev.Start()
+	})
 }
 
-type InitFile struct {
-	Filename string
-	Data     string
-}
-
-var InitFileMap = map[string]*InitFile{
-	"dockerfile":    &InitFile{"Dockerfile", DataDockerfile},
-	"makefile":      &InitFile{"Makefile", DataMakefile},
-	".dockerignore": &InitFile{".dockerignore", DataDotDockerignore},
-	".gitignore":    &InitFile{".gitignore", DataDotGitignore},
-	"main.go":       &InitFile{"main.go", DataMainDotgo},
-	"go.mod":        &InitFile{"go.mod", DataGoDotMod},
-}
-
+// InitGoDev initialises the application using a configuration
+// struct and creating a logger
 func InitGoDev(config *Config) *GoDev {
 	return &GoDev{
 		config: config,
@@ -43,6 +33,7 @@ func InitGoDev(config *Config) *GoDev {
 	}
 }
 
+// GoDev holds the logic and values needed for GoDev to run
 type GoDev struct {
 	config  *Config
 	logger  *Logger
@@ -50,13 +41,13 @@ type GoDev struct {
 	runner  *Runner
 }
 
+// Start should only be called once and triggers the pipeline
+// and watcher
 func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")
-	if godev.config.RunVersion {
-		fmt.Printf("godev %s-%s\n", Version, Commit)
-	} else if godev.config.RunView {
-		godev.viewFile()
+	if godev.config.RunVersion || godev.config.RunView {
+		// do nothing
 	} else if godev.config.RunInit {
 		godev.initialiseDirectory()
 	} else {
@@ -126,6 +117,7 @@ func (godev *GoDev) logUniversalConfigurations() {
 func (godev *GoDev) logWatchModeConfigurations() {
 	config := godev.config
 	logger := godev.logger
+	logger.Debugf("environment       : %v", config.EnvVars)
 	logger.Debugf("file extensions   : %v", config.FileExtensions)
 	logger.Debugf("ignored names     : %v", config.IgnoredNames)
 	logger.Debugf("refresh interval  : %v", config.Rate)
@@ -225,18 +217,4 @@ func (godev *GoDev) initialiseWatcher() {
 		LogLevel:       godev.config.LogLevel,
 	})
 	godev.watcher.RecursivelyWatch(godev.config.WatchDirectory)
-}
-
-func (godev *GoDev) viewFile() {
-	config := godev.config
-	logger := godev.logger
-	fileKey := strings.ToLower(config.View)
-	if InitFileMap[fileKey] != nil {
-		initFile := InitFileMap[fileKey]
-		logger.Infof("previewing contents of %s", initFile.Filename)
-		fmt.Println(initFile.Filename)
-		logger.Infof("end of preview for contents of %s", initFile.Filename)
-	} else {
-		logger.Panicf("the requested file '%s' does not seem to exist :/", fileKey)
-	}
 }

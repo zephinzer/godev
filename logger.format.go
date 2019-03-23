@@ -6,6 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// LogFormat represents the possible string types that
+// the log format can accept
 type LogFormat string
 
 // String returns a string representation of the format

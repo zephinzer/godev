@@ -4,6 +4,8 @@ import (
 	"bufio"
 )
 
+// Initialiser is the interface for all file/directory bootstrapping
+// operations
 type Initialiser interface {
 	Check() bool
 	Confirm(*bufio.Reader) bool
@@ -11,4 +13,4 @@ type Initialiser interface {
 	Handle(...bool) error
 }
 
-const InitialiserRetryText = "godev> sorry, i didn't get that"
+const initialiserRetryText = "godev> sorry, i didn't get that"

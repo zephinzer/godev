@@ -156,6 +156,10 @@ func (command *Command) handleInitialisation() {
 	)
 	command.cmd.Dir = command.config.Directory
 	command.cmd.Env = command.config.Environment
+	for _, envvar := range os.Environ() {
+		command.cmd.Env = append(command.cmd.Env, envvar)
+	}
+	// command.cmd.Env = append(command.config.Environment, "GOCACHE=on")
 	command.cmd.Stderr = os.Stderr
 	command.cmd.Stdout = os.Stdout
 }
