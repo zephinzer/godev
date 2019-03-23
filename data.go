@@ -11,10 +11,10 @@
 package main
 
 // Version is used by godev for reporting the version when installed via 'go get'
-const Version = "0.5.37"
+const Version = "0.5.39"
 
 // Commit is used by godev for reporting the version when installed via 'go get'
-const Commit = "08f53ef"
+const Commit = "9747eac"
 
 // DataDockerfile defines the 'Dockerfile' contents when --init is used
 // hash:fc3c6491cb0d101ae17e2e68aec4714f
