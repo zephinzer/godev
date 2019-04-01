@@ -13,6 +13,15 @@ func getFlagBuildOutput() cli.Flag {
 	}
 }
 
+// getFlagCommandArguments provisions --output
+func getFlagCommandArguments() cli.Flag {
+	return cli.StringFlag{
+		Name:  "args",
+		Usage: "| where <value> is a comma delimited string containing arguments to pass to commands in the final execution group",
+		Value: DefaultCommandArguments,
+	}
+}
+
 // getFlagCommandsDelimiter provisions --exec-delim
 func getFlagCommandsDelimiter() cli.Flag {
 	return cli.StringFlag{

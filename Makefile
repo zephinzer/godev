@@ -81,13 +81,13 @@ start:
 	fi
 start.linux: compile.linux
 	@$(MAKE) log.debug MSG="running godev for development..."
-	@$(CURDIR)/bin/godev--linux-amd64 -vv --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
+	@$(CURDIR)/bin/godev--linux-amd64 -vv --args 'hi,there' --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
 start.macos: compile.macos
 	@$(MAKE) log.debug MSG="running godev for development..."
-	@$(CURDIR)/bin/godev--darwin-amd64 -vv --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
+	@$(CURDIR)/bin/godev--darwin-amd64 -vv --args 'hi,there' --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
 start.windows: compile.windows
 	@$(MAKE) log.debug MSG="running godev for development..."
-	@$(CURDIR)/bin/godev--windows-386.exe -vv --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
+	@$(CURDIR)/bin/godev--windows-386.exe -vv --args 'hi,there' --watch $(CURDIR) --dir $(CURDIR)/dev ${ARGS}
 
 ## installs the dependencies
 deps:

@@ -19,6 +19,10 @@ func (s *FlagsTestSuite) Test_getFlagBuildOutput() {
 	ensureFlag(s.T(), getFlagBuildOutput(), cli.StringFlag{}, `^output.*`)
 }
 
+func (s *FlagsTestSuite) Test_getFlagCommandArguments() {
+	ensureFlag(s.T(), getFlagCommandArguments(), cli.StringFlag{}, `^args`)
+}
+
 func (s *FlagsTestSuite) Test_getFlagCommandsDelimiter() {
 	ensureFlag(s.T(), getFlagCommandsDelimiter(), cli.StringFlag{}, `^exec-delim.*`)
 }
