@@ -93,56 +93,6 @@ func (godev *GoDev) eventHandler(events *[]WatcherEvent) bool {
 	return true
 }
 
-func (godev *GoDev) startWatching() {
-	godev.logUniversalConfigurations()
-	godev.logWatchModeConfigurations()
-	godev.initialiseWatcher()
-	godev.initialiseRunner()
-
-	var wg sync.WaitGroup
-	godev.watcher.BeginWatch(&wg, godev.eventHandler)
-	godev.logger.Infof("working dir : '%s'", godev.config.WorkDirectory)
-	godev.logger.Infof("watching dir: '%s'", godev.config.WatchDirectory)
-	godev.runner.Trigger()
-	wg.Wait()
-}
-
-func (godev *GoDev) logUniversalConfigurations() {
-	godev.logger.Debugf("flag - init       : %v", godev.config.RunInit)
-	godev.logger.Debugf("flag - test       : %v", godev.config.RunTest)
-	godev.logger.Debugf("flag - view       : %v", godev.config.RunView)
-	godev.logger.Debugf("watch directory   : %s", godev.config.WatchDirectory)
-	godev.logger.Debugf("work directory    : %s", godev.config.WorkDirectory)
-	godev.logger.Debugf("build output      : %s", godev.config.BuildOutput)
-}
-
-func (godev *GoDev) logWatchModeConfigurations() {
-	config := godev.config
-	logger := godev.logger
-	logger.Debugf("environment       : %v", config.EnvVars)
-	logger.Debugf("file extensions   : %v", config.FileExtensions)
-	logger.Debugf("ignored names     : %v", config.IgnoredNames)
-	logger.Debugf("refresh interval  : %v", config.Rate)
-	logger.Debugf("execution delim   : %s", config.CommandsDelimiter)
-	logger.Debug("execution groups as follows...")
-	for execGroupIndex, execGroup := range config.ExecGroups {
-		logger.Debugf("  %v) %s", execGroupIndex+1, execGroup)
-		commands := strings.Split(execGroup, config.CommandsDelimiter)
-		for commandIndex, command := range commands {
-			sections, err := shellquote.Split(command)
-			if err != nil {
-				panic(err)
-			}
-			application := sections[0]
-			arguments := sections[1:]
-			if execGroupIndex == len(config.ExecGroups)-1 {
-				arguments = append(arguments, config.CommandArguments...)
-			}
-			logger.Debugf("    %v > %s %v", commandIndex+1, application, arguments)
-		}
-	}
-}
-
 func (godev *GoDev) initialiseInitialisers() []Initialiser {
 	return []Initialiser{
 		InitGitInitialiser(&GitInitialiserConfig{
@@ -222,4 +172,54 @@ func (godev *GoDev) initialiseWatcher() {
 		LogLevel:       godev.config.LogLevel,
 	})
 	godev.watcher.RecursivelyWatch(godev.config.WatchDirectory)
+}
+
+func (godev *GoDev) logUniversalConfigurations() {
+	godev.logger.Debugf("flag - init       : %v", godev.config.RunInit)
+	godev.logger.Debugf("flag - test       : %v", godev.config.RunTest)
+	godev.logger.Debugf("flag - view       : %v", godev.config.RunView)
+	godev.logger.Debugf("watch directory   : %s", godev.config.WatchDirectory)
+	godev.logger.Debugf("work directory    : %s", godev.config.WorkDirectory)
+	godev.logger.Debugf("build output      : %s", godev.config.BuildOutput)
+}
+
+func (godev *GoDev) logWatchModeConfigurations() {
+	config := godev.config
+	logger := godev.logger
+	logger.Debugf("environment       : %v", config.EnvVars)
+	logger.Debugf("file extensions   : %v", config.FileExtensions)
+	logger.Debugf("ignored names     : %v", config.IgnoredNames)
+	logger.Debugf("refresh interval  : %v", config.Rate)
+	logger.Debugf("execution delim   : %s", config.CommandsDelimiter)
+	logger.Debug("execution groups as follows...")
+	for execGroupIndex, execGroup := range config.ExecGroups {
+		logger.Debugf("  %v) %s", execGroupIndex+1, execGroup)
+		commands := strings.Split(execGroup, config.CommandsDelimiter)
+		for commandIndex, command := range commands {
+			sections, err := shellquote.Split(command)
+			if err != nil {
+				panic(err)
+			}
+			application := sections[0]
+			arguments := sections[1:]
+			if execGroupIndex == len(config.ExecGroups)-1 {
+				arguments = append(arguments, config.CommandArguments...)
+			}
+			logger.Debugf("    %v > %s %v", commandIndex+1, application, arguments)
+		}
+	}
+}
+
+func (godev *GoDev) startWatching() {
+	godev.logUniversalConfigurations()
+	godev.logWatchModeConfigurations()
+	godev.initialiseWatcher()
+	godev.initialiseRunner()
+
+	var wg sync.WaitGroup
+	godev.watcher.BeginWatch(&wg, godev.eventHandler)
+	godev.logger.Infof("working dir : '%s'", godev.config.WorkDirectory)
+	godev.logger.Infof("watching dir: '%s'", godev.config.WatchDirectory)
+	godev.runner.Trigger()
+	wg.Wait()
 }
