@@ -3,12 +3,14 @@ package main
 import (
 	"strings"
 
+	shellquote "github.com/kballard/go-shellquote"
 	"github.com/urfave/cli"
 )
 
 func getDefaultFlags() []cli.Flag {
 	return []cli.Flag{
 		getFlagBuildOutput(),
+		getFlagCommandArguments(),
 		getFlagCommandsDelimiter(),
 		getFlagEnvVars(),
 		getFlagExecGroups(),
@@ -25,8 +27,12 @@ func getDefaultFlags() []cli.Flag {
 
 func getDefaultAction(config *Config) cli.ActionFunc {
 	return func(c *cli.Context) error {
+		var err error
 		config.RunDefault = true
 		config.BuildOutput = c.String("output")
+		if config.CommandArguments, err = shellquote.Split(c.String("args")); err != nil {
+			panic(err)
+		}
 		config.CommandsDelimiter = c.String("exec-delim")
 		config.EnvVars = c.StringSlice("env")
 		config.ExecGroups = c.StringSlice("exec")

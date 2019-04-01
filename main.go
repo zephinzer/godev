@@ -46,18 +46,16 @@ type GoDev struct {
 func (godev *GoDev) Start() {
 	defer godev.logger.Infof("godev has ended")
 	godev.logger.Infof("godev has started")
-	if godev.config.RunVersion || godev.config.RunView {
-		// do nothing
+	if godev.config.RunDefault || godev.config.RunTest {
+		godev.startWatching()
 	} else if godev.config.RunInit {
 		godev.initialiseDirectory()
-	} else {
-		godev.startWatching()
 	}
 }
 
 func (godev *GoDev) createPipeline() []*ExecutionGroup {
 	var pipeline []*ExecutionGroup
-	for _, execGroup := range godev.config.ExecGroups {
+	for execGroupIndex, execGroup := range godev.config.ExecGroups {
 		executionGroup := &ExecutionGroup{}
 		var executionCommands []*Command
 		commands := strings.Split(execGroup, godev.config.CommandsDelimiter)
@@ -65,11 +63,15 @@ func (godev *GoDev) createPipeline() []*ExecutionGroup {
 			if sections, err := shellquote.Split(command); err != nil {
 				panic(err)
 			} else {
+				arguments := sections[1:]
+				if execGroupIndex == len(godev.config.ExecGroups)-1 {
+					arguments = append(arguments, godev.config.CommandArguments...)
+				}
 				executionCommands = append(
 					executionCommands,
 					InitCommand(&CommandConfig{
 						Application: sections[0],
-						Arguments:   sections[1:],
+						Arguments:   arguments,
 						Directory:   godev.config.WorkDirectory,
 						Environment: godev.config.EnvVars,
 						LogLevel:    godev.config.LogLevel,
@@ -123,17 +125,20 @@ func (godev *GoDev) logWatchModeConfigurations() {
 	logger.Debugf("refresh interval  : %v", config.Rate)
 	logger.Debugf("execution delim   : %s", config.CommandsDelimiter)
 	logger.Debug("execution groups as follows...")
-	for egIndex, execGroup := range config.ExecGroups {
-		logger.Debugf("  %v) %s", egIndex+1, execGroup)
+	for execGroupIndex, execGroup := range config.ExecGroups {
+		logger.Debugf("  %v) %s", execGroupIndex+1, execGroup)
 		commands := strings.Split(execGroup, config.CommandsDelimiter)
-		for cIndex, command := range commands {
+		for commandIndex, command := range commands {
 			sections, err := shellquote.Split(command)
 			if err != nil {
 				panic(err)
 			}
-			app := sections[0]
-			args := sections[1:]
-			logger.Debugf("    %v > %s %v", cIndex+1, app, args)
+			application := sections[0]
+			arguments := sections[1:]
+			if execGroupIndex == len(config.ExecGroups)-1 {
+				arguments = append(arguments, config.CommandArguments...)
+			}
+			logger.Debugf("    %v > %s %v", commandIndex+1, application, arguments)
 		}
 	}
 }

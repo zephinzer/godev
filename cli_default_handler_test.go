@@ -29,6 +29,7 @@ func (s *CLIDefaultHandlerTestSuite) SetupTest() {
 func (s *CLIDefaultHandlerTestSuite) Test_getDefaultFlags() {
 	ensureCLIFlags(s.T(),
 		[]string{
+			"args",
 			"dir",
 			"env",
 			"exec-delim",

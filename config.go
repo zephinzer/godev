@@ -10,6 +10,9 @@ import (
 // DefaultBuildOutput - default relative path to watch directory to place built binaries in
 const DefaultBuildOutput = "bin/app"
 
+// DefaultCommandArguments - default arguments to pass to commands in the last execution group
+const DefaultCommandArguments = ""
+
 // DefaultCommandsDelimiter - default string to split --execs into commands with
 const DefaultCommandsDelimiter = ","
 
@@ -31,6 +34,7 @@ const DefaultRefreshRate = 2 * time.Second
 // Config configures the main application entrypoint
 type Config struct {
 	BuildOutput       string
+	CommandArguments  ConfigCommaDelimitedString
 	CommandsDelimiter string
 	EnvVars           ConfigMultiflagString
 	ExecGroups        ConfigMultiflagString

@@ -123,6 +123,7 @@ By default, GoDev will run for live-reload in development. This results in the d
 
 | Flag | Description |
 | --- | --- |
+| [`--args`](#--args) | Specifies arguments to pass into commands of the final execution group (the application being live-reloaded) |
 | [`--dir`](#--dir) | Specifies the working directory |
 | [`--env`](#--env) | Specifies an environment variable |
 | [`--exec`](#--exec) | Specifies comma-delimited commands |
@@ -211,6 +212,11 @@ Tells GoDev to keep completely quiet. Only panic level logs are printed before G
 
 
 #### Configuration
+
+##### `--args`
+Specifies the arguments to be passed into the last execution group which should contain the path to your binary.
+
+Default: None
 
 ##### `--dir`
 Specifies the directory for commands from GoDev to run from.

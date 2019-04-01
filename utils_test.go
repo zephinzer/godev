@@ -84,3 +84,13 @@ func (s *UtilsTestSuite) Test_fileExists() {
 func (s *UtilsTestSuite) Test_fileExists_onDirectory() {
 	assert.False(s.T(), fileExists(getCurrentWorkingDirectory()))
 }
+
+func (s *UtilsTestSuite) Test_sliceContainsString() {
+	testSlice := []string{"a", "b", "c"}
+	// test the happy path
+	assert.True(s.T(), sliceContainsString(testSlice, "a"))
+	// test the sad path
+	assert.False(s.T(), sliceContainsString(testSlice, "d"))
+	// test if duplicates might affect searching
+	assert.False(s.T(), sliceContainsString(testSlice, "aa"))
+}
